@@ -1,23 +1,23 @@
-#' LogRatioLogisticLasso: Logistic log-ratio lasso regression
+#' LogRatioCoxLasso: Cox log-ratio lasso regression
 #'
-#' @description Conduct logistic log-ratio lasso regression
+#' @description Conduct Cox proportional hazards log-ratio lasso regression
 #' @param x Covariate data matrix
-#' @param y Binary outcome data vector
+#' @param y A `Surv` object
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import caret Rcpp RcppArmadillo
+#' @import survival caret Rcpp RcppArmadillo
 #' @useDynLib LogRatioReg
 #' @export
 
-LogRatioLogisticLasso <- function(x,
-                          y,
-                          length.lambda=100,
-                          mu=1,
-                          ncv=5){
+LogRatioCoxLasso <- function(x,
+                             y,
+                             length.lambda=100,
+                             mu=1,
+                             ncv=5){
   
   ptm <- proc.time()
   

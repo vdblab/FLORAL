@@ -33,6 +33,8 @@ LogRatioLasso <- function(x,
   
   fullfit <- linear_lasso_al(x,y,length.lambda,mu,100,lambda,FALSE)
   
+  if (!is.null(colnames(x))) rownames(fullfit$beta) = colnames(x)
+  
   if (intercept){
     beta0 <- mean(y0) - colMeans(x %*% fullfit$beta)
   }
