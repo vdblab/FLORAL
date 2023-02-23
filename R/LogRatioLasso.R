@@ -1,3 +1,18 @@
+#' LogRatioLasso: Linear log-ratio lasso regression
+#'
+#' @description Conduct linear log-ratio lasso regression
+#' @param x Covariate data matrix
+#' @param y Continuous outcome data vector
+#' @param length.lambda Number of penalty parameters used in the path
+#' @param mu Value of penalty for the augmented Lagrangian
+#' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
+#' @param intercept TRUE or FALSE, indicating whether an intercept should be estimated.
+#' @return A list with path-specific estimates (beta), path (lambda), and many others.
+#' @author Teng Fei. Email: feit1@mskcc.org
+#' 
+#' @import caret Rcpp RcppArmadillo
+#' @useDynLib LogRatioReg
+#' @export
 LogRatioLasso <- function(x,
                           y,
                           length.lambda=100,
