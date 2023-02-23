@@ -39,9 +39,9 @@ model_fit <- glmnet.constr(dat$x, dat$y0, family = "gaussian")
 ### constrained data
 
 dat <- simulation_constrained(intercept = TRUE)
-ptm <- proc.time()
-fit <- linear_lasso_al(dat$x,dat$y0,len=100,mu=1,ub=100,intercept=FALSE)
-proc.time() - ptm
+# ptm <- proc.time()
+# fit <- linear_lasso_al(dat$x,dat$y0,len=100,mu=1,ub=100,intercept=FALSE)
+# proc.time() - ptm
 
 ptm <- proc.time()
 res1 <- LogRatioLasso(dat$x,dat$y0,intercept=FALSE)
@@ -49,34 +49,19 @@ proc.time() - ptm
 ptm <- proc.time()
 res2 <- LogRatioLasso(dat$x,dat$y,intercept=TRUE)
 proc.time() - ptm
-plot(log(res2$lambda),res2$cvmse.mean,ylim=c(0,0.1))
-
-plot(log(fit$lambda),fit$mse)
-plot(log(fit$lambda),fit$loss)
-
-dat$beta
-model_fit <- glmnet.constr(dat$x, dat$y0, family = "gaussian")
-cvfit <- cv.glmnet.constr(model_fit,dat$x, dat$y0)
-sum(cvfit$beta)
-sum(cvfit$beta!=0)
-
-constrainedfit <- linear_lasso_augmented_lagrangian(dat$x,dat$y0,length.lambda = 100, mu = 1, tol=1e-7)
-plot(log(constrainedfit$lambda),constrainedfit$lossout)
-plot(log(constrainedfit$lambda),constrainedfit$mseout)
-plot(log(constrainedfit$lambda),constrainedfit$GIC)
-
-cvconstrainedfit <- cv_linear_lasso_augmented_lagrangian(dat$x,dat$y0,length.lambda = 100, mu = 1, tol=1e-7)
-plot(log(cvconstrainedfit$lambda),constrainedfit$lossout)
-plot(log(cvconstrainedfit$lambda),constrainedfit$mseout)
-plot(log(cvconstrainedfit$lambda),cvconstrainedfit$losscvout)
-plot(log(cvconstrainedfit$lambda),cvconstrainedfit$msecvout)
-plot(log(cvconstrainedfit$lambda),cvconstrainedfit$GIC)
-
-
+plot(log(res2$lambda),res2$cvmse.mean)
 
 ### binary data
 
-dat <- simulation_constrained_binary(n=100,p=30)
+dat <- simulation_constrained_binary(n=100,p=200)
+ptm <- proc.time()
+res3 <- LogRatioLogisticLasso(dat$x,dat$y)
+proc.time() - ptm
+plot(log(res3$lambda),res3$cvmse.mean)
+res3$best.beta0
+res3$best.beta
+
+
 binaryfit <- logratiolasso_binary(dat$x,dat$y,mu=1,ub=50,tol=1e-7)
 plot(log(binaryfit$lambda),binaryfit$lossout)
 plot(log(binaryfit$lambda),binaryfit$mseout)

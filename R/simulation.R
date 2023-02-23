@@ -50,7 +50,7 @@ simulation_constrained <- function(n = 100, p = 1000, true_size = 10, intercept=
   
 }
 
-simulation_constrained_binary <- function(n = 100, p = 1000, true_size = 10){
+simulation_constrained_binary <- function(n = 100, p = 1000, true_size = 10, intercept=TRUE){
   
   true_set <- 1:true_size
   beta <- c(2,2,2,2,2,-2,-2,-2,-2)
@@ -66,13 +66,24 @@ simulation_constrained_binary <- function(n = 100, p = 1000, true_size = 10){
   
   eta <- x[,true_set] %*% beta
   
+  if(intercept) {
+    
+    intcpt <- rnorm(1,mean=1,sd=1)
+    eta <- eta + intcpt
+    
+  }
+  
   prob <- exp(eta)/(1+exp(eta))
   
   for (i in 1:n){
     y[i] <- rbinom(1,1,prob=prob[i])
   }
   
-  return(list(x=x,y=y,beta=beta,idx=true_set))
+  ret <- list(x=x,y=y,beta=beta,idx=true_set)
+  
+  if (intercept) ret$intercept=intcpt
+  
+  return(ret)
   
 }
 

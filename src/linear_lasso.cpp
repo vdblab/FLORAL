@@ -245,3 +245,94 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
   return ret;
   
 }
+
+
+// [[Rcpp::export]]
+Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda){
+  
+  int n = y.n_elem;
+  int p = x.n_cols;
+  
+  arma::vec beta0;
+  beta0.zeros(len);
+  arma::mat beta;
+  beta.zeros(p,len);
+  arma::vec loss = vec(len);
+  arma::vec mse = vec(len);
+  
+  for (int i=0; i<len; ++i){
+    
+    double l = lambda(i);
+
+    double beta0i = beta0(i);
+    arma::vec betai = beta.col(i);
+    if (i >= 1) {
+      double beta0i = beta0(i-1);
+      betai = beta.col(i-1);
+    }
+    
+    double alpha = 0;
+    int k = 0;
+    
+    // Rcpp::Rcout << "i: " << i<< endl;
+    
+    arma::vec prob = exp(beta0i + x*betai)/(1 + exp(beta0i + x*betai));
+    arma::vec sfun = y - prob;
+    arma::vec hfun = prob % (1-prob) + 1e-8;
+    arma::vec z0 = beta0i + x*betai + sfun/hfun;
+    arma::vec z = z0 - mean(z0);
+    arma::mat xx = x.t()*diagmat(hfun)*x;
+    arma::vec xz = x.t()*(z % hfun);
+    
+    arma::vec diff = z - x*betai;
+    double loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+    arma::vec betatemp = gd_cov_al(xx,xz,n,l,betai,mu,alpha,false);
+    arma::vec difftemp = z - x*betatemp;
+    double lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+    
+    while (abs(lossnew - loss0) > 1e-7){
+      loss0 = lossnew;
+      betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
+      difftemp = z - x*betatemp;
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+    }
+    
+    while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
+      
+      k = k+1;
+      // Rcpp::Rcout << "k: " << k << endl;
+      
+      betai = betatemp;
+      alpha = alpha + accu(betai);
+      
+      diff = z - x*betai;
+      loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+      betatemp = gd_cov_al(xx,xz,n,l,betai,mu,alpha,false);
+      difftemp = z - x*betatemp;
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+      
+      while (abs(lossnew - loss0) > 1e-7){
+        loss0 = lossnew;
+        betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
+        difftemp = z - x*betatemp;
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+      }
+    }
+    
+    beta0(i) = mean(z0 - x*betatemp);
+    loss(i) = lossnew;
+    mse(i) = accu(difftemp % difftemp)/n;
+    beta.col(i) = betatemp;
+    
+  }
+  
+  Rcpp::List ret;
+  ret["beta"] = beta;
+  ret["beta0"] = beta0;
+  ret["lambda"] = lambda;
+  ret["loss"] = loss;
+  ret["mse"] = mse;
+  
+  return ret;
+  
+}
