@@ -339,7 +339,7 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
 
 
 // [[Rcpp::export]]
-Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda){
+Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull){
   
   int n = t.n_elem;
   int p = x.n_cols;
@@ -402,6 +402,16 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
       
     }
     
+    if (i >= 1){
+      // Rcpp::Rcout << "Delta Dev: " << -2*loglik(i-1) - devnull<< endl;
+      // Rcpp::Rcout << "0.99Devnull: " << 0.99*devnull << endl;
+      
+      if (-2*loglik(i-1) - devnull >= 0.99*devnull){
+        break;
+      }
+    }
+    
+    
     // denomj = denomj + 1e-8;
     
     // for (int k=0; k<n; ++k){
@@ -424,7 +434,8 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
     arma::vec difftemp = z - x*betatemp;
     double lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
     
-    while (abs(lossnew - loss0) > 1e-7){
+    while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+      k1 = k1 + 1;
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
       difftemp = z - x*betatemp;
@@ -443,11 +454,11 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
       difftemp = z - x*betatemp;
       lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
       
-      // k1 = 0;
+      k1 = 0;
       
-      while (abs(lossnew - loss0) > 1e-7){
+      while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
         // Rcpp::Rcout << "lossnew: " << lossnew << endl;
-        // k1 = k1 + 1;
+        k1 = k1 + 1;
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
         difftemp = z - x*betatemp;
