@@ -72,7 +72,7 @@ arma::vec gd_cov_al(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta,
     beta(0) = ((xy(0) - dot(xx(idxx,idb), beta(idb)) + dot(xx(idxx,idxx), beta(idxx)) )/n)/(accu(xx(idxx,idxx))/n);
     
     for (int j = 1; j < p; ++j){
-  
+      
       idb = arma::find(abs(beta) > 0);
       idxx = {j};
       
@@ -191,7 +191,7 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
     
     arma::vec betai = beta.col(i);
     if (i >= 1) betai = beta.col(i-1);
-
+    
     double alpha = 0;
     int k = 0;
     
@@ -263,11 +263,11 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
   for (int i=0; i<len; ++i){
     
     double l = lambda(i);
-
+    
     double beta0i = beta0(i);
     arma::vec betai = beta.col(i);
     if (i >= 1) {
-      double beta0i = beta0(i-1);
+      beta0i = beta0(i-1);
       betai = beta.col(i-1);
     }
     
@@ -332,6 +332,153 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
   ret["lambda"] = lambda;
   ret["loss"] = loss;
   ret["mse"] = mse;
+  
+  return ret;
+  
+}
+
+
+// [[Rcpp::export]]
+Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda){
+  
+  int n = t.n_elem;
+  int p = x.n_cols;
+  int m = tj.n_elem;
+  
+  arma::mat beta;
+  beta.zeros(p,len);
+  arma::vec loss = vec(len);
+  arma::vec mse = vec(len);
+  arma::vec loglik;
+  loglik.zeros(len);
+  
+  for (int i=0; i<len; ++i){
+    
+    double l = lambda(i);
+    
+    arma::vec betai = beta.col(i);
+    if (i >= 1) {
+      betai = beta.col(i-1);
+    }
+    
+    double alpha = 0;
+    int k = 0;
+    int k1 = 0;
+    
+    // Rcpp::Rcout << "i: " << i<< endl;
+    
+    arma::vec link = exp(x*betai);
+    arma::vec denomj = vec(m);
+    arma::vec d1;
+    d1.zeros(n);
+    arma::vec d2;
+    d2.zeros(n);
+    
+    arma::uvec idx = find(t >= tj(0));
+    denomj(0) = accu(link(idx)) + 1e-8;
+    
+    arma::uvec tidx;
+    arma::uvec widx = find(t >= tj(0));
+    arma::uvec uidx = find(t == tj(0));
+    
+    if (i >= 1) {
+      loglik(i-1) = loglik(i-1) + accu(x.rows(uidx)*betai) - log(accu(link(widx))+1e-8);
+    }
+    d1(widx) = d1(widx) + 1/denomj(0);
+    d2(widx) = d2(widx) + 1/pow(denomj(0),2);
+    
+    for (int j=1; j<m; ++j){
+      idx = find(t >= tj(j-1) && t < tj(j));
+      denomj(j) = denomj(j-1) - accu(link(idx)) + 1e-8;
+      
+      widx = find(t >= tj(j));
+      if (i >= 1){
+        uidx = find(t == tj(j));
+        loglik(i-1) = loglik(i-1) + accu(x.rows(uidx)*betai) - log(accu(link(widx))+1e-8);
+      }
+      
+      d1(widx) = d1(widx) + 1/denomj(j);
+      d2(widx) = d2(widx) + 1/pow(denomj(j),2);
+      
+    }
+    
+    // denomj = denomj + 1e-8;
+    
+    // for (int k=0; k<n; ++k){
+    // 
+    //   arma::uvec tidx = find(tj <= t(k));
+    //   d1(k) = accu(1/denomj(tidx));
+    //   d2(k) = accu(1/pow(denomj(tidx),2));
+    // 
+    // }
+    
+    arma::vec sfun = d - link % d1;
+    arma::vec hfun = link % d1 - d2 % pow(link,2) + 1e-8;
+    arma::vec z =  x*betai + sfun/hfun;
+    arma::mat xx = x.t()*diagmat(hfun)*x;
+    arma::vec xz = x.t()*(z % hfun);
+    
+    arma::vec diff = z - x*betai;
+    double loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+    arma::vec betatemp = gd_cov_al(xx,xz,n,l,betai,mu,alpha,false);
+    arma::vec difftemp = z - x*betatemp;
+    double lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+    
+    while (abs(lossnew - loss0) > 1e-7){
+      loss0 = lossnew;
+      betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
+      difftemp = z - x*betatemp;
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+    }
+    
+    while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
+      
+      k = k+1;
+      betai = betatemp;
+      alpha = alpha + accu(betai);
+      
+      diff = z - x*betai;
+      loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+      betatemp = gd_cov_al(xx,xz,n,l,betai,mu,alpha,false);
+      difftemp = z - x*betatemp;
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+      
+      // k1 = 0;
+      
+      while (abs(lossnew - loss0) > 1e-7){
+        // Rcpp::Rcout << "lossnew: " << lossnew << endl;
+        // k1 = k1 + 1;
+        loss0 = lossnew;
+        betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
+        difftemp = z - x*betatemp;
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
+      }
+    }
+    
+    loss(i) = lossnew;
+    mse(i) = accu(difftemp % difftemp)/n;
+    beta.col(i) = betatemp;
+    
+    if (i == len-1){
+      
+      link = exp(x*betatemp);
+      
+      for (int j=0; j<m; ++j){
+        widx = find(t >= tj(j));
+        uidx = find(t == tj(j));
+        loglik(i) = loglik(i) + accu(x.rows(uidx)*betai) - log(accu(link(widx))+1e-8);
+      }
+      
+    }
+    
+  }
+  
+  Rcpp::List ret;
+  ret["beta"] = beta;
+  ret["lambda"] = lambda;
+  ret["loss"] = loss;
+  ret["mse"] = mse;
+  ret["loglik"] = loglik;
   
   return ret;
   

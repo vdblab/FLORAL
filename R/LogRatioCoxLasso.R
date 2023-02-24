@@ -21,34 +21,70 @@ LogRatioCoxLasso <- function(x,
   
   ptm <- proc.time()
   
-  n <- length(y)
+  t <- y[,1]
+  d <- y[,2]
+  n <- nrow(y)
   p <- ncol(x)
-  sfun = y-0.5
+  
+  tj <- sort(t[d==1])
+  devnull <- log(sum(t >= tj[1]))
+  denomj <- rep(NA,length(tj))
+  denomj[1] <- sum(t >= tj[1])
+  for (j in 2:length(tj)){
+    denomj[j] <- denomj[j-1] - sum(t >= tj[j-1] & t < tj[j])
+    devnull <- devnull + log(sum(t >= tj[j]))
+  }
+  devnull <- 2*devnull
+  
+  expect <- sapply(t,function(x) sum(1/denomj[which(tj <= x)]))
+  sfun = d - expect
+  # hfun <- expect - sapply(t,function(x) sum(1/denomj[which(tj <= x)]^2)) + 1e-8 # hessian
+  # z <- sfun/hfun
   lambda0 <- max(t(sfun) %*% x)/n
   
   lambda.min.ratio = ifelse(n < p, 1e-02, 1e-04)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
-  fullfit <- logistic_lasso_al(x,y,length.lambda,mu,100,lambda)
+  fullfit <- cox_lasso_al(x,t,d,tj,length.lambda,mu,100,lambda)
+  dev <- -2*fullfit$loglik
   
   if (!is.null(colnames(x))) rownames(fullfit$beta) = colnames(x)
   
-  cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
+  cvdevdiff <- matrix(0,nrow=length.lambda,ncol=ncv)
+  cvdevnull <- rep(0,ncol=ncv)
   
   if (!is.null(ncv)){
     
-    labels <- caret::createFolds(factor(y),k=ncv)
+    labels <- caret::createFolds(factor(d),k=ncv)
     
     for (cv in 1:ncv){
       
       train.x <- x[-labels[[cv]],]
-      train.y <- y[-labels[[cv]]]
+      train.d <- d[-labels[[cv]]]
+      train.t <- t[-labels[[cv]]]
       test.x <- x[labels[[cv]],]
-      test.y <- y[labels[[cv]]]
+      test.d <- d[labels[[cv]]]
+      test.t <- t[labels[[cv]]]
       
-      cvfit <- logistic_lasso_al(train.x,train.y,length.lambda,mu,100,lambda)
+      train.tj <- sort(train.t[train.d==1])
       
-      cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
+      cvfit <- cox_lasso_al(train.x,train.t,train.d,train.tj,length.lambda,mu,100,lambda)
+      
+      cv.devnull <- 0
+      loglik <- rep(0,length.lambda)
+      linprod <- test.x %*% cvfit$beta
+      
+      test.tj <- sort(test.t[test.d==1])
+      for (j in 1:length(test.tj)){
+        cv.devnull <- cv.devnull + log(sum(test.t >= test.tj[j]))
+        cvdevdiff[,cv] <- cvdevdiff[,cv] + linprod[test.t == test.tj[j],] - 
+          log(colSums(exp(linprod[test.t >= test.tj[j],])) + 1e-8)
+        
+        #- log(accu(link(widx))+1e-8)
+      }
+      cvdevnull[cv] <- 2*cv.devnull
+      cvdevdiff[,cv] <- -2*cvdevdiff[,cv]
+      # cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y - exp(x)/(1+exp(x)))^2)/length(test.y))
       
     }
     
