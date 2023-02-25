@@ -85,9 +85,11 @@
 # sum(cvfit$beta!=0)
 # 
 # 
-dat <- simulation_constrained_cox(n=100,p=200)
-coxfit <- LogRatioCoxLasso(dat$x,survival::Surv(dat$t,dat$d))
-plot(log(coxfit$lambda),coxfit$cvdev.mean)
+# dat <- simulation_constrained_cox(n=100,p=200)
+# ptm <- proc.time()
+# coxfit <- LogRatioCoxLasso(dat$x,survival::Surv(dat$t,dat$d))
+# proc.time() - ptm
+# plot(log(coxfit$lambda),coxfit$cvdev.mean)
 
 # library(survival)
 # coxfit <- coxph(Surv(dat$t,dat$d)~dat$x[,1:10])

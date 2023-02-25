@@ -29,3 +29,7 @@ logistic_lasso_al <- function(x, y, len, mu, ub, lambda) {
     .Call('_LogRatioReg_logistic_lasso_al', PACKAGE = 'LogRatioReg', x, y, len, mu, ub, lambda)
 }
 
+cox_lasso_al <- function(x, t, d, tj, len, mu, ub, lambda, devnull) {
+    .Call('_LogRatioReg_cox_lasso_al', PACKAGE = 'LogRatioReg', x, t, d, tj, len, mu, ub, lambda, devnull)
+}
+

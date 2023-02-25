@@ -116,6 +116,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cox_lasso_al
+Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull);
+RcppExport SEXP _LogRatioReg_cox_lasso_al(SEXP xSEXP, SEXP tSEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type t(tSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type tj(tjSEXP);
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< int >::type ub(ubSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type devnull(devnullSEXP);
+    rcpp_result_gen = Rcpp::wrap(cox_lasso_al(x, t, d, tj, len, mu, ub, lambda, devnull));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_LogRatioReg_softthreshold", (DL_FUNC) &_LogRatioReg_softthreshold, 2},
@@ -125,6 +144,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_LogRatioReg_linear_lasso", (DL_FUNC) &_LogRatioReg_linear_lasso, 3},
     {"_LogRatioReg_linear_lasso_al", (DL_FUNC) &_LogRatioReg_linear_lasso_al, 7},
     {"_LogRatioReg_logistic_lasso_al", (DL_FUNC) &_LogRatioReg_logistic_lasso_al, 6},
+    {"_LogRatioReg_cox_lasso_al", (DL_FUNC) &_LogRatioReg_cox_lasso_al, 9},
     {NULL, NULL, 0}
 };
 

@@ -1,6 +1,8 @@
 export(LogRatioLasso)
 export(LogRatioLogisticLasso)
+export(LogRatioCoxLasso)
 import(Rcpp)
 import(RcppArmadillo)
 import(caret)
+import(survival)
 useDynLib(LogRatioReg)

@@ -2,7 +2,7 @@
 #'
 #' @description Conduct Cox proportional hazards log-ratio lasso regression
 #' @param x Covariate data matrix
-#' @param y A `Surv` object
+#' @param y A `survival::Surv` object
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
