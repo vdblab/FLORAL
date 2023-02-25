@@ -7,10 +7,11 @@
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
+#' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import caret Rcpp RcppArmadillo
+#' @import caret Rcpp RcppArmadillo ggplot2 reshape RcppProgress
 #' @useDynLib LogRatioReg
 #' @export
 
@@ -19,7 +20,8 @@ LogRatioLogisticLasso <- function(x,
                           length.lambda=100,
                           mu=1,
                           ncv=5,
-                          progress=TRUE){
+                          progress=TRUE,
+                          plot=TRUE){
   
   ptm <- proc.time()
   
@@ -35,7 +37,11 @@ LogRatioLogisticLasso <- function(x,
   
   fullfit <- logistic_lasso_al(x,y,length.lambda,mu,100,lambda,progress)
   
-  if (!is.null(colnames(x))) rownames(fullfit$beta) = colnames(x)
+  if (!is.null(colnames(x))){
+    rownames(fullfit$beta) = colnames(x)
+  }else{
+    rownames(fullfit$beta) = 1:ncol(x)
+  }
   
   if (!is.null(ncv)){
     
@@ -87,6 +93,52 @@ LogRatioLogisticLasso <- function(x,
                 best.idx=best.idx
     )
     
+    if (plot){
+      
+      beta_nzero <- suppressWarnings(data.frame(reshape::melt(ret$beta[rowSums(ret$beta != 0) > 0,])))
+      beta_nzero$lambda <- ret$lambda[beta_nzero$X2]
+      beta_nzero$loglambda <- log(beta_nzero$lambda)
+      
+      lambda_count <- data.frame(loglambda = log(ret$lambda),
+                                 count = colSums(ret$beta != 0))
+      lambda_count <- lambda_count[seq(5,nrow(lambda_count),length.out=10),]
+      
+      top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
+      top10name <- names(top10feat)
+      
+      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+        geom_line() + 
+        scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
+        theme_bw() + 
+        theme(legend.position = "none") +
+        xlab("log(lambda)") +
+        ylab("Coefficient") +
+        annotate("text",x=min(beta_nzero$loglambda)-0.5,y=top10feat,label=top10name)+
+        annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
+        ggtitle("Coefficients versus log(lambda)")
+      
+      mseplot <- data.frame(loglambda=log(ret$lambda),
+                            mse=ret$cvmse.mean,
+                            se=ret$cvmse.se,
+                            mseaddse=ret$cvmse.mean+ret$cvmse.se,
+                            mseminse=ret$cvmse.mean-ret$cvmse.se)
+      
+      pmse <- ggplot(mseplot, aes(x=loglambda, y=mse)) +
+        geom_errorbar(aes(ymin=mseminse,ymax=mseaddse),color="grey")+
+        geom_point(color="red")+
+        theme_bw() +
+        xlab("log(lambda)") +
+        ylab("Mean-Squared Error")+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
+        annotate("text",x=lambda_count$loglambda,y=max(mseplot$mseaddse)+0.05,label=as.character(lambda_count$count))+
+        ggtitle("Cross-validated MSE versus log(lambda)")
+      
+      ret$pcoef <- pcoef
+      ret$pmse <- pmse
+      
+    }
+    
   }else{
     
     ret <- list(beta=fullfit$beta,
@@ -95,6 +147,34 @@ LogRatioLogisticLasso <- function(x,
                 loss=fullfit$loss,
                 mse=fullfit$mse
     )
+    
+    if (plot){
+      
+      beta_nzero <- suppressWarnings(data.frame(reshape::melt(ret$beta[rowSums(ret$beta != 0) > 0,])))
+      beta_nzero$lambda <- ret$lambda[beta_nzero$X2]
+      beta_nzero$loglambda <- log(beta_nzero$lambda)
+      
+      lambda_count <- data.frame(loglambda = log(ret$lambda),
+                                 count = colSums(ret$beta != 0))
+      lambda_count <- lambda_count[seq(5,nrow(lambda_count),length.out=10),]
+      
+      top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
+      top10name <- names(top10feat)
+      
+      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+        geom_line() + 
+        scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
+        theme_bw() + 
+        theme(legend.position = "none") +
+        xlab("log(lambda)") +
+        ylab("Coefficient") +
+        annotate("text",x=min(beta_nzero$loglambda)-0.5,y=top10feat,label=top10name)+
+        annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
+        ggtitle("Coefficients versus log(lambda)")
+      
+      ret$pcoef <- pcoef
+      
+    }
     
   }
   

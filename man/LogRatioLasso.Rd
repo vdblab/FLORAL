@@ -4,7 +4,16 @@
 \alias{LogRatioLasso}
 \title{LogRatioLasso: Linear log-ratio lasso regression}
 \usage{
-LogRatioLasso(x, y, length.lambda = 100, mu = 1, ncv = 5, intercept = FALSE)
+LogRatioLasso(
+  x,
+  y,
+  length.lambda = 100,
+  mu = 1,
+  ncv = 5,
+  intercept = FALSE,
+  progress = TRUE,
+  plot = TRUE
+)
 }
 \arguments{
 \item{x}{Covariate data matrix}
@@ -18,6 +27,10 @@ LogRatioLasso(x, y, length.lambda = 100, mu = 1, ncv = 5, intercept = FALSE)
 \item{ncv}{Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.}
 
 \item{intercept}{TRUE or FALSE, indicating whether an intercept should be estimated.}
+
+\item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
+
+\item{plot}{TRUE or FALSE, indicating whether returning plots of model fitting.}
 }
 \value{
 A list with path-specific estimates (beta), path (lambda), and many others.

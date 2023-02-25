@@ -1,13 +1,13 @@
 Package: LogRatioReg
 Type: Package
-Title: What the package does (short line)
-Version: 1.0
+Title: Log-ratio Lasso Regression
+Version: 0.1
 Date: 2023-02-20
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
+Author: Teng Fei
+Maintainer: Teng Fei <feit1@mskcc.org>
+Description: Log-ratio Lasso Regression
 License: What license is it under?
 Imports: Rcpp (>= 1.0.9)
-LinkingTo: Rcpp, RcppArmadillo
+LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.2.3
 Encoding: UTF-8

@@ -4,7 +4,15 @@
 \alias{LogRatioLogisticLasso}
 \title{LogRatioLogisticLasso: Logistic log-ratio lasso regression}
 \usage{
-LogRatioLogisticLasso(x, y, length.lambda = 100, mu = 1, ncv = 5)
+LogRatioLogisticLasso(
+  x,
+  y,
+  length.lambda = 100,
+  mu = 1,
+  ncv = 5,
+  progress = TRUE,
+  plot = TRUE
+)
 }
 \arguments{
 \item{x}{Covariate data matrix}
@@ -16,6 +24,10 @@ LogRatioLogisticLasso(x, y, length.lambda = 100, mu = 1, ncv = 5)
 \item{mu}{Value of penalty for the augmented Lagrangian}
 
 \item{ncv}{Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.}
+
+\item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
+
+\item{plot}{TRUE or FALSE, indicating whether returning plots of model fitting.}
 }
 \value{
 A list with path-specific estimates (beta), path (lambda), and many others.
