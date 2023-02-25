@@ -6,6 +6,7 @@
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
+#' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
@@ -17,7 +18,8 @@ LogRatioCoxLasso <- function(x,
                              y,
                              length.lambda=100,
                              mu=1,
-                             ncv=5){
+                             ncv=5,
+                             progress=TRUE){
   
   ptm <- proc.time()
   
@@ -45,22 +47,26 @@ LogRatioCoxLasso <- function(x,
   lambda.min.ratio = ifelse(n < p, 1e-02, 1e-04)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
-  fullfit <- cox_lasso_al(x,t,d,tj,length.lambda,mu,100,lambda,devnull)
+  if (progress) cat("Algorithm running for full dataset: \n")
+  
+  fullfit <- cox_lasso_al(x,t,d,tj,length.lambda,mu,100,lambda,devnull,progress)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
   
   if (!is.null(colnames(x))) rownames(fullfit$beta) = colnames(x)
   
-  cvdev <- matrix(0,nrow=length(lidx),ncol=ncv)
-  cvdevnull <- rep(0,ncol=ncv)
-  
   if (!is.null(ncv)){
+    
+    cvdev <- matrix(0,nrow=length(lidx),ncol=ncv)
+    cvdevnull <- rep(0,ncol=ncv)
     
     # labels <- caret::createFolds(factor(d),k=ncv)
     labels <- coxsplity(as.matrix(y),ncv)
     
     for (cv in 1:ncv){
+      
+      if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
       
       # train.x <- x[-labels[[cv]],]
       # train.d <- d[-labels[[cv]]]
@@ -83,7 +89,7 @@ LogRatioCoxLasso <- function(x,
       }
       cv.devnull <- 2*cv.devnull
       
-      cvfit <- cox_lasso_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],cv.devnull)
+      cvfit <- cox_lasso_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],cv.devnull,progress)
       
       cv.devnull <- 0
       loglik <- rep(0,length(lidx))
@@ -109,31 +115,40 @@ LogRatioCoxLasso <- function(x,
       
     }
     
+    mean.cvdev <- rowMeans(cvdev)
+    se.cvdev <- apply(cvdev,1,sd)
+    
+    idx.min <- which.min(mean.cvdev)
+    se.min <- se.cvdev[idx.min]
+    idx.1se <- suppressWarnings(max(which(mean.cvdev > mean.cvdev[idx.min] + se.min & 1:length(lidx) < idx.min)))
+    if (idx.1se == -Inf) idx.1se = 1
+    
+    best.beta <- list(min.mse = fullfit$beta[,idx.min],
+                      add.1se = fullfit$beta[,idx.1se])
+    
+    best.idx <- list(idx.min = idx.min,
+                     idx.1se = idx.1se)
+    
+    ret <- list(beta=fullfit$beta[,lidx],
+                lambda=fullfit$lambda[lidx],
+                loss=fullfit$loss[lidx],
+                mse=fullfit$mse[lidx],
+                cvdev.mean=mean.cvdev,
+                cvdev.se=se.cvdev,
+                best.beta=best.beta,
+                best.idx=best.idx
+    )
+    
+  }else{
+    
+    ret <- list(beta=fullfit$beta[,lidx],
+                lambda=fullfit$lambda[lidx],
+                loss=fullfit$loss[lidx],
+                mse=fullfit$mse[lidx]
+    )
+    
   }
   
-  mean.cvdev <- rowMeans(cvdev)
-  se.cvdev <- apply(cvdev,1,sd)
-  
-  idx.min <- which.min(mean.cvdev)
-  se.min <- se.cvdev[idx.min]
-  idx.1se <- max(which(mean.cvdev > mean.cvdev[idx.min] + se.min & 1:length(lidx) < idx.min))
-  if (idx.1se == -Inf) idx.1se = 1
-  
-  best.beta <- list(min.mse = fullfit$beta[,idx.min],
-                    add.1se = fullfit$beta[,idx.1se])
-  
-  best.idx <- list(idx.min = idx.min,
-                   idx.1se = idx.1se)
-  
-  ret <- list(beta=fullfit$beta[,lidx],
-              lambda=fullfit$lambda[lidx],
-              loss=fullfit$loss[lidx],
-              mse=fullfit$mse[lidx],
-              cvdev.mean=mean.cvdev,
-              cvdev.se=se.cvdev,
-              best.beta=best.beta,
-              best.idx=best.idx
-  )
   
   ret$runtime <- proc.time() - ptm
   

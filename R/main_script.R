@@ -44,7 +44,7 @@
 # # proc.time() - ptm
 # 
 # ptm <- proc.time()
-# res1 <- LogRatioLasso(dat$x,dat$y0,intercept=FALSE)
+# res1 <- LogRatioLasso(dat$x,dat$y0,intercept=FALSE,progress=TRUE)
 # proc.time() - ptm
 # ptm <- proc.time()
 # res2 <- LogRatioLasso(dat$x,dat$y,intercept=TRUE)

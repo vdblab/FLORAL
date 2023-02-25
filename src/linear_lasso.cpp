@@ -4,6 +4,9 @@
 // [[Rcpp::depends(RcppArmadillo)]]
 using namespace arma;
 using namespace std;
+// [[Rcpp::depends(RcppProgress)]]
+#include <progress.hpp>
+#include <progress_bar.hpp>
 
 // [[Rcpp::export]]
 double softthreshold(double x, double lambda){
@@ -165,7 +168,7 @@ Rcpp::List linear_lasso(arma::mat x, arma::vec y, int len){
 
 
 // [[Rcpp::export]]
-Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool intercept){
+Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool intercept, bool display_progress=true){
   
   int n = y.n_elem;
   int p = x.n_cols;
@@ -181,7 +184,11 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
   arma::mat xx = x.t()*x;
   arma::vec xy = x.t()*y;
   
+  Progress prog(len, display_progress);
+  
   for (int i=0; i<len; ++i){
+    
+    prog.increment();
     
     //if (i >= 1) lambda0 = lambda0 - inc;
     //double l = pow(10,lambda0);
@@ -248,7 +255,7 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
 
 
 // [[Rcpp::export]]
-Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda){
+Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool display_progress=true){
   
   int n = y.n_elem;
   int p = x.n_cols;
@@ -260,7 +267,11 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
   arma::vec loss = vec(len);
   arma::vec mse = vec(len);
   
+  Progress prog(len, display_progress);
+  
   for (int i=0; i<len; ++i){
+    
+    prog.increment();
     
     double l = lambda(i);
     
@@ -339,7 +350,7 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
 
 
 // [[Rcpp::export]]
-Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull){
+Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress=true){
   
   int n = t.n_elem;
   int p = x.n_cols;
@@ -352,7 +363,11 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
   arma::vec loglik;
   loglik.zeros(len);
   
+  Progress prog(len, display_progress);
+  
   for (int i=0; i<len; ++i){
+    
+    prog.increment();
     
     double l = lambda(i);
     
