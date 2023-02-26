@@ -12,7 +12,7 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' 
-#' @import caret Rcpp RcppArmadillo ggplot2 reshape RcppProgress
+#' @import Rcpp RcppArmadillo ggplot2 reshape RcppProgress
 #' @useDynLib LogRatioReg
 #' @export
 LogRatioLasso <- function(x,
@@ -32,7 +32,7 @@ LogRatioLasso <- function(x,
   p <- ncol(x)
   lambda0 <- max(t(y) %*% x)/n
   
-  lambda.min.ratio = ifelse(n < p, 1e-08, 1e-08)
+  lambda.min.ratio = ifelse(n < p, 1e-2, 1e-4)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
   if (progress) cat("Algorithm running for full dataset: \n")
@@ -115,7 +115,9 @@ LogRatioLasso <- function(x,
         theme(legend.position = "none") +
         xlab("log(lambda)") +
         ylab("Coefficient") +
-        annotate("text",x=min(beta_nzero$loglambda)-0.5,y=top10feat,label=top10name)+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
+        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
         annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
         ggtitle("Coefficients versus log(lambda)")
       
@@ -169,7 +171,7 @@ LogRatioLasso <- function(x,
         theme(legend.position = "none") +
         xlab("log(lambda)") +
         ylab("Coefficient") +
-        annotate("text",x=min(beta_nzero$loglambda)-0.5,y=top10feat,label=top10name)+
+        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
         annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
         ggtitle("Coefficients versus log(lambda)")
       

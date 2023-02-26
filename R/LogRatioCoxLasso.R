@@ -11,7 +11,7 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import survival caret Rcpp RcppArmadillo ggplot2 reshape RcppProgress
+#' @import survival Rcpp RcppArmadillo ggplot2 reshape RcppProgress
 #' @useDynLib LogRatioReg
 #' @export
 
@@ -44,7 +44,7 @@ LogRatioCoxLasso <- function(x,
   sfun = d - expect
   # hfun <- expect - sapply(t,function(x) sum(1/denomj[which(tj <= x)]^2)) + 1e-8 # hessian
   # z <- sfun/hfun
-  lambda0 <- max(t(sfun) %*% x)/n
+  lambda0 <- 2*max(t(sfun) %*% x)/n
   
   lambda.min.ratio = ifelse(n < p, 1e-02, 1e-04)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
@@ -165,7 +165,9 @@ LogRatioCoxLasso <- function(x,
         theme(legend.position = "none") +
         xlab("log(lambda)") +
         ylab("Coefficient") +
-        annotate("text",x=min(beta_nzero$loglambda)-0.5,y=top10feat,label=top10name)+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
+        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
         annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
         ggtitle("Coefficients versus log(lambda)")
       
@@ -198,6 +200,34 @@ LogRatioCoxLasso <- function(x,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx]
     )
+    
+    if (plot){
+      
+      beta_nzero <- suppressWarnings(data.frame(reshape::melt(ret$beta[rowSums(ret$beta != 0) > 0,])))
+      beta_nzero$lambda <- ret$lambda[beta_nzero$X2]
+      beta_nzero$loglambda <- log(beta_nzero$lambda)
+      
+      lambda_count <- data.frame(loglambda = log(ret$lambda),
+                                 count = colSums(ret$beta != 0))
+      lambda_count <- lambda_count[seq(5,nrow(lambda_count),length.out=10),]
+      
+      top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
+      top10name <- names(top10feat)
+      
+      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+        geom_line() + 
+        scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
+        theme_bw() + 
+        theme(legend.position = "none") +
+        xlab("log(lambda)") +
+        ylab("Coefficient") +
+        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
+        annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
+        ggtitle("Coefficients versus log(lambda)")
+      
+      ret$pcoef <- pcoef
+      
+    }
     
   }
   
