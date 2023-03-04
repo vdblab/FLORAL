@@ -201,6 +201,7 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
     
     double alpha = 0;
     int k = 0;
+    int k1 = 0;
     
     arma::vec diff = y - x*betai;
     double loss0 = accu(diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
@@ -208,7 +209,9 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
     arma::vec difftemp = y - x*betatemp;
     double lossnew = accu(difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
     
-    while (abs(lossnew - loss0) > 1e-7){
+    while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+      // Rcpp::Rcout << "lossnew: " << lossnew << endl;
+      k1 = k1 + 1;
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xy,n,l,betatemp,mu,alpha,intercept);
       difftemp = y - x*betatemp;
@@ -229,7 +232,11 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
       difftemp = y - x*betatemp;
       lossnew = accu(difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
       
-      while (abs(lossnew - loss0) > 1e-7){
+      k1 = 0;
+      
+      while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+        // Rcpp::Rcout << "lossnew: " << lossnew << endl;
+        k1 = k1 + 1;
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xy,n,l,betatemp,mu,alpha,intercept);
         difftemp = y - x*betatemp;
@@ -284,6 +291,7 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
     
     double alpha = 0;
     int k = 0;
+    int k1 = 0;
     
     // Rcpp::Rcout << "i: " << i<< endl;
     
@@ -301,7 +309,11 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
     arma::vec difftemp = z - x*betatemp;
     double lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
     
-    while (abs(lossnew - loss0) > 1e-7){
+    k1 = 0;
+    
+    while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+      // Rcpp::Rcout << "lossnew: " << lossnew << endl;
+      k1 = k1 + 1;
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
       difftemp = z - x*betatemp;
@@ -322,7 +334,11 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
       difftemp = z - x*betatemp;
       lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
       
-      while (abs(lossnew - loss0) > 1e-7){
+      k1 = 0;
+      
+      while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+        // Rcpp::Rcout << "lossnew: " << lossnew << endl;
+        k1 = k1 + 1;
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
         difftemp = z - x*betatemp;
