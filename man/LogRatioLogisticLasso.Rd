@@ -10,6 +10,7 @@ LogRatioLogisticLasso(
   length.lambda = 100,
   mu = 1,
   ncv = 5,
+  foldid = NULL,
   progress = TRUE,
   plot = TRUE
 )
@@ -24,6 +25,8 @@ LogRatioLogisticLasso(
 \item{mu}{Value of penalty for the augmented Lagrangian}
 
 \item{ncv}{Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.}
+
+\item{foldid}{A vector of fold indicator. Default is `NULL`.}
 
 \item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
 

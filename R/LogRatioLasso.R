@@ -7,6 +7,7 @@
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
 #' @param intercept TRUE or FALSE, indicating whether an intercept should be estimated.
+#' @param foldid A vector of fold indicator. Default is `NULL`.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
@@ -21,6 +22,7 @@ LogRatioLasso <- function(x,
                           mu=1,
                           ncv=5,
                           intercept=FALSE,
+                          foldid=NULL,
                           progress=TRUE,
                           plot=TRUE){
   
@@ -53,16 +55,20 @@ LogRatioLasso <- function(x,
     
     cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
     
-    labels <- caret::createFolds(1:nrow(x),k=ncv)
+    if (is.null(foldid)){
+      labels <- caret::createFolds(1:nrow(x),k=ncv)
+    }else{
+      labels <- foldid
+    }
     
     for (cv in 1:ncv){
       
       if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
       
-      train.x <- x[-labels[[cv]],]
-      train.y <- y[-labels[[cv]]]
-      test.x <- x[labels[[cv]],]
-      test.y <- y[labels[[cv]]]
+      train.x <- x[labels!=cv,]
+      train.y <- y[labels!=cv]
+      test.x <- x[labels==cv,]
+      test.y <- y[labels==cv]
       
       cvfit <- linear_lasso_al(train.x,train.y,length.lambda,mu,100,lambda,FALSE,progress)
       
@@ -92,7 +98,8 @@ LogRatioLasso <- function(x,
                 cvmse.mean=mean.cvmse,
                 cvmse.se=se.cvmse,
                 best.beta=best.beta,
-                best.idx=best.idx
+                best.idx=best.idx,
+                foldid=labels
     )
     
     if (plot){

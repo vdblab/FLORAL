@@ -11,6 +11,7 @@ LogRatioLasso(
   mu = 1,
   ncv = 5,
   intercept = FALSE,
+  foldid = NULL,
   progress = TRUE,
   plot = TRUE
 )
@@ -27,6 +28,8 @@ LogRatioLasso(
 \item{ncv}{Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.}
 
 \item{intercept}{TRUE or FALSE, indicating whether an intercept should be estimated.}
+
+\item{foldid}{A vector of fold indicator. Default is `NULL`.}
 
 \item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
 

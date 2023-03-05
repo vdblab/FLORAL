@@ -6,6 +6,7 @@
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
+#' @param foldid A vector of fold indicator. Default is `NULL`.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
@@ -20,6 +21,7 @@ LogRatioCoxLasso <- function(x,
                              length.lambda=100,
                              mu=1,
                              ncv=5,
+                             foldid=NULL,
                              progress=TRUE,
                              plot=TRUE){
   
@@ -67,8 +69,13 @@ LogRatioCoxLasso <- function(x,
     cvdev <- matrix(0,nrow=length(lidx),ncol=ncv)
     cvdevnull <- rep(0,ncol=ncv)
     
+    if (is.null(foldid)){
+      labels <- coxsplity(as.matrix(y),ncv)
+    }else{
+      labels <- foldid
+    }
+    
     # labels <- caret::createFolds(factor(d),k=ncv)
-    labels <- coxsplity(as.matrix(y),ncv)
     
     for (cv in 1:ncv){
       
@@ -109,9 +116,8 @@ LogRatioCoxLasso <- function(x,
             log(colSums(exp(linprod[test.t >= test.tj[j],])) + 1e-8)
         }else if (sum(test.t >= test.tj[j]) == 1){
           cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
-            log(sum(exp(linprod[test.t >= test.tj[j],])) + 1e-8)
+            log(exp(linprod[test.t >= test.tj[j],]) + 1e-8) 
         }
-        
         
         #- log(accu(link(widx))+1e-8)
       }
@@ -142,7 +148,8 @@ LogRatioCoxLasso <- function(x,
                 cvdev.mean=mean.cvdev,
                 cvdev.se=se.cvdev,
                 best.beta=best.beta,
-                best.idx=best.idx
+                best.idx=best.idx,
+                foldid=labels
     )
     
     if (plot){

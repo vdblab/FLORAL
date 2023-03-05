@@ -6,6 +6,7 @@
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
+#' @param foldid A vector of fold indicator. Default is `NULL`.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
@@ -20,6 +21,7 @@ LogRatioLogisticLasso <- function(x,
                           length.lambda=100,
                           mu=1,
                           ncv=5,
+                          foldid=NULL,
                           progress=TRUE,
                           plot=TRUE){
   
@@ -47,16 +49,20 @@ LogRatioLogisticLasso <- function(x,
     
     cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
     
-    labels <- caret::createFolds(factor(y),k=ncv)
+    if (is.null(foldid)){
+      labels <- caret::createFolds(factor(y),k=ncv,list=FALSE)
+    }else{
+      labels <- foldid
+    }
     
     for (cv in 1:ncv){
       
       if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
       
-      train.x <- x[-labels[[cv]],]
-      train.y <- y[-labels[[cv]]]
-      test.x <- x[labels[[cv]],]
-      test.y <- y[labels[[cv]]]
+      train.x <- x[labels!=cv,]
+      train.y <- y[labels!=cv]
+      test.x <- x[labels==cv,]
+      test.y <- y[labels==cv]
       
       cvfit <- logistic_lasso_al(train.x,train.y,length.lambda,mu,100,lambda,progress)
       
@@ -90,7 +96,8 @@ LogRatioLogisticLasso <- function(x,
                 cvmse.se=se.cvmse,
                 best.beta=best.beta,
                 best.beta0=best.beta0,
-                best.idx=best.idx
+                best.idx=best.idx,
+                foldid=labels
     )
     
     if (plot){
