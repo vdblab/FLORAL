@@ -4,9 +4,11 @@
 #' @param x Covariate data matrix
 #' @param y A `survival::Surv` object
 #' @param length.lambda Number of penalty parameters used in the path
+#' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is `NULL`, where the ratio is chosen as 1e-2 if n < p and 1e-4 otherwise.
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
 #' @param foldid A vector of fold indicator. Default is `NULL`.
+#' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
@@ -19,9 +21,11 @@
 LogRatioCoxLasso <- function(x,
                              y,
                              length.lambda=100,
+                             lambda.min.ratio=NULL,
                              mu=1,
                              ncv=5,
                              foldid=NULL,
+                             step2=FALSE,
                              progress=TRUE,
                              plot=TRUE){
   
@@ -31,6 +35,7 @@ LogRatioCoxLasso <- function(x,
   d <- y[,2]
   n <- nrow(y)
   p <- ncol(x)
+  if (length(unique(t)) < n)  t <- t+runif(n,min=0,max=1e-4) # break ties
   
   tj <- sort(t[d==1])
   devnull <- log(sum(t >= tj[1]))
@@ -48,7 +53,7 @@ LogRatioCoxLasso <- function(x,
   # z <- sfun/hfun
   lambda0 <- 2*max(t(sfun) %*% x)/n
   
-  lambda.min.ratio = ifelse(n < p, 1e-02, 1e-04)
+  if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
   if (progress) cat("Algorithm running for full dataset: \n")
@@ -118,7 +123,6 @@ LogRatioCoxLasso <- function(x,
           cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
             log(exp(linprod[test.t >= test.tj[j],]) + 1e-8) 
         }
-        
         #- log(accu(link(widx))+1e-8)
       }
       cvdevnull[cv] <- 2*cv.devnull
@@ -197,6 +201,50 @@ LogRatioCoxLasso <- function(x,
       
       ret$pcoef <- pcoef
       ret$pdev <- pdev
+      
+    }
+    
+    if (step2){
+      
+      if (length(which(ret$best.beta$min.mse!=0))){
+        idxs <- combn(which(ret$best.beta$min.mse!=0),2)
+        x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
+        for (k in 1:ncol(idxs)){
+          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+        }
+        df_step2 <- data.frame(d=d,t=t,x=x.select.min)
+        step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
+        vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+        
+        selected <- idxs[,vars]
+        for (k1 in 1:nrow(selected)){
+          for (k2 in 1:ncol(selected)){
+            selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+          }
+        }
+        ret$step2.feature.min = selected
+        ret$step2fit.min <- step2fit
+      }
+      
+      if (length(which(ret$best.beta$add.1se!=0))){
+        idxs <- combn(which(ret$best.beta$add.1se!=0),2)
+        x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
+        for (k in 1:ncol(idxs)){
+          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+        }
+        df_step2 <- data.frame(d=d,t=t,x=x.select.min)
+        step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
+        vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+        
+        selected <- idxs[,vars]
+        for (k1 in 1:nrow(selected)){
+          for (k2 in 1:ncol(selected)){
+            selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+          }
+        }
+        ret$step2.feature.1se = selected
+        ret$step2fit.1se <- step2fit
+      }
       
     }
     
