@@ -36,7 +36,7 @@ LogRatioLogisticLasso <- function(x,
   sfun = y-0.5
   lambda0 <- max(t(sfun) %*% x)/n
   
-  if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
+  if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
@@ -155,7 +155,7 @@ LogRatioLogisticLasso <- function(x,
     
     if (step2){
       
-      if (length(which(ret$best.beta$min.mse!=0))){
+      if (length(which(ret$best.beta$min.mse!=0)) <= 10 & length(which(ret$best.beta$min.mse!=0)) > 0){
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
@@ -164,6 +164,10 @@ LogRatioLogisticLasso <- function(x,
         df_step2 <- data.frame(y=y,x=x.select.min)
         step2fit <- step(glm(y~.,data=df_step2,family=binomial),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+        
+        if (ncol(idxs) == 1 & length(vars) == 2){
+          vars = 1
+        }
         
         selected <- idxs[,vars]
         for (k1 in 1:nrow(selected)){
@@ -175,7 +179,7 @@ LogRatioLogisticLasso <- function(x,
         ret$step2fit.min <- step2fit
       }
       
-      if (length(which(ret$best.beta$add.1se!=0))){
+      if (length(which(ret$best.beta$add.1se!=0)) <= 10 & length(which(ret$best.beta$add.1se!=0)) > 0){
         idxs <- combn(which(ret$best.beta$add.1se!=0),2)
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
@@ -184,6 +188,10 @@ LogRatioLogisticLasso <- function(x,
         df_step2 <- data.frame(y=y,x=x.select.min)
         step2fit <- step(glm(y~.,data=df_step2,family=binomial),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+        
+        if (ncol(idxs) == 1 & length(vars) == 2){
+          vars = 1
+        }
         
         selected <- idxs[,vars]
         for (k1 in 1:nrow(selected)){

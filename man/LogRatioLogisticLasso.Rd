@@ -8,9 +8,11 @@ LogRatioLogisticLasso(
   x,
   y,
   length.lambda = 100,
+  lambda.min.ratio = NULL,
   mu = 1,
   ncv = 5,
   foldid = NULL,
+  step2 = FALSE,
   progress = TRUE,
   plot = TRUE
 )
@@ -22,11 +24,15 @@ LogRatioLogisticLasso(
 
 \item{length.lambda}{Number of penalty parameters used in the path}
 
+\item{lambda.min.ratio}{Ratio between the minimum and maximum choice of lambda. Default is `NULL`, where the ratio is chosen as 1e-2 if n < p and 1e-4 otherwise.}
+
 \item{mu}{Value of penalty for the augmented Lagrangian}
 
 \item{ncv}{Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.}
 
 \item{foldid}{A vector of fold indicator. Default is `NULL`.}
+
+\item{step2}{TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.}
 
 \item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
 

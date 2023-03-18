@@ -11,10 +11,12 @@
 #' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
+#' @param mcv Metric for cross validation prediction assessment. Default is `Deviance`. An alternative option is `Cindex`.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
 #' @import survival Rcpp RcppArmadillo ggplot2 reshape RcppProgress
+#' @importFrom survcomp concordance.index
 #' @useDynLib LogRatioReg
 #' @export
 
@@ -27,7 +29,8 @@ LogRatioCoxLasso <- function(x,
                              foldid=NULL,
                              step2=FALSE,
                              progress=TRUE,
-                             plot=TRUE){
+                             plot=TRUE,
+                             mcv="Deviance"){
   
   ptm <- proc.time()
   
@@ -53,7 +56,7 @@ LogRatioCoxLasso <- function(x,
   # z <- sfun/hfun
   lambda0 <- 2*max(t(sfun) %*% x)/n
   
-  if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
+  if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
   if (progress) cat("Algorithm running for full dataset: \n")
@@ -113,20 +116,34 @@ LogRatioCoxLasso <- function(x,
       loglik <- rep(0,length(lidx))
       linprod <- test.x %*% cvfit$beta
       
-      test.tj <- sort(test.t[test.d==1])
-      for (j in 1:length(test.tj)){
-        cv.devnull <- cv.devnull + log(sum(test.t >= test.tj[j]))
-        if (sum(test.t >= test.tj[j]) > 1){
-          cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
-            log(colSums(exp(linprod[test.t >= test.tj[j],])) + 1e-8)
-        }else if (sum(test.t >= test.tj[j]) == 1){
-          cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
-            log(exp(linprod[test.t >= test.tj[j],]) + 1e-8) 
+      if (mcv == "Deviance"){
+        
+        test.tj <- sort(test.t[test.d==1])
+        for (j in 1:length(test.tj)){
+          cv.devnull <- cv.devnull + log(sum(test.t >= test.tj[j]))
+          if (sum(test.t >= test.tj[j]) > 1){
+            cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
+              log(colSums(exp(linprod[test.t >= test.tj[j],])) + 1e-8)
+          }else if (sum(test.t >= test.tj[j]) == 1){
+            cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
+              log(exp(linprod[test.t >= test.tj[j],]) + 1e-8) 
+          }
+          #- log(accu(link(widx))+1e-8)
         }
-        #- log(accu(link(widx))+1e-8)
+        
+        cvdevnull[cv] <- 2*cv.devnull
+        cvdev[,cv] <- -2*cvdev[,cv]
+        
+      }else if (mcv == "Cindex"){
+        
+        for (kk in 1:length(lidx)){
+          cvdev[kk,cv] <- 1-concordance.index(x=linprod[,kk],surv.time=test.t,surv.event=test.d)$c.index
+        }
+        
       }
-      cvdevnull[cv] <- 2*cv.devnull
-      cvdev[,cv] <- -2*cvdev[,cv]
+      
+      
+     
       # cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y - exp(x)/(1+exp(x)))^2)/length(test.y))
       
     }
@@ -204,9 +221,9 @@ LogRatioCoxLasso <- function(x,
       
     }
     
-    if (step2){
+    if (step2){ # need to develop a equivalent lasso procedure for this. Stepwise selection is too slow for a big number of selected variables.
       
-      if (length(which(ret$best.beta$min.mse!=0))){
+      if (length(which(ret$best.beta$min.mse!=0)) <= 10 & length(which(ret$best.beta$min.mse!=0)) > 0){
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
@@ -215,6 +232,10 @@ LogRatioCoxLasso <- function(x,
         df_step2 <- data.frame(d=d,t=t,x=x.select.min)
         step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+        
+        if (ncol(idxs) == 1 & length(vars) == 2){
+          vars = 1
+        }
         
         selected <- idxs[,vars]
         for (k1 in 1:nrow(selected)){
@@ -226,7 +247,7 @@ LogRatioCoxLasso <- function(x,
         ret$step2fit.min <- step2fit
       }
       
-      if (length(which(ret$best.beta$add.1se!=0))){
+      if (length(which(ret$best.beta$add.1se!=0)) <= 10 & length(which(ret$best.beta$add.1se!=0)) > 0){
         idxs <- combn(which(ret$best.beta$add.1se!=0),2)
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
@@ -235,6 +256,10 @@ LogRatioCoxLasso <- function(x,
         df_step2 <- data.frame(d=d,t=t,x=x.select.min)
         step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+        
+        if (ncol(idxs) == 1 & length(vars) == 2){
+          vars = 1
+        }
         
         selected <- idxs[,vars]
         for (k1 in 1:nrow(selected)){
