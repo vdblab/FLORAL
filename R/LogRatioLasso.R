@@ -49,6 +49,7 @@ LogRatioLasso <- function(x,
   if (!is.null(colnames(x))){
     rownames(fullfit$beta) = colnames(x)
   }else{
+    colnames(x) = 1:ncol(x)
     rownames(fullfit$beta) = 1:ncol(x)
   }
   
@@ -61,7 +62,7 @@ LogRatioLasso <- function(x,
     cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
     
     if (is.null(foldid)){
-      labels <- caret::createFolds(1:nrow(x),k=ncv)
+      labels <- caret::createFolds(1:nrow(x),k=ncv,list=FALSE)
     }else{
       labels <- foldid
     }
@@ -157,14 +158,18 @@ LogRatioLasso <- function(x,
     
     if (step2){
       
-      if (length(which(ret$best.beta$min.mse!=0)) <= 10 & length(which(ret$best.beta$min.mse!=0)) > 0){
+      if (length(which(ret$best.beta$min.mse!=0)) > 0){
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
+        
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
           x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
         }
+        stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
+        x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+        idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
         df_step2 <- data.frame(y=y,x=x.select.min)
-        step2fit <- step(lm(y~.,data=df_step2),trace=0)
+        step2fit <- step(glm(y~.,data=df_step2,family=gaussian),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (ncol(idxs) == 1 & length(vars) == 2){
@@ -177,18 +182,24 @@ LogRatioLasso <- function(x,
             selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
           }
         }
+        
         ret$step2.feature.min = selected
         ret$step2fit.min <- step2fit
       }
       
-      if (length(which(ret$best.beta$add.1se!=0)) <= 10 & length(which(ret$best.beta$add.1se!=0)) > 0){
+      if (length(which(ret$best.beta$add.1se!=0)) > 0){
+        
         idxs <- combn(which(ret$best.beta$add.1se!=0),2)
+        
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
           x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
         }
+        stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
+        x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+        idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
         df_step2 <- data.frame(y=y,x=x.select.min)
-        step2fit <- step(lm(y~.,data=df_step2),trace=0)
+        step2fit <- step(glm(y~.,data=df_step2,family=gaussian),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (ncol(idxs) == 1 & length(vars) == 2){
@@ -201,6 +212,7 @@ LogRatioLasso <- function(x,
             selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
           }
         }
+        
         ret$step2.feature.1se = selected
         ret$step2fit.1se <- step2fit
       }
