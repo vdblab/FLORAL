@@ -24,10 +24,10 @@ double softthreshold(double x, double lambda){
 // [[Rcpp::export]]
 arma::vec gd_naive(arma::mat x, arma::vec y, double l, arma::vec beta){
   
-  int p = beta.n_elem;
+  unsigned int p = beta.n_elem;
   int n = x.n_rows;
   
-  for (int j = 0; j < p; ++j){
+  for (unsigned int j = 0; j < p; ++j){
     
     arma::vec r = y - x*beta;
     
@@ -44,9 +44,9 @@ arma::vec gd_naive(arma::mat x, arma::vec y, double l, arma::vec beta){
 // [[Rcpp::export]]
 arma::vec gd_cov(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta){
   
-  int p = beta.n_elem;
+  unsigned int p = beta.n_elem;
   
-  for (int j = 0; j < p; ++j){
+  for (unsigned int j = 0; j < p; ++j){
     
     arma::uvec idxy = arma::find(abs(beta) > 0);
     arma::uvec idxx = {j};
@@ -65,7 +65,7 @@ arma::vec gd_cov(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta){
 // [[Rcpp::export]]
 arma::vec gd_cov_al(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta, double mu, double alpha, bool intercept){
   
-  int p = beta.n_elem;
+  unsigned int p = beta.n_elem;
   
   if (intercept){
     
@@ -74,10 +74,13 @@ arma::vec gd_cov_al(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta,
     
     beta(0) = ((xy(0) - dot(xx(idxx,idb), beta(idb)) + dot(xx(idxx,idxx), beta(idxx)) )/n)/(accu(xx(idxx,idxx))/n);
     
-    for (int j = 1; j < p; ++j){
+    for (unsigned int j = 1; j < p; ++j){
       
       idb = arma::find(abs(beta) > 0);
       idxx = {j};
+      // cout << idxx << endl;
+      // idxx = j;
+      // cout << idxx << endl;
       
       double z = (xy(j) - dot(xx(idxx,idb), beta(idb)) + dot(xx(idxx,idxx), beta(idxx)) )/n - mu*(accu(beta(idb)) - accu(beta(idxx)) + alpha);
       
@@ -89,7 +92,7 @@ arma::vec gd_cov_al(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta,
     
   }else{
     
-    for (int j = 0; j < p; ++j){
+    for (unsigned int j = 0; j < p; ++j){
       
       arma::uvec idb = arma::find(abs(beta) > 0);
       arma::uvec idxx = {j};
@@ -112,7 +115,7 @@ arma::vec gd_cov_al(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta,
 Rcpp::List linear_lasso(arma::mat x, arma::vec y, int len){
   
   int n = y.n_elem;
-  int p = x.n_cols;
+  unsigned int p = x.n_cols;
   double lambda0 = log10(max(x.t() * y/n));
   double inc = (lambda0 + 2)/len;
   
@@ -171,7 +174,7 @@ Rcpp::List linear_lasso(arma::mat x, arma::vec y, int len){
 Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool intercept, bool display_progress=true){
   
   int n = y.n_elem;
-  int p = x.n_cols;
+  unsigned int p = x.n_cols;
   //double lambda0 = log10(max(x.t() * y/n));
   //double inc = (lambda0 + 2)/len;
   
@@ -265,7 +268,7 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
 Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool display_progress=true){
   
   int n = y.n_elem;
-  int p = x.n_cols;
+  unsigned int p = x.n_cols;
   
   arma::vec beta0;
   beta0.zeros(len);
@@ -369,7 +372,7 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
 Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress=true){
   
   int n = t.n_elem;
-  int p = x.n_cols;
+  unsigned int p = x.n_cols;
   int m = tj.n_elem;
   
   arma::mat beta;

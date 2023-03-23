@@ -163,9 +163,13 @@ LogRatioLogisticLasso <- function(x,
         for (k in 1:ncol(idxs)){
           x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
         }
-        stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
-        x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-        idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+        
+        if (ncol(x.select.min) > 1){
+          stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
+          x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+        }
+        
         df_step2 <- data.frame(y=y,x=x.select.min)
         step2fit <- step(glm(y~.,data=df_step2,family=binomial),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
@@ -175,11 +179,11 @@ LogRatioLogisticLasso <- function(x,
         }
         
         selected <- idxs[,vars]
-        for (k1 in 1:nrow(selected)){
-          for (k2 in 1:ncol(selected)){
-            selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
-          }
-        }
+        # for (k1 in 1:nrow(selected)){
+        #   for (k2 in 1:ncol(selected)){
+        #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+        #   }
+        # }
         ret$step2.feature.min = selected
         ret$step2fit.min <- step2fit
       }
@@ -192,9 +196,13 @@ LogRatioLogisticLasso <- function(x,
         for (k in 1:ncol(idxs)){
           x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
         }
-        stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
-        x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-        idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+        
+        if (ncol(x.select.min) > 1){
+          stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
+          x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+        }
+        
         df_step2 <- data.frame(y=y,x=x.select.min)
         step2fit <- step(glm(y~.,data=df_step2,family=binomial),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
@@ -204,12 +212,11 @@ LogRatioLogisticLasso <- function(x,
         }
         
         selected <- idxs[,vars]
-        for (k1 in 1:nrow(selected)){
-          for (k2 in 1:ncol(selected)){
-            selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
-          }
-        }
-        
+        # for (k1 in 1:nrow(selected)){
+        #   for (k2 in 1:ncol(selected)){
+        #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+        #   }
+        # }
         ret$step2.feature.1se = selected
         ret$step2fit.1se <- step2fit
       }
