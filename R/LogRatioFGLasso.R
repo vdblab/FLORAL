@@ -112,14 +112,14 @@ LogRatioFGLasso <- function(x,
       train.t0 <- t0[labels!=cv]
       train.t1 <- t1[labels!=cv]
       train.tt <- y[labels!=cv,1:2]
-      train.w <- w[labels!=cv]
+      train.w <- weight[labels!=cv]
       
       test.x <- x[labels==cv,]
       test.d <- d[labels==cv]
       test.t0 <- t0[labels==cv]
       test.t1 <- t1[labels==cv]
       test.tt <- y[labels==cv,1:2]
-      test.w <- w[labels==cv]
+      test.w <- weight[labels==cv]
       
       cv.devnull <- 0
       train.tj <- sort(train.t1[train.d==1])
@@ -249,13 +249,13 @@ LogRatioFGLasso <- function(x,
         }
         
         if (ncol(x.select.min) > 1){
-          stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t,d),type.measure = "deviance",family="cox")
+          stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox")
           x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
         }
         
-        df_step2 <- data.frame(t=t,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
+        df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
+        step2fit <- step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (ncol(idxs) == 1 & length(vars) == 2){
@@ -283,13 +283,13 @@ LogRatioFGLasso <- function(x,
         }
         
         if (ncol(x.select.min) > 1){
-          stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox")
+          stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox")
           x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
         }
         
         df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t0,t1,d)~.,data=df_step2),trace=0)
+        step2fit <- step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (ncol(idxs) == 1 & length(vars) == 2){
