@@ -138,6 +138,49 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cox_timedep_lasso_al
+Rcpp::List cox_timedep_lasso_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress);
+RcppExport SEXP _LogRatioReg_cox_timedep_lasso_al(SEXP xSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type t0(t0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type t1(t1SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type tj(tjSEXP);
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< int >::type ub(ubSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type devnull(devnullSEXP);
+    Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
+    rcpp_result_gen = Rcpp::wrap(cox_timedep_lasso_al(x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress));
+    return rcpp_result_gen;
+END_RCPP
+}
+// fg_lasso_al
+Rcpp::List fg_lasso_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma::vec tj, arma::vec w, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress);
+RcppExport SEXP _LogRatioReg_fg_lasso_al(SEXP xSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP dSEXP, SEXP tjSEXP, SEXP wSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type t0(t0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type t1(t1SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type d(dSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type tj(tjSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type w(wSEXP);
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< int >::type ub(ubSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type devnull(devnullSEXP);
+    Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
+    rcpp_result_gen = Rcpp::wrap(fg_lasso_al(x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_LogRatioReg_softthreshold", (DL_FUNC) &_LogRatioReg_softthreshold, 2},
@@ -148,6 +191,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_LogRatioReg_linear_lasso_al", (DL_FUNC) &_LogRatioReg_linear_lasso_al, 8},
     {"_LogRatioReg_logistic_lasso_al", (DL_FUNC) &_LogRatioReg_logistic_lasso_al, 7},
     {"_LogRatioReg_cox_lasso_al", (DL_FUNC) &_LogRatioReg_cox_lasso_al, 10},
+    {"_LogRatioReg_cox_timedep_lasso_al", (DL_FUNC) &_LogRatioReg_cox_timedep_lasso_al, 11},
+    {"_LogRatioReg_fg_lasso_al", (DL_FUNC) &_LogRatioReg_fg_lasso_al, 12},
     {NULL, NULL, 0}
 };
 

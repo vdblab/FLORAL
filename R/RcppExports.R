@@ -33,3 +33,11 @@ cox_lasso_al <- function(x, t, d, tj, len, mu, ub, lambda, devnull, display_prog
     .Call('_LogRatioReg_cox_lasso_al', PACKAGE = 'LogRatioReg', x, t, d, tj, len, mu, ub, lambda, devnull, display_progress)
 }
 
+cox_timedep_lasso_al <- function(x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE) {
+    .Call('_LogRatioReg_cox_timedep_lasso_al', PACKAGE = 'LogRatioReg', x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress)
+}
+
+fg_lasso_al <- function(x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress = TRUE) {
+    .Call('_LogRatioReg_fg_lasso_al', PACKAGE = 'LogRatioReg', x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress)
+}
+
