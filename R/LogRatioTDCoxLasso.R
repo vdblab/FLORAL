@@ -62,7 +62,7 @@ LogRatioTDCoxLasso <- function(x,
   sfun = d - expect
   # hfun <- expect - sapply(t,function(x) sum(1/denomj[which(tj <= x)]^2)) + 1e-8 # hessian
   # z <- sfun/hfun
-  lambda0 <- 2*max(t(sfun) %*% x)/n
+  lambda0 <- max(abs(t(sfun) %*% x))/n
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))

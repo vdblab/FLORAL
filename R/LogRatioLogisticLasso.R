@@ -34,7 +34,7 @@ LogRatioLogisticLasso <- function(x,
   n <- length(y)
   p <- ncol(x)
   sfun = y-0.5
-  lambda0 <- max(t(sfun) %*% x)/n
+  lambda0 <- max(abs(t(sfun) %*% x))/n
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   
