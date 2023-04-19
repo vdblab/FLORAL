@@ -25,12 +25,12 @@ linear_lasso_al <- function(x, y, len, mu, ub, lambda, intercept, display_progre
     .Call('_LogRatioReg_linear_lasso_al', PACKAGE = 'LogRatioReg', x, y, len, mu, ub, lambda, intercept, display_progress)
 }
 
-logistic_lasso_al <- function(x, y, len, mu, ub, lambda, display_progress = TRUE) {
-    .Call('_LogRatioReg_logistic_lasso_al', PACKAGE = 'LogRatioReg', x, y, len, mu, ub, lambda, display_progress)
+logistic_lasso_al <- function(x, y, len, mu, ub, lambda, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE) {
+    .Call('_LogRatioReg_logistic_lasso_al', PACKAGE = 'LogRatioReg', x, y, len, mu, ub, lambda, display_progress, loop1, loop2)
 }
 
-cox_lasso_al <- function(x, t, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE) {
-    .Call('_LogRatioReg_cox_lasso_al', PACKAGE = 'LogRatioReg', x, t, d, tj, len, mu, ub, lambda, devnull, display_progress)
+cox_lasso_al <- function(x, t, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE, notcv = TRUE) {
+    .Call('_LogRatioReg_cox_lasso_al', PACKAGE = 'LogRatioReg', x, t, d, tj, len, mu, ub, lambda, devnull, display_progress, loop1, loop2, notcv)
 }
 
 cox_timedep_lasso_al <- function(x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE) {

@@ -265,7 +265,7 @@ Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub,
 
 
 // [[Rcpp::export]]
-Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool display_progress=true){
+Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool display_progress=true, bool loop1=false, bool loop2=false){
   
   int n = y.n_elem;
   unsigned int p = x.n_cols;
@@ -315,6 +315,18 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
     k1 = 0;
     
     while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+      
+      if (loop2){
+        beta0i = mean(z0 - x*betatemp);
+        prob = exp(beta0i + x*betatemp)/(1 + exp(beta0i + x*betatemp));
+        sfun = y - prob;
+        hfun = prob % (1-prob) + 1e-8;
+        z0 = beta0i + x*betatemp + sfun/hfun;
+        z = z0 - mean(z0);
+        xx = x.t()*diagmat(hfun)*x;
+        xz = x.t()*(z % hfun);
+      }
+      
       // Rcpp::Rcout << "lossnew: " << lossnew << endl;
       k1 = k1 + 1;
       loss0 = lossnew;
@@ -324,6 +336,17 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
     }
     
     while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
+      
+      if (loop1){
+        beta0i = mean(z0 - x*betatemp);
+        prob = exp(beta0i + x*betatemp)/(1 + exp(beta0i + x*betatemp));
+        sfun = y - prob;
+        hfun = prob % (1-prob) + 1e-8;
+        z0 = beta0i + x*betatemp + sfun/hfun;
+        z = z0 - mean(z0);
+        xx = x.t()*diagmat(hfun)*x;
+        xz = x.t()*(z % hfun);
+      }
       
       k = k+1;
       // Rcpp::Rcout << "k: " << k << endl;
@@ -340,6 +363,18 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
       k1 = 0;
       
       while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+        
+        if (loop2){
+          beta0i = mean(z0 - x*betatemp);
+          prob = exp(beta0i + x*betatemp)/(1 + exp(beta0i + x*betatemp));
+          sfun = y - prob;
+          hfun = prob % (1-prob) + 1e-8;
+          z0 = beta0i + x*betatemp + sfun/hfun;
+          z = z0 - mean(z0);
+          xx = x.t()*diagmat(hfun)*x;
+          xz = x.t()*(z % hfun);
+        }
+        
         // Rcpp::Rcout << "lossnew: " << lossnew << endl;
         k1 = k1 + 1;
         loss0 = lossnew;
@@ -369,7 +404,7 @@ Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int u
 
 
 // [[Rcpp::export]]
-Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress=true){
+Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress=true, bool loop1=false, bool loop2=false, bool notcv=true){
   
   int n = t.n_elem;
   unsigned int p = x.n_cols;
@@ -440,9 +475,12 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
       // Rcpp::Rcout << "Delta Dev: " << -2*loglik(i-1) - devnull<< endl;
       // Rcpp::Rcout << "0.99Devnull: " << 0.99*devnull << endl;
       
-      if (-2*loglik(i-1) - devnull >= 0.99*devnull){
-        break;
+      if (notcv){
+        if (-2*loglik(i-1) - devnull >= 0.99*devnull){
+          break;
+        }
       }
+      
     }
     
     
@@ -469,6 +507,36 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
     double lossnew = accu(hfun % difftemp % difftemp)/(2*n) + l*accu(abs(betatemp)) + mu*pow(accu(betatemp) + alpha,2)/2;
     
     while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+      
+      if (loop2){
+        
+        d1.zeros(n);
+        d2.zeros(n);
+        
+        widx = find(t >= tj(0));
+        denomj(0) = accu(link(widx)) + 1e-8;
+        
+        d1(widx) = d1(widx) + 1/denomj(0);
+        d2(widx) = d2(widx) + 1/pow(denomj(0),2);
+        
+        for (int j=1; j<m; ++j){
+          idx = find(t >= tj(j-1) && t < tj(j));
+          denomj(j) = denomj(j-1) - accu(link(idx)) + 1e-8;
+          
+          widx = find(t >= tj(j));
+          d1(widx) = d1(widx) + 1/denomj(j);
+          d2(widx) = d2(widx) + 1/pow(denomj(j),2);
+          
+        }
+        
+        link = exp(x*betatemp);
+        sfun = d - link % d1;
+        hfun = link % d1 - d2 % pow(link,2) + 1e-8;
+        z =  x*betatemp + sfun/hfun;
+        xx = x.t()*diagmat(hfun)*x;
+        xz = x.t()*(z % hfun);
+      }
+      
       k1 = k1 + 1;
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xz,n,l,betatemp,mu,alpha,false);
@@ -477,6 +545,35 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
     }
     
     while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
+      
+      if (loop1){
+        
+        d1.zeros(n);
+        d2.zeros(n);
+        
+        widx = find(t >= tj(0));
+        denomj(0) = accu(link(widx)) + 1e-8;
+        
+        d1(widx) = d1(widx) + 1/denomj(0);
+        d2(widx) = d2(widx) + 1/pow(denomj(0),2);
+        
+        for (int j=1; j<m; ++j){
+          idx = find(t >= tj(j-1) && t < tj(j));
+          denomj(j) = denomj(j-1) - accu(link(idx)) + 1e-8;
+          
+          widx = find(t >= tj(j));
+          d1(widx) = d1(widx) + 1/denomj(j);
+          d2(widx) = d2(widx) + 1/pow(denomj(j),2);
+          
+        }
+        
+        link = exp(x*betatemp);
+        sfun = d - link % d1;
+        hfun = link % d1 - d2 % pow(link,2) + 1e-8;
+        z =  x*betatemp + sfun/hfun;
+        xx = x.t()*diagmat(hfun)*x;
+        xz = x.t()*(z % hfun);
+      }
       
       k = k+1;
       betai = betatemp;
@@ -491,6 +588,36 @@ Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int
       k1 = 0;
       
       while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+        
+        if (loop2){
+          
+          d1.zeros(n);
+          d2.zeros(n);
+          
+          widx = find(t >= tj(0));
+          denomj(0) = accu(link(widx)) + 1e-8;
+          
+          d1(widx) = d1(widx) + 1/denomj(0);
+          d2(widx) = d2(widx) + 1/pow(denomj(0),2);
+          
+          for (int j=1; j<m; ++j){
+            idx = find(t >= tj(j-1) && t < tj(j));
+            denomj(j) = denomj(j-1) - accu(link(idx)) + 1e-8;
+            
+            widx = find(t >= tj(j));
+            d1(widx) = d1(widx) + 1/denomj(j);
+            d2(widx) = d2(widx) + 1/pow(denomj(j),2);
+            
+          }
+          
+          link = exp(x*betatemp);
+          sfun = d - link % d1;
+          hfun = link % d1 - d2 % pow(link,2) + 1e-8;
+          z =  x*betatemp + sfun/hfun;
+          xx = x.t()*diagmat(hfun)*x;
+          xz = x.t()*(z % hfun);
+        }
+        
         // Rcpp::Rcout << "lossnew: " << lossnew << endl;
         k1 = k1 + 1;
         loss0 = lossnew;

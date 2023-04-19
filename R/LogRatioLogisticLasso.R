@@ -14,20 +14,23 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import Rcpp RcppArmadillo ggplot2 reshape RcppProgress glmnet
+#' @import Rcpp RcppArmadillo ggplot2 RcppProgress glmnet
+#' @importFrom reshape melt
 #' @useDynLib LogRatioReg
 #' @export
 
 LogRatioLogisticLasso <- function(x,
-                          y,
-                          length.lambda=100,
-                          lambda.min.ratio=NULL,
-                          mu=1,
-                          ncv=5,
-                          foldid=NULL,
-                          step2=FALSE,
-                          progress=TRUE,
-                          plot=TRUE){
+                                  y,
+                                  length.lambda=100,
+                                  lambda.min.ratio=NULL,
+                                  mu=1,
+                                  ncv=5,
+                                  foldid=NULL,
+                                  step2=FALSE,
+                                  progress=TRUE,
+                                  plot=TRUE,
+                                  loop1=FALSE,
+                                  loop2=FALSE){
   
   ptm <- proc.time()
   
@@ -42,7 +45,7 @@ LogRatioLogisticLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- logistic_lasso_al(x,y,length.lambda,mu,100,lambda,progress)
+  fullfit <- logistic_lasso_al(x,y,length.lambda,mu,100,lambda,progress,loop1,loop2)
   
   if (!is.null(colnames(x))){
     rownames(fullfit$beta) = colnames(x)
@@ -70,14 +73,14 @@ LogRatioLogisticLasso <- function(x,
       test.x <- x[labels==cv,]
       test.y <- y[labels==cv]
       
-      cvfit <- logistic_lasso_al(train.x,train.y,length.lambda,mu,100,lambda,progress)
+      cvfit <- logistic_lasso_al(train.x,train.y,length.lambda,mu,100,lambda,progress,loop1,loop2)
       
       cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
       
     }
     
     mean.cvmse <- rowMeans(cvmse)
-    se.cvmse <- apply(cvmse,1,sd)
+    se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
     
     idx.min <- which.min(mean.cvmse)
     se.min <- se.cvmse[idx.min]
@@ -156,7 +159,7 @@ LogRatioLogisticLasso <- function(x,
     
     if (step2){
       
-      if (length(which(ret$best.beta$min.mse!=0)) > 0){
+      if (length(which(ret$best.beta$min.mse!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
@@ -178,7 +181,16 @@ LogRatioLogisticLasso <- function(x,
           vars = 1
         }
         
-        selected <- idxs[,vars]
+        if (is.null(ncol(idxs))){
+          if (length(vars) == 2){
+            selected <- idxs
+          }else{
+            selected <- NULL
+          }
+        }else{
+          selected <- idxs[,vars]
+        }
+        
         # for (k1 in 1:nrow(selected)){
         #   for (k2 in 1:ncol(selected)){
         #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
@@ -188,7 +200,7 @@ LogRatioLogisticLasso <- function(x,
         ret$step2fit.min <- step2fit
       }
       
-      if (length(which(ret$best.beta$add.1se!=0)) > 0){
+      if (length(which(ret$best.beta$add.1se!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$add.1se!=0),2)
         
@@ -207,11 +219,15 @@ LogRatioLogisticLasso <- function(x,
         step2fit <- step(glm(y~.,data=df_step2,family=binomial),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
+        if (is.null(ncol(idxs))){
+          if (length(vars) == 2){
+            selected <- idxs
+          }else{
+            selected <- NULL
+          }
+        }else{
+          selected <- idxs[,vars]
         }
-        
-        selected <- idxs[,vars]
         # for (k1 in 1:nrow(selected)){
         #   for (k2 in 1:ncol(selected)){
         #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]

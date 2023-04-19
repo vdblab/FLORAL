@@ -15,8 +15,9 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import survival Rcpp RcppArmadillo ggplot2 reshape RcppProgress
+#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress glmnet
 #' @importFrom survcomp concordance.index
+#' @importFrom reshape melt
 #' @useDynLib LogRatioReg
 #' @export
 
@@ -30,7 +31,9 @@ LogRatioCoxLasso <- function(x,
                              step2=FALSE,
                              progress=TRUE,
                              plot=TRUE,
-                             mcv="Deviance"){
+                             mcv="Deviance",
+                             loop1=FALSE,
+                             loop2=FALSE){
   
   ptm <- proc.time()
   
@@ -61,7 +64,7 @@ LogRatioCoxLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- cox_lasso_al(x,t,d,tj,length.lambda,mu,100,lambda,devnull,progress)
+  fullfit <- cox_lasso_al(x,t,d,tj,length.lambda,mu,100,lambda,devnull,progress,loop1,loop2,notcv=TRUE)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
@@ -111,7 +114,7 @@ LogRatioCoxLasso <- function(x,
       }
       cv.devnull <- 2*cv.devnull
       
-      cvfit <- cox_lasso_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],cv.devnull,progress)
+      cvfit <- cox_lasso_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],cv.devnull,progress,loop1,loop2,notcv=FALSE)
       
       cv.devnull <- 0
       loglik <- rep(0,length(lidx))
@@ -150,7 +153,7 @@ LogRatioCoxLasso <- function(x,
     }
     
     mean.cvdev <- rowMeans(cvdev)
-    se.cvdev <- apply(cvdev,1,sd)
+    se.cvdev <- apply(cvdev,1,function(x) sd(x)/sqrt(ncv))
     
     idx.min <- which.min(mean.cvdev)
     se.min <- se.cvdev[idx.min]
@@ -224,7 +227,7 @@ LogRatioCoxLasso <- function(x,
     
     if (step2){ # need to develop a equivalent lasso procedure for this. Stepwise selection is too slow for a big number of selected variables.
       
-      if (length(which(ret$best.beta$min.mse!=0)) > 0){
+      if (length(which(ret$best.beta$min.mse!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
         
@@ -243,22 +246,17 @@ LogRatioCoxLasso <- function(x,
         step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
+        if (is.null(ncol(idxs))){
+          selected <- idxs
+        }else{
+          selected <- idxs[,vars]
         }
-        
-        selected <- idxs[,vars]
-        # for (k1 in 1:nrow(selected)){
-        #   for (k2 in 1:ncol(selected)){
-        #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
-        #   }
-        # }
         
         ret$step2.feature.min = selected
         ret$step2fit.min <- step2fit
       }
       
-      if (length(which(ret$best.beta$add.1se!=0)) > 0){
+      if (length(which(ret$best.beta$add.1se!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$add.1se!=0),2)
         
@@ -277,11 +275,12 @@ LogRatioCoxLasso <- function(x,
         step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
+        if (is.null(ncol(idxs))){
+          selected <- idxs
+        }else{
+          selected <- idxs[,vars]
         }
         
-        selected <- idxs[,vars]
         # for (k1 in 1:nrow(selected)){
         #   for (k2 in 1:ncol(selected)){
         #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]

@@ -102,8 +102,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // logistic_lasso_al
-Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool display_progress);
-RcppExport SEXP _LogRatioReg_logistic_lasso_al(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP display_progressSEXP) {
+Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool display_progress, bool loop1, bool loop2);
+RcppExport SEXP _LogRatioReg_logistic_lasso_al(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -114,13 +114,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type ub(ubSEXP);
     Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
-    rcpp_result_gen = Rcpp::wrap(logistic_lasso_al(x, y, len, mu, ub, lambda, display_progress));
+    Rcpp::traits::input_parameter< bool >::type loop1(loop1SEXP);
+    Rcpp::traits::input_parameter< bool >::type loop2(loop2SEXP);
+    rcpp_result_gen = Rcpp::wrap(logistic_lasso_al(x, y, len, mu, ub, lambda, display_progress, loop1, loop2));
     return rcpp_result_gen;
 END_RCPP
 }
 // cox_lasso_al
-Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress);
-RcppExport SEXP _LogRatioReg_cox_lasso_al(SEXP xSEXP, SEXP tSEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP) {
+Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress, bool loop1, bool loop2, bool notcv);
+RcppExport SEXP _LogRatioReg_cox_lasso_al(SEXP xSEXP, SEXP tSEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP, SEXP notcvSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -134,7 +136,10 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
     Rcpp::traits::input_parameter< double >::type devnull(devnullSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
-    rcpp_result_gen = Rcpp::wrap(cox_lasso_al(x, t, d, tj, len, mu, ub, lambda, devnull, display_progress));
+    Rcpp::traits::input_parameter< bool >::type loop1(loop1SEXP);
+    Rcpp::traits::input_parameter< bool >::type loop2(loop2SEXP);
+    Rcpp::traits::input_parameter< bool >::type notcv(notcvSEXP);
+    rcpp_result_gen = Rcpp::wrap(cox_lasso_al(x, t, d, tj, len, mu, ub, lambda, devnull, display_progress, loop1, loop2, notcv));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -189,8 +194,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_LogRatioReg_gd_cov_al", (DL_FUNC) &_LogRatioReg_gd_cov_al, 8},
     {"_LogRatioReg_linear_lasso", (DL_FUNC) &_LogRatioReg_linear_lasso, 3},
     {"_LogRatioReg_linear_lasso_al", (DL_FUNC) &_LogRatioReg_linear_lasso_al, 8},
-    {"_LogRatioReg_logistic_lasso_al", (DL_FUNC) &_LogRatioReg_logistic_lasso_al, 7},
-    {"_LogRatioReg_cox_lasso_al", (DL_FUNC) &_LogRatioReg_cox_lasso_al, 10},
+    {"_LogRatioReg_logistic_lasso_al", (DL_FUNC) &_LogRatioReg_logistic_lasso_al, 9},
+    {"_LogRatioReg_cox_lasso_al", (DL_FUNC) &_LogRatioReg_cox_lasso_al, 13},
     {"_LogRatioReg_cox_timedep_lasso_al", (DL_FUNC) &_LogRatioReg_cox_timedep_lasso_al, 11},
     {"_LogRatioReg_fg_lasso_al", (DL_FUNC) &_LogRatioReg_fg_lasso_al, 12},
     {NULL, NULL, 0}

@@ -15,7 +15,8 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' 
-#' @import Rcpp RcppArmadillo ggplot2 reshape RcppProgress
+#' @import Rcpp RcppArmadillo ggplot2 RcppProgress glmnet
+#' @importFrom reshape melt
 #' @useDynLib LogRatioReg
 #' @export
 LogRatioLasso <- function(x,
@@ -84,7 +85,7 @@ LogRatioLasso <- function(x,
     
     
     mean.cvmse <- rowMeans(cvmse)
-    se.cvmse <- apply(cvmse,1,sd)
+    se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
     
     idx.min <- which.min(mean.cvmse)
     se.min <- se.cvmse[idx.min]
@@ -158,7 +159,7 @@ LogRatioLasso <- function(x,
     
     if (step2){
       
-      if (length(which(ret$best.beta$min.mse!=0)) > 0){
+      if (length(which(ret$best.beta$min.mse!=0)) > 1){
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
         
         x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
@@ -176,11 +177,15 @@ LogRatioLasso <- function(x,
         step2fit <- step(glm(y~.,data=df_step2,family=gaussian),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
+        if (is.null(ncol(idxs))){
+          if (length(vars) == 2){
+            selected <- idxs
+          }else{
+            selected <- NULL
+          }
+        }else{
+          selected <- idxs[,vars]
         }
-        
-        selected <- idxs[,vars]
         # for (k1 in 1:nrow(selected)){
         #   for (k2 in 1:ncol(selected)){
         #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
@@ -191,7 +196,7 @@ LogRatioLasso <- function(x,
         ret$step2fit.min <- step2fit
       }
       
-      if (length(which(ret$best.beta$add.1se!=0)) > 0){
+      if (length(which(ret$best.beta$add.1se!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$add.1se!=0),2)
         
@@ -208,11 +213,15 @@ LogRatioLasso <- function(x,
         step2fit <- step(glm(y~.,data=df_step2,family=gaussian),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
+        if (is.null(ncol(idxs))){
+          if (length(vars) == 2){
+            selected <- idxs
+          }else{
+            selected <- NULL
+          }
+        }else{
+          selected <- idxs[,vars]
         }
-        
-        selected <- idxs[,vars]
         # for (k1 in 1:nrow(selected)){
         #   for (k2 in 1:ncol(selected)){
         #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]

@@ -24,7 +24,7 @@ LogRatioTDCoxLasso(
 
 \item{y}{A triplet `survival::Surv` object indicating the time period that each microbiome sample represents.}
 
-\item{id}{A covariate of subject IDs.}
+\item{id}{A vector of subject IDs.}
 
 \item{length.lambda}{Number of penalty parameters used in the path}
 

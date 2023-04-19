@@ -3,7 +3,7 @@
 #' @description Conduct Cox proportional hazards log-ratio lasso regression
 #' @param x Covariate data matrix
 #' @param y A triplet `survival::Surv` object indicating the time period that each microbiome sample represents.
-#' @param id A covariate of subject IDs.
+#' @param id A vector of subject IDs.
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is `NULL`, where the ratio is chosen as 1e-2 if n < p and 1e-4 otherwise.
 #' @param mu Value of penalty for the augmented Lagrangian
@@ -16,8 +16,9 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import survival Rcpp RcppArmadillo ggplot2 reshape RcppProgress dyplr
+#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress dyplr glmnet
 #' @importFrom survcomp concordance.index
+#' @importFrom reshape melt
 #' @useDynLib LogRatioReg
 #' @export
 
@@ -161,7 +162,7 @@ LogRatioTDCoxLasso <- function(x,
     }
     
     mean.cvdev <- rowMeans(cvdev)
-    se.cvdev <- apply(cvdev,1,sd)
+    se.cvdev <- apply(cvdev,1,function(x) sd(x)/sqrt(ncv))
     
     idx.min <- which.min(mean.cvdev)
     se.min <- se.cvdev[idx.min]
@@ -235,7 +236,7 @@ LogRatioTDCoxLasso <- function(x,
     
     if (step2){ # need to develop a equivalent lasso procedure for this. Stepwise selection is too slow for a big number of selected variables.
       
-      if (length(which(ret$best.beta$min.mse!=0)) > 0){
+      if (length(which(ret$best.beta$min.mse!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
         
@@ -254,11 +255,11 @@ LogRatioTDCoxLasso <- function(x,
         step2fit <- step(coxph(Surv(t0,t1,d)~.,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
+        if (is.null(ncol(idxs))){
+          selected <- idxs
+        }else{
+          selected <- idxs[,vars]
         }
-        
-        selected <- idxs[,vars]
         # for (k1 in 1:nrow(selected)){
         #   for (k2 in 1:ncol(selected)){
         #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
@@ -269,7 +270,7 @@ LogRatioTDCoxLasso <- function(x,
         ret$step2fit.min <- step2fit
       }
       
-      if (length(which(ret$best.beta$add.1se!=0)) > 0){
+      if (length(which(ret$best.beta$add.1se!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$add.1se!=0),2)
         
@@ -288,11 +289,11 @@ LogRatioTDCoxLasso <- function(x,
         step2fit <- step(coxph(Surv(t0,t1,d)~.,data=df_step2),trace=0)
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
+        if (is.null(ncol(idxs))){
+          selected <- idxs
+        }else{
+          selected <- idxs[,vars]
         }
-        
-        selected <- idxs[,vars]
         # for (k1 in 1:nrow(selected)){
         #   for (k2 in 1:ncol(selected)){
         #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
