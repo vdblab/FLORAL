@@ -6,7 +6,8 @@ Date: 2023-04-19
 Author: Teng Fei
 Maintainer: Teng Fei <feit1@mskcc.org>
 Description: Log-ratio Lasso Regression
-License: What license is it under?
+License: GNU GPL v3.0
+biocViews:
 Imports: Rcpp (>= 1.0.9), stats, survival, ggplot2, survcomp, reshape, dplyr, glmnet
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.2.3
