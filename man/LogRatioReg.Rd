@@ -36,7 +36,7 @@ LogRatioReg(
 
 \item{tobs}{If `longitudinal` is TRUE, `tobs` specifies time points corresponding to the rows of input `x`.}
 
-\item{failcode}{If `family = finegray`, `failcode` specifies the failure type of interest.}
+\item{failcode}{If `family = finegray`, `failcode` specifies the failure type of interest. This must be a positive integer.}
 
 \item{length.lambda}{Number of penalty parameters used in the path}
 

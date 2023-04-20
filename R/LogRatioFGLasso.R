@@ -13,11 +13,11 @@
 #' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
-#' @param mcv Metric for cross validation prediction assessment. Default is `Deviance`. An alternative option is `Cindex`.
+#' @param mcv Metric for cross validation prediction assessment. The only option for Fine-Gray model is `Deviance`.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress dplyr glmnet
+#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress dplyr glmnet grDevices utils stats
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @useDynLib LogRatioReg
@@ -153,12 +153,6 @@ LogRatioFGLasso <- function(x,
         cvdevnull[cv] <- 2*cv.devnull
         cvdev[,cv] <- -2*cvdev[,cv]
         
-      }else if (mcv == "Cindex"){
-        
-        for (kk in 1:length(lidx)){
-          cvdev[kk,cv] <- 1-concordance.index(x=linprod[,kk],surv.time=test.t,surv.event=test.d)$c.index
-        }
-        
       }
       
       # cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y - exp(x)/(1+exp(x)))^2)/length(test.y))
@@ -203,7 +197,7 @@ LogRatioFGLasso <- function(x,
       top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
       top10name <- names(top10feat)
       
-      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
         geom_line() + 
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 
@@ -222,8 +216,8 @@ LogRatioFGLasso <- function(x,
                             devaddse=ret$cvdev.mean+ret$cvdev.se,
                             devminse=ret$cvdev.mean-ret$cvdev.se)
       
-      pdev <- ggplot(devplot, aes(x=loglambda, y=dev)) +
-        geom_errorbar(aes(ymin=devminse,ymax=devaddse),color="grey")+
+      pdev <- ggplot(devplot, aes(x=.data$loglambda, y=.data$dev)) +
+        geom_errorbar(aes(ymin=.data$devminse,ymax=.data$devaddse),color="grey")+
         geom_point(color="red")+
         theme_bw() +
         xlab("log(lambda)") +
@@ -331,7 +325,7 @@ LogRatioFGLasso <- function(x,
       top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
       top10name <- names(top10feat)
       
-      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
         geom_line() + 
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 

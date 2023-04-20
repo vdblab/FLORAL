@@ -7,3 +7,4 @@ src/*.so
 src/*.dll
 R/simulation.R
 R/main_script.R
+docs

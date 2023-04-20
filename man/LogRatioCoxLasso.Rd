@@ -15,7 +15,9 @@ LogRatioCoxLasso(
   step2 = FALSE,
   progress = TRUE,
   plot = TRUE,
-  mcv = "Deviance"
+  mcv = "Deviance",
+  loop1 = FALSE,
+  loop2 = FALSE
 )
 }
 \arguments{
@@ -40,12 +42,23 @@ LogRatioCoxLasso(
 \item{plot}{TRUE or FALSE, indicating whether returning plots of model fitting.}
 
 \item{mcv}{Metric for cross validation prediction assessment. Default is `Deviance`. An alternative option is `Cindex`.}
+
+\item{loop1}{Boolean, testing an alternative computational iterative option in loops (experimental purposes).}
+
+\item{loop2}{Boolean, testing an alternative computational iterative option in loops (experimental purposes).}
 }
 \value{
 A list with path-specific estimates (beta), path (lambda), and many others.
 }
 \description{
 Conduct Cox proportional hazards log-ratio lasso regression
+}
+\examples{
+
+set.seed(23420)
+dat <- simu(n=50,p=100,model="cox")
+fit <- LogRatioCoxLasso(dat$x,survival::Surv(dat$t,dat$d),progress=FALSE)
+
 }
 \author{
 Teng Fei. Email: feit1@mskcc.org

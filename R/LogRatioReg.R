@@ -20,7 +20,7 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' 
-#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
+#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr grDevices utils stats
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @useDynLib LogRatioReg
@@ -99,8 +99,8 @@ LogRatioReg <- function(x,
         xy <- xidt %>% left_join(yid,by="id") %>% group_by(id) %>% 
           mutate(tstart = tobs,
                  tstop = ifelse(row_number()==n(),t,lead(tobs)),
-                 dd = ifelse(row_number()==n(),d,0)) %>% 
-          filter(tstart < tstop)
+                 dd = ifelse(row_number()==n(),.data$d,0)) %>% 
+          filter(.data$tstart < .data$tstop)
         
         newx <- as.matrix(xy[,colnames(x)])
         newy <- Surv(xy$tstart,xy$tstop,xy$dd)
@@ -153,8 +153,8 @@ LogRatioReg <- function(x,
         xy <- xidt %>% left_join(yid,by="id") %>% group_by(id) %>% 
           mutate(tstart = tobs,
                  tstop = ifelse(row_number()==n(),t,lead(tobs)),
-                 dd = ifelse(row_number()==n(),d,0)) %>% 
-          filter(tstart < tstop)
+                 dd = ifelse(row_number()==n(),.data$d,0)) %>% 
+          filter(.data$tstart < .data$tstop)
         
         if (is.null(failcode)){
           warning("`failcode` is `NULL`. Using the first failure type as default")

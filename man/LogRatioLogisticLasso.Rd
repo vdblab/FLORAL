@@ -14,7 +14,9 @@ LogRatioLogisticLasso(
   foldid = NULL,
   step2 = FALSE,
   progress = TRUE,
-  plot = TRUE
+  plot = TRUE,
+  loop1 = FALSE,
+  loop2 = FALSE
 )
 }
 \arguments{
@@ -37,12 +39,24 @@ LogRatioLogisticLasso(
 \item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
 
 \item{plot}{TRUE or FALSE, indicating whether returning plots of model fitting.}
+
+\item{loop1}{Boolean, testing an alternative computational iterative option in loops (experimental purposes).}
+
+\item{loop2}{Boolean, testing an alternative computational iterative option in loops (experimental purposes).}
 }
 \value{
 A list with path-specific estimates (beta), path (lambda), and many others.
 }
 \description{
 Conduct logistic log-ratio lasso regression
+}
+\examples{
+
+set.seed(23420)
+dat <- simu(n=50,p=100,model="binomial")
+fit <- LogRatioLogisticLasso(dat$x,dat$y,progress=FALSE)
+
+
 }
 \author{
 Teng Fei. Email: feit1@mskcc.org

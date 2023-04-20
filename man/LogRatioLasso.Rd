@@ -47,6 +47,13 @@ A list with path-specific estimates (beta), path (lambda), and many others.
 \description{
 Conduct linear log-ratio lasso regression
 }
+\examples{
+
+set.seed(23420)
+dat <- simu(n=50,p=100,model="linear")
+fit <- LogRatioLasso(dat$x,dat$y,progress=FALSE)
+
+}
 \author{
 Teng Fei. Email: feit1@mskcc.org
 }

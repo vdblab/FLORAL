@@ -42,7 +42,7 @@ LogRatioTDCoxLasso(
 
 \item{plot}{TRUE or FALSE, indicating whether returning plots of model fitting.}
 
-\item{mcv}{Metric for cross validation prediction assessment. Default is `Deviance`. An alternative option is `Cindex`.}
+\item{mcv}{Metric for cross validation prediction assessment. The only option for Cox regression with time-dependent covariates is `Deviance`.}
 }
 \value{
 A list with path-specific estimates (beta), path (lambda), and many others.

@@ -12,9 +12,8 @@ coxsplity=function(y, nfolds){
 }
 
 coxsplitss=function(y, id, nfolds){
-  require(dplyr)
   full = data.frame(y, foldid=0, id=id)
-  tem = full %>% group_by(id) %>% filter(row_number()==n())
+  tem = full %>% dplyr::group_by(.data$id) %>% dplyr::filter(row_number()==n())
   N=nrow(tem)
   tem$i = seq(N)
   tem=tem[order(tem$stop, tem$status), ]
@@ -24,8 +23,8 @@ coxsplitss=function(y, id, nfolds){
   tem$foldid[tem$status==1]=sample(rep(seq(nfolds), length=n1))
   tem$foldid[tem$status==0]=sample(rep(seq(nfolds), length=n2))
   
-  temif <- tem %>% select(foldid,id)  #data.frame(tem[,c("foldid","id")])
-  full <- full %>% select(start,stop,status,id) %>% left_join(temif,by="id")
+  temif <- tem %>% select(.data$foldid,.data$id)  #data.frame(tem[,c("foldid","id")])
+  full <- full %>% select(.data$start,.data$stop,.data$status,.data$id) %>% left_join(temif,by="id")
   
   foldid <- full$foldid
   

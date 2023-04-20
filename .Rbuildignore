@@ -3,3 +3,8 @@
 ^R/simulation\.R$
 ^R/main_script\.R$
 ^LICENSE$
+^\.github$
+^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$

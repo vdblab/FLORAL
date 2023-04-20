@@ -11,10 +11,19 @@
 #' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
+#' @param loop1 Boolean, testing an alternative computational iterative option in loops (experimental purposes).
+#' @param loop2 Boolean, testing an alternative computational iterative option in loops (experimental purposes).
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import Rcpp RcppArmadillo ggplot2 RcppProgress glmnet
+#' @examples 
+#' 
+#' set.seed(23420)
+#' dat <- simu(n=50,p=100,model="binomial")
+#' fit <- LogRatioLogisticLasso(dat$x,dat$y,progress=FALSE)
+#'
+#'
+#' @import Rcpp RcppArmadillo ggplot2 RcppProgress glmnet grDevices utils stats
 #' @importFrom reshape melt
 #' @useDynLib LogRatioReg
 #' @export
@@ -122,7 +131,7 @@ LogRatioLogisticLasso <- function(x,
       top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
       top10name <- names(top10feat)
       
-      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
         geom_line() + 
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 
@@ -141,8 +150,8 @@ LogRatioLogisticLasso <- function(x,
                             mseaddse=ret$cvmse.mean+ret$cvmse.se,
                             mseminse=ret$cvmse.mean-ret$cvmse.se)
       
-      pmse <- ggplot(mseplot, aes(x=loglambda, y=mse)) +
-        geom_errorbar(aes(ymin=mseminse,ymax=mseaddse),color="grey")+
+      pmse <- ggplot(mseplot, aes(x=.data$loglambda, y=.data$mse)) +
+        geom_errorbar(aes(ymin=.data$mseminse,ymax=.data$mseaddse),color="grey")+
         geom_point(color="red")+
         theme_bw() +
         xlab("log(lambda)") +
@@ -261,7 +270,7 @@ LogRatioLogisticLasso <- function(x,
       top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
       top10name <- names(top10feat)
       
-      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
         geom_line() + 
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 

@@ -12,10 +12,18 @@
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
 #' @param mcv Metric for cross validation prediction assessment. Default is `Deviance`. An alternative option is `Cindex`.
+#' @param loop1 Boolean, testing an alternative computational iterative option in loops (experimental purposes).
+#' @param loop2 Boolean, testing an alternative computational iterative option in loops (experimental purposes).
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
-#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress glmnet
+#' @examples 
+#' 
+#' set.seed(23420)
+#' dat <- simu(n=50,p=100,model="cox")
+#' fit <- LogRatioCoxLasso(dat$x,survival::Surv(dat$t,dat$d),progress=FALSE)
+#'
+#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress glmnet grDevices utils stats
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @useDynLib LogRatioReg
@@ -190,7 +198,7 @@ LogRatioCoxLasso <- function(x,
       top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
       top10name <- names(top10feat)
       
-      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
         geom_line() + 
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 
@@ -209,8 +217,8 @@ LogRatioCoxLasso <- function(x,
                             devaddse=ret$cvdev.mean+ret$cvdev.se,
                             devminse=ret$cvdev.mean-ret$cvdev.se)
       
-      pdev <- ggplot(devplot, aes(x=loglambda, y=dev)) +
-        geom_errorbar(aes(ymin=devminse,ymax=devaddse),color="grey")+
+      pdev <- ggplot(devplot, aes(x=.data$loglambda, y=.data$dev)) +
+        geom_errorbar(aes(ymin=.data$devminse,ymax=.data$devaddse),color="grey")+
         geom_point(color="red")+
         theme_bw() +
         xlab("log(lambda)") +
@@ -314,7 +322,7 @@ LogRatioCoxLasso <- function(x,
       top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
       top10name <- names(top10feat)
       
-      pcoef <- ggplot(beta_nzero, aes(x=loglambda,y=value,group=X1,color=as.factor(X1))) + 
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
         geom_line() + 
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 

@@ -5,8 +5,8 @@ Version: 0.1
 Date: 2023-04-19
 Author: Teng Fei
 Maintainer: Teng Fei <feit1@mskcc.org>
-Description: Log-ratio Lasso Regression
-License: GNU GPL v3.0
+Description: Log-ratio Lasso Regression.
+License: GPL (>= 3)
 biocViews:
 Imports: 
   Rcpp (>= 1.0.9), 
@@ -19,7 +19,10 @@ Imports:
   glmnet,
   RcppArmadillo,
   RcppProgress,
-  caret
+  caret, 
+  grDevices,
+  utils,
+  mvtnorm
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.2.3
 Encoding: UTF-8
