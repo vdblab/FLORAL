@@ -1,4 +1,4 @@
-#' FLORAL: Fit Log-ratio lasso regression for clinical outcomes
+#' FLORAL: Fit Log-ratio lasso regression for clinical outcomes 
 #'
 #' @description Conduct log-ratio lasso regression for continuous, binary and survival outcomes. 
 #' @param x Count data matrix, where rows specify subjects and columns specify features. If `x` contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in `y`.
