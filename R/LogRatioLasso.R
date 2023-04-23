@@ -153,7 +153,7 @@ LogRatioLasso <- function(x,
         }
         
         df_step2 <- data.frame(y=y,x=x.select.min)
-        step2fit <- step(glm(y~.,data=df_step2,family=gaussian),trace=0)
+        step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=gaussian),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){
@@ -189,7 +189,7 @@ LogRatioLasso <- function(x,
           idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
         }
         df_step2 <- data.frame(y=y,x=x.select.min)
-        step2fit <- step(glm(y~.,data=df_step2,family=gaussian),trace=0)
+        step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=gaussian),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){

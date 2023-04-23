@@ -225,7 +225,7 @@ LogRatioFGLasso <- function(x,
         }
         
         df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0)
+        step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){
@@ -259,7 +259,7 @@ LogRatioFGLasso <- function(x,
         }
         
         df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0)
+        step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){

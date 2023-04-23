@@ -220,7 +220,7 @@ LogRatioCoxLasso <- function(x,
         }
         
         df_step2 <- data.frame(t=t,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
+        step2fit <- suppressWarnings(step(coxph(Surv(t,d)~.,data=df_step2),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){
@@ -249,7 +249,7 @@ LogRatioCoxLasso <- function(x,
         }
         
         df_step2 <- data.frame(t=t,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
+        step2fit <- suppressWarnings(step(coxph(Surv(t,d)~.,data=df_step2),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){

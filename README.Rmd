@@ -17,6 +17,7 @@ knitr::opts_chunk$set(
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml)
+[![Codecov test coverage](https://codecov.io/gh/vdblab/FLORAL/branch/master/graph/badge.svg)](https://app.codecov.io/gh/vdblab/FLORAL?branch=master)
 <!-- badges: end -->
 
 `FLORAL` is an open-source computational tool to perform log-ratio lasso regression modeling and microbial feature selection for continuous, binary, time-to-event, and competing risk outcomes. The proposed method adapts the augmented Lagrangian algorithm for a zero-sum constraint optimization problem while enabling a two-stage screening process for extended false-positive control.
@@ -48,7 +49,7 @@ fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE)
 
 To view plots of cross-validated prediction error and parameter coefficients, use `fit$pmse` or `fit$pcoef`:
 
-```{r plot, echo = FALSE,fig.height=3,fig.width=6}
+```{r plot, echo = FALSE,fig.height=3,fig.width=6,dpi=300}
 fit$pmse
 fit$pcoef
 ```
