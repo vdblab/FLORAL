@@ -13,14 +13,14 @@ knitr::opts_chunk$set(
 )
 ```
 
-# FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates
+# FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates <img src="man/figures/logo.png" align="right" height="139" />
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml)
 [![Codecov test coverage](https://codecov.io/gh/vdblab/FLORAL/branch/master/graph/badge.svg)](https://app.codecov.io/gh/vdblab/FLORAL?branch=master)
 <!-- badges: end -->
 
-`FLORAL` is an open-source computational tool to perform log-ratio lasso regression modeling and microbial feature selection for continuous, binary, time-to-event, and competing risk outcomes. The proposed method adapts the augmented Lagrangian algorithm for a zero-sum constraint optimization problem while enabling a two-stage screening process for extended false-positive control.
+`FLORAL` is an open-source computational tool to perform log-ratio lasso regression modeling and compositional feature selection for continuous, binary, time-to-event, and competing risk outcomes. The proposed method adapts the augmented Lagrangian algorithm for a zero-sum constraint optimization problem while enabling a two-stage screening process for extended false-positive control.
 
 ## Installation
 
@@ -68,11 +68,11 @@ fit$step2.ratios
 
 More detailed interpretations can be obtained for the selected log-ratios. First, the selected log-ratios also improve the cross-validated prediction errors because these log-ratios are derived from the constrained lasso estimate. Moreover, as guided by the association table between log-ratios and the outcome, it is possible to interpret the directions of the covariate effects associated with certain log-ratios on the outcome. To view detailed associations between selected log-ratios and the outcome, set `table=TRUE` and use `fit$step2.tables` to print `gtsummary` tables for the multivariable stepwise regression models obtained by the 2-stage procedure. 
 
-```{r gtsummary1}
+```{r gtsummary1, eval=FALSE}
 fit$step2.tables$min
 ```
 
-```{r gtsummary2}
+```{r gtsummary2, eval=FALSE}
 fit$step2.tables$`1se`
 ```
 
