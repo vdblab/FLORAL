@@ -26,3 +26,6 @@ Imports:
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.2.3
 Encoding: UTF-8
+Suggests: 
+    spelling
+Language: en-US
