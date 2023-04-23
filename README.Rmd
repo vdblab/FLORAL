@@ -13,35 +13,36 @@ knitr::opts_chunk$set(
 )
 ```
 
-# LogRatioReg: Log-ratio Lasso Regression
+# FLORAL: Log-ratio Lasso Regression
 
 <!-- badges: start -->
-[![R-CMD-check](https://github.com/tengfei-emory/LogRatioReg/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/tengfei-emory/LogRatioReg/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`LogRatioReg` is an open-source computational tool to perform log-ratio lasso regression modeling and microbial feature selection for continuous, binary, time-to-event, and competing risk outcomes. The proposed method adapts the augmented Lagrangian algorithm for a zero-sum constraint optimization problem while enabling a two-stage screening process for extended false-positive control.
+`FLORAL` is an open-source computational tool to perform log-ratio lasso regression modeling and microbial feature selection for continuous, binary, time-to-event, and competing risk outcomes. The proposed method adapts the augmented Lagrangian algorithm for a zero-sum constraint optimization problem while enabling a two-stage screening process for extended false-positive control.
 
 ## Installation
 
-You can install the development version of `LogRatioReg` from [GitHub](https://github.com/) with:
+You can install the development version of `FLORAL` from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("tengfei-emory/LogRatioReg")
+devtools::install_github("vdblab/FLORAL")
 ```
 
 ## Example
 
-Here is a toy example for linear regression with 10-fold cross-validation with `LogRatioLasso()` for a simulated data with 50 samples and 100 compositional features.
+Here is a toy example for linear regression with 10-fold cross-validation for a simulated data with 50 samples and 100 compositional features.
 
 The data simulation procedure is described in the preprint.
 
 ```{r example}
 
-library(LogRatioReg)
+set.seed(23420)
+library(FLORAL)
 
 dat <- simu(n=50,p=100,model="linear")
-fit <- LogRatioLasso(dat$x,dat$y,ncv=10,progress=FALSE)
+fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE)
 
 ```
 
@@ -52,17 +53,17 @@ fit$pmse
 fit$pcoef
 ```
 
-For binary and survival outcomes, please use the corresponding functions `LogRatioLogisticLasso()` and `LogRatioCoxLasso()`. 
+For binary and survival outcomes, please specify `family="binomial"` and `family="cox"` accordingly. 
 
 ```{r example2}
 
-library(LogRatioReg)
+library(FLORAL)
 library(survival)
 
 dat.bin <- simu(n=50,p=100,model="binomial")
-fit.bin <- LogRatioLogisticLasso(dat.bin$x,dat.bin$y,ncv=10,progress=FALSE)
+fit.bin <- FLORAL(dat.bin$xcount,dat.bin$y,family="binomial",ncv=10,progress=FALSE)
 
 dat.cox <- simu(n=50,p=100,model="cox")
-fit.cox <- LogRatioCoxLasso(dat.cox$x,Surv(dat.cox$t,dat.cox$d),ncv=10,progress=FALSE)
+fit.cox <- FLORAL(dat.cox$xcount,Surv(dat.cox$t,dat.cox$d),family="cox",ncv=10,progress=FALSE)
 
 ```

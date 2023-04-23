@@ -2,42 +2,42 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 softthreshold <- function(x, lambda) {
-    .Call('_LogRatioReg_softthreshold', PACKAGE = 'LogRatioReg', x, lambda)
+    .Call('_FLORAL_softthreshold', PACKAGE = 'FLORAL', x, lambda)
 }
 
 gd_naive <- function(x, y, l, beta) {
-    .Call('_LogRatioReg_gd_naive', PACKAGE = 'LogRatioReg', x, y, l, beta)
+    .Call('_FLORAL_gd_naive', PACKAGE = 'FLORAL', x, y, l, beta)
 }
 
 gd_cov <- function(xx, xy, n, l, beta) {
-    .Call('_LogRatioReg_gd_cov', PACKAGE = 'LogRatioReg', xx, xy, n, l, beta)
+    .Call('_FLORAL_gd_cov', PACKAGE = 'FLORAL', xx, xy, n, l, beta)
 }
 
 gd_cov_al <- function(xx, xy, n, l, beta, mu, alpha, intercept) {
-    .Call('_LogRatioReg_gd_cov_al', PACKAGE = 'LogRatioReg', xx, xy, n, l, beta, mu, alpha, intercept)
+    .Call('_FLORAL_gd_cov_al', PACKAGE = 'FLORAL', xx, xy, n, l, beta, mu, alpha, intercept)
 }
 
 linear_lasso <- function(x, y, len) {
-    .Call('_LogRatioReg_linear_lasso', PACKAGE = 'LogRatioReg', x, y, len)
+    .Call('_FLORAL_linear_lasso', PACKAGE = 'FLORAL', x, y, len)
 }
 
 linear_lasso_al <- function(x, y, len, mu, ub, lambda, intercept, display_progress = TRUE) {
-    .Call('_LogRatioReg_linear_lasso_al', PACKAGE = 'LogRatioReg', x, y, len, mu, ub, lambda, intercept, display_progress)
+    .Call('_FLORAL_linear_lasso_al', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, intercept, display_progress)
 }
 
 logistic_lasso_al <- function(x, y, len, mu, ub, lambda, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE) {
-    .Call('_LogRatioReg_logistic_lasso_al', PACKAGE = 'LogRatioReg', x, y, len, mu, ub, lambda, display_progress, loop1, loop2)
+    .Call('_FLORAL_logistic_lasso_al', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, display_progress, loop1, loop2)
 }
 
 cox_lasso_al <- function(x, t, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE, notcv = TRUE) {
-    .Call('_LogRatioReg_cox_lasso_al', PACKAGE = 'LogRatioReg', x, t, d, tj, len, mu, ub, lambda, devnull, display_progress, loop1, loop2, notcv)
+    .Call('_FLORAL_cox_lasso_al', PACKAGE = 'FLORAL', x, t, d, tj, len, mu, ub, lambda, devnull, display_progress, loop1, loop2, notcv)
 }
 
 cox_timedep_lasso_al <- function(x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE) {
-    .Call('_LogRatioReg_cox_timedep_lasso_al', PACKAGE = 'LogRatioReg', x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress)
+    .Call('_FLORAL_cox_timedep_lasso_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress)
 }
 
 fg_lasso_al <- function(x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress = TRUE) {
-    .Call('_LogRatioReg_fg_lasso_al', PACKAGE = 'LogRatioReg', x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress)
+    .Call('_FLORAL_fg_lasso_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress)
 }
 

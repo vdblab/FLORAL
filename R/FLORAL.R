@@ -1,4 +1,4 @@
-#' LogRatioReg: Log-ratio lasso regression for clinical outcomes
+#' FLORAL: Fit Log-ratio lasso regression for clinical outcomes
 #'
 #' @description Conduct log-ratio lasso regression for continuous, binary and survival outcomes. 
 #' @param x Count data matrix, where rows specify subjects and columns specify features. If `x` contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in `y`.
@@ -20,28 +20,44 @@
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' 
+#' @examples 
+#' 
+#' set.seed(23420)
+#' 
+#' # Continuous outcome
+#' dat <- simu(n=50,p=100,model="linear")
+#' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE)
+#' 
+#' # Binary outcome
+#' dat <- simu(n=50,p=100,model="binomial")
+#' fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE)
+#' 
+#' # Survival outcome
+#' dat <- simu(n=50,p=100,model="cox")
+#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE)
+#' 
 #' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr grDevices utils stats
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
-#' @useDynLib LogRatioReg
+#' @useDynLib FLORAL
 #' @export
 
-LogRatioReg <- function(x,
-                        y,
-                        family="gaussian",
-                        longitudinal=FALSE,
-                        id=NULL,
-                        tobs=NULL,
-                        failcode=NULL,
-                        length.lambda=100,
-                        lambda.min.ratio=NULL,
-                        mu=1,
-                        ncv=5,
-                        intercept=FALSE,
-                        foldid=NULL,
-                        step2=FALSE,
-                        progress=TRUE,
-                        plot=TRUE){
+FLORAL <- function(x,
+                   y,
+                   family="gaussian",
+                   longitudinal=FALSE,
+                   id=NULL,
+                   tobs=NULL,
+                   failcode=NULL,
+                   length.lambda=100,
+                   lambda.min.ratio=NULL,
+                   mu=1,
+                   ncv=5,
+                   intercept=FALSE,
+                   foldid=NULL,
+                   step2=FALSE,
+                   progress=TRUE,
+                   plot=TRUE){
   
   x <- log(x+1)
   
@@ -190,6 +206,7 @@ LogRatioReg <- function(x,
       
       if (is.null(failcode)){
         warning("`failcode` is `NULL`. Using the first failure type as default")
+        failcode = 1
         df_FG <- finegray(Surv(time,status,type="mstate") ~ ., data=xy, etype=failcode,timefix = FALSE)
       }else{
         df_FG <- finegray(Surv(time,status,type="mstate") ~ ., data=xy, etype=failcode,timefix = FALSE)

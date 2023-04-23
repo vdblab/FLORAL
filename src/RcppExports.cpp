@@ -13,7 +13,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 
 // softthreshold
 double softthreshold(double x, double lambda);
-RcppExport SEXP _LogRatioReg_softthreshold(SEXP xSEXP, SEXP lambdaSEXP) {
+RcppExport SEXP _FLORAL_softthreshold(SEXP xSEXP, SEXP lambdaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -25,7 +25,7 @@ END_RCPP
 }
 // gd_naive
 arma::vec gd_naive(arma::mat x, arma::vec y, double l, arma::vec beta);
-RcppExport SEXP _LogRatioReg_gd_naive(SEXP xSEXP, SEXP ySEXP, SEXP lSEXP, SEXP betaSEXP) {
+RcppExport SEXP _FLORAL_gd_naive(SEXP xSEXP, SEXP ySEXP, SEXP lSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -39,7 +39,7 @@ END_RCPP
 }
 // gd_cov
 arma::vec gd_cov(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta);
-RcppExport SEXP _LogRatioReg_gd_cov(SEXP xxSEXP, SEXP xySEXP, SEXP nSEXP, SEXP lSEXP, SEXP betaSEXP) {
+RcppExport SEXP _FLORAL_gd_cov(SEXP xxSEXP, SEXP xySEXP, SEXP nSEXP, SEXP lSEXP, SEXP betaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -54,7 +54,7 @@ END_RCPP
 }
 // gd_cov_al
 arma::vec gd_cov_al(arma::mat xx, arma::vec xy, int n, double l, arma::vec beta, double mu, double alpha, bool intercept);
-RcppExport SEXP _LogRatioReg_gd_cov_al(SEXP xxSEXP, SEXP xySEXP, SEXP nSEXP, SEXP lSEXP, SEXP betaSEXP, SEXP muSEXP, SEXP alphaSEXP, SEXP interceptSEXP) {
+RcppExport SEXP _FLORAL_gd_cov_al(SEXP xxSEXP, SEXP xySEXP, SEXP nSEXP, SEXP lSEXP, SEXP betaSEXP, SEXP muSEXP, SEXP alphaSEXP, SEXP interceptSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -72,7 +72,7 @@ END_RCPP
 }
 // linear_lasso
 Rcpp::List linear_lasso(arma::mat x, arma::vec y, int len);
-RcppExport SEXP _LogRatioReg_linear_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP) {
+RcppExport SEXP _FLORAL_linear_lasso(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -85,7 +85,7 @@ END_RCPP
 }
 // linear_lasso_al
 Rcpp::List linear_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool intercept, bool display_progress);
-RcppExport SEXP _LogRatioReg_linear_lasso_al(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP interceptSEXP, SEXP display_progressSEXP) {
+RcppExport SEXP _FLORAL_linear_lasso_al(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP interceptSEXP, SEXP display_progressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -103,7 +103,7 @@ END_RCPP
 }
 // logistic_lasso_al
 Rcpp::List logistic_lasso_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, bool display_progress, bool loop1, bool loop2);
-RcppExport SEXP _LogRatioReg_logistic_lasso_al(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP) {
+RcppExport SEXP _FLORAL_logistic_lasso_al(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -122,7 +122,7 @@ END_RCPP
 }
 // cox_lasso_al
 Rcpp::List cox_lasso_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress, bool loop1, bool loop2, bool notcv);
-RcppExport SEXP _LogRatioReg_cox_lasso_al(SEXP xSEXP, SEXP tSEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP, SEXP notcvSEXP) {
+RcppExport SEXP _FLORAL_cox_lasso_al(SEXP xSEXP, SEXP tSEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP, SEXP notcvSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -145,7 +145,7 @@ END_RCPP
 }
 // cox_timedep_lasso_al
 Rcpp::List cox_timedep_lasso_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress);
-RcppExport SEXP _LogRatioReg_cox_timedep_lasso_al(SEXP xSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP) {
+RcppExport SEXP _FLORAL_cox_timedep_lasso_al(SEXP xSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -166,7 +166,7 @@ END_RCPP
 }
 // fg_lasso_al
 Rcpp::List fg_lasso_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma::vec tj, arma::vec w, int len, double mu, int ub, arma::vec lambda, double devnull, bool display_progress);
-RcppExport SEXP _LogRatioReg_fg_lasso_al(SEXP xSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP dSEXP, SEXP tjSEXP, SEXP wSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP) {
+RcppExport SEXP _FLORAL_fg_lasso_al(SEXP xSEXP, SEXP t0SEXP, SEXP t1SEXP, SEXP dSEXP, SEXP tjSEXP, SEXP wSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP devnullSEXP, SEXP display_progressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -188,20 +188,20 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_LogRatioReg_softthreshold", (DL_FUNC) &_LogRatioReg_softthreshold, 2},
-    {"_LogRatioReg_gd_naive", (DL_FUNC) &_LogRatioReg_gd_naive, 4},
-    {"_LogRatioReg_gd_cov", (DL_FUNC) &_LogRatioReg_gd_cov, 5},
-    {"_LogRatioReg_gd_cov_al", (DL_FUNC) &_LogRatioReg_gd_cov_al, 8},
-    {"_LogRatioReg_linear_lasso", (DL_FUNC) &_LogRatioReg_linear_lasso, 3},
-    {"_LogRatioReg_linear_lasso_al", (DL_FUNC) &_LogRatioReg_linear_lasso_al, 8},
-    {"_LogRatioReg_logistic_lasso_al", (DL_FUNC) &_LogRatioReg_logistic_lasso_al, 9},
-    {"_LogRatioReg_cox_lasso_al", (DL_FUNC) &_LogRatioReg_cox_lasso_al, 13},
-    {"_LogRatioReg_cox_timedep_lasso_al", (DL_FUNC) &_LogRatioReg_cox_timedep_lasso_al, 11},
-    {"_LogRatioReg_fg_lasso_al", (DL_FUNC) &_LogRatioReg_fg_lasso_al, 12},
+    {"_FLORAL_softthreshold", (DL_FUNC) &_FLORAL_softthreshold, 2},
+    {"_FLORAL_gd_naive", (DL_FUNC) &_FLORAL_gd_naive, 4},
+    {"_FLORAL_gd_cov", (DL_FUNC) &_FLORAL_gd_cov, 5},
+    {"_FLORAL_gd_cov_al", (DL_FUNC) &_FLORAL_gd_cov_al, 8},
+    {"_FLORAL_linear_lasso", (DL_FUNC) &_FLORAL_linear_lasso, 3},
+    {"_FLORAL_linear_lasso_al", (DL_FUNC) &_FLORAL_linear_lasso_al, 8},
+    {"_FLORAL_logistic_lasso_al", (DL_FUNC) &_FLORAL_logistic_lasso_al, 9},
+    {"_FLORAL_cox_lasso_al", (DL_FUNC) &_FLORAL_cox_lasso_al, 13},
+    {"_FLORAL_cox_timedep_lasso_al", (DL_FUNC) &_FLORAL_cox_timedep_lasso_al, 11},
+    {"_FLORAL_fg_lasso_al", (DL_FUNC) &_FLORAL_fg_lasso_al, 12},
     {NULL, NULL, 0}
 };
 
-RcppExport void R_init_LogRatioReg(DllInfo *dll) {
+RcppExport void R_init_FLORAL(DllInfo *dll) {
     R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
     R_useDynamicSymbols(dll, FALSE);
 }

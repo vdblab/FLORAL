@@ -1,6 +1,6 @@
-Package: LogRatioReg
+Package: FLORAL
 Type: Package
-Title: LogRatioReg: Log-ratio lasso regression for clinical outcomes
+Title: FLORAL: Fit LOg-RAtio Lasso regression for clinical outcomes
 Version: 0.1
 Date: 2023-04-19
 Author: Teng Fei
