@@ -202,13 +202,13 @@ LogRatioFGLasso <- function(x,
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 
         theme(legend.position = "none") +
-        xlab("log(lambda)") +
+        xlab(expression(paste("log(",lambda,")"))) +
         ylab("Coefficient") +
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
-        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
+        # annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
         annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
-        ggtitle("Coefficients versus log(lambda)")
+        ggtitle(expression(paste("Coefficients versus log(",lambda,")")))
       
       devplot <- data.frame(loglambda=log(ret$lambda),
                             dev=ret$cvdev.mean,
@@ -220,12 +220,12 @@ LogRatioFGLasso <- function(x,
         geom_errorbar(aes(ymin=.data$devminse,ymax=.data$devaddse),color="grey")+
         geom_point(color="red")+
         theme_bw() +
-        xlab("log(lambda)") +
+        xlab(expression(paste("log(",lambda,")"))) +
         ylab("Partial Likelihood Deviance")+
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
         annotate("text",x=lambda_count$loglambda,y=max(devplot$devaddse)+0.05,label=as.character(lambda_count$count))+
-        ggtitle("Cross-validated deviance versus log(lambda)")
+        ggtitle(expression(paste("Cross-validated MSE versus log(",lambda,")")))
       
       ret$pcoef <- pcoef
       ret$pdev <- pdev
@@ -330,11 +330,11 @@ LogRatioFGLasso <- function(x,
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 
         theme(legend.position = "none") +
-        xlab("log(lambda)") +
+        xlab(expression(paste("log(",lambda,")"))) +
         ylab("Coefficient") +
-        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
+        # annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
         annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
-        ggtitle("Coefficients versus log(lambda)")
+        ggtitle(expression(paste("Coefficients versus log(",lambda,")")))
       
       ret$pcoef <- pcoef
       

@@ -14,7 +14,7 @@
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
 #' @param intercept TRUE or FALSE, indicating whether an intercept should be estimated.
 #' @param foldid A vector of fold indicator. Default is `NULL`.
-#' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
+#' @param step2 TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
@@ -26,15 +26,15 @@
 #' 
 #' # Continuous outcome
 #' dat <- simu(n=50,p=100,model="linear")
-#' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE)
+#' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE)
 #' 
 #' # Binary outcome
 #' dat <- simu(n=50,p=100,model="binomial")
-#' fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE)
+#' fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
 #' 
 #' # Survival outcome
 #' dat <- simu(n=50,p=100,model="cox")
-#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE)
+#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)
 #' 
 #' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr grDevices utils stats
 #' @importFrom survcomp concordance.index
@@ -55,7 +55,7 @@ FLORAL <- function(x,
                    ncv=5,
                    intercept=FALSE,
                    foldid=NULL,
-                   step2=FALSE,
+                   step2=TRUE,
                    progress=TRUE,
                    plot=TRUE){
   
@@ -233,5 +233,31 @@ FLORAL <- function(x,
     }
     
   }
+  
+  res$loss <- NULL
+  res$mse <- NULL
+  res$best.beta$min <- res$best.beta$min.mse
+  res$best.beta$`1se` <- res$best.beta$add.1se
+  res$best.beta$min.mse <- NULL
+  res$best.beta$add.1se <- NULL
+  
+  if (step2){
+    res$selected.taxa <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                              `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
+                              min.2stage=na.omit(unique(names(res$best.beta$min)[res$step2.feature.min])),
+                              `1se.2stage`=na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se]))
+    )
+  }else{
+    res$selected.taxa <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                              `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)]
+    )
+  }
+  
+  res$step2.feature.min <- NULL
+  res$step2.feature.1se <- NULL
+  
+  res$selected.taxa <- lapply(res$selected.taxa,sort)
+  
+  return(res)
   
 }

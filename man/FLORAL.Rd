@@ -18,7 +18,7 @@ FLORAL(
   ncv = 5,
   intercept = FALSE,
   foldid = NULL,
-  step2 = FALSE,
+  step2 = TRUE,
   progress = TRUE,
   plot = TRUE
 )
@@ -50,7 +50,7 @@ FLORAL(
 
 \item{foldid}{A vector of fold indicator. Default is `NULL`.}
 
-\item{step2}{TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.}
+\item{step2}{TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.}
 
 \item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
 
@@ -68,15 +68,15 @@ set.seed(23420)
 
 # Continuous outcome
 dat <- simu(n=50,p=100,model="linear")
-fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE)
+fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE)
 
 # Binary outcome
 dat <- simu(n=50,p=100,model="binomial")
-fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE)
+fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
 
 # Survival outcome
 dat <- simu(n=50,p=100,model="cox")
-fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE)
+fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)
 
 }
 \author{
