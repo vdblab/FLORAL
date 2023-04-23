@@ -17,7 +17,7 @@ Checklist for PR reviewer
 - [ ] `usethis::use_spell_check()` runs with no spelling errors in documentation
 
 When the branch is ready to be merged into master:
-- [ ] Update `NEWS.md` with the changes from this pull request under the heading "`# tidycmprsk (development version)`". If there is an issue associated with the pull request, reference it in parentheses at the end of the update.
+- [ ] Update `NEWS.md` with the changes from this pull request under the heading "`# FLORAL (development version)`". If there is an issue associated with the pull request, reference it in parentheses at the end of the update.
 - [ ] Increment the version number using `usethis::use_version(which = "dev")` 
 - [ ] Run `usethis::use_spell_check()` again
 - [ ] Approve Pull Request
