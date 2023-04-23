@@ -1,27 +1,3 @@
-#' LogRatioTDCoxLasso: Cox log-ratio lasso regression for time-dependent microbiome data
-#'
-#' @description Conduct Cox proportional hazards log-ratio lasso regression
-#' @param x Covariate data matrix
-#' @param y A triplet `survival::Surv` object indicating the time period that each microbiome sample represents.
-#' @param id A vector of subject IDs.
-#' @param length.lambda Number of penalty parameters used in the path
-#' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is `NULL`, where the ratio is chosen as 1e-2 if n < p and 1e-4 otherwise.
-#' @param mu Value of penalty for the augmented Lagrangian
-#' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
-#' @param foldid A vector of fold indicator. Default is `NULL`.
-#' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
-#' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
-#' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
-#' @param mcv Metric for cross validation prediction assessment. The only option for Cox regression with time-dependent covariates is `Deviance`. 
-#' @return A list with path-specific estimates (beta), path (lambda), and many others.
-#' @author Teng Fei. Email: feit1@mskcc.org
-#'
-#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress dyplr glmnet grDevices utils stats
-#' @importFrom survcomp concordance.index
-#' @importFrom reshape melt
-#' @useDynLib LogRatioReg
-#' @export
-
 LogRatioTDCoxLasso <- function(x,
                                y,
                                id,

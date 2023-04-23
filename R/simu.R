@@ -19,8 +19,14 @@
 #' set.seed(23420)
 #' dat <- simu(n=50,p=100,model="linear")
 #' 
-#' @import survival grDevices utils stats mvtnorm
-#' @useDynLib LogRatioReg
+#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
+#' @importFrom survcomp concordance.index
+#' @importFrom reshape melt
+#' @importFrom utils combn
+#' @importFrom grDevices rainbow
+#' @importFrom caret createFolds
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @useDynLib FLORAL
 #' @export
 
 simu <- function(n = 100, 
