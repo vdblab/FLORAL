@@ -34,8 +34,8 @@ simu <- function(n = 100,
                  model = "linear",
                  weak = 4,
                  strong = 6,
-                 weaksize = 0.25,
-                 strongsize = 0.5,
+                 weaksize = 0.125,
+                 strongsize = 0.25,
                  pct.sparsity = 0.5,
                  rho=0,
                  intercept=FALSE){
@@ -83,6 +83,7 @@ simu <- function(n = 100,
     x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
   }
   xcount = x
+  colnames(xcount) <- paste0("taxa",1:p)
   x = log(x+1)
   
   if (model == "linear"){

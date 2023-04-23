@@ -1,13 +1,12 @@
 Package: FLORAL
 Type: Package
-Title: FLORAL: Fit LOg-RAtio Lasso regression for clinical outcomes
+Title: FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates
 Version: 0.1
-Date: 2023-04-19
+Date: 2023-04-23
 Authors@R: c(
-    person("Teng", "Fei", role = c("aut", "cre", "cph"),
+    person("Teng", "Fei", , "feit1@mskcc.org", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0001-7888-1715"))
   )
-Maintainer: Teng Fei <feit1@mskcc.org>
 Description: Log-ratio Lasso Regression.
 License: GPL (>= 3)
 biocViews:

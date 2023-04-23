@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# FLORAL: Fit LOg-RAtio Lasso regression
+# FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml)
@@ -38,13 +38,11 @@ Here is a toy example for linear regression with 10-fold cross-validation for a 
 The data simulation procedure is described in the preprint.
 
 ```{r example}
-
 set.seed(23420)
 library(FLORAL)
 
 dat <- simu(n=50,p=100,model="linear")
 fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE)
-
 ```
 
 To view plots of cross-validated prediction error and parameter coefficients, use `fit$pmse` or `fit$pcoef`:
@@ -54,17 +52,24 @@ fit$pmse
 fit$pcoef
 ```
 
+To view selected compositional features, use `fit$selected.feature`, where features are sorted by their names. Features under `min` and `1se` correspond to penalty parameter $\lambda_{\min}$ and $\lambda_{\text{1se}}$, respectively. Features under `min.2stage` and `1se.2stage` are obtained after applying 2-stage filtering based on features under `min` and `1se`, respectively.
+
+```{r feature}
+fit$selected.feature
+```
+
+To get specific ratios selected by the 2-stage procedure, use `fit$step2.ratios`, where `min` and `1se` display the ratios between features. For each identified ratio, `min.idx` and `1se.idx` return the column indices in the original input matrix for the two corresponding features forming the ratio.
+
+```{r ratio}
+fit$step2.ratios
+```
+
 For binary and survival outcomes, please specify `family="binomial"` and `family="cox"` accordingly. 
 
-```{r example2}
-
-library(FLORAL)
-library(survival)
-
+```{r example2, warning=FALSE}
 dat.bin <- simu(n=50,p=100,model="binomial")
 fit.bin <- FLORAL(dat.bin$xcount,dat.bin$y,family="binomial",ncv=10,progress=FALSE)
 
 dat.cox <- simu(n=50,p=100,model="cox")
-fit.cox <- FLORAL(dat.cox$xcount,Surv(dat.cox$t,dat.cox$d),family="cox",ncv=10,progress=FALSE)
-
+fit.cox <- FLORAL(dat.cox$xcount,survival::Surv(dat.cox$t,dat.cox$d),family="cox",ncv=10,progress=FALSE)
 ```

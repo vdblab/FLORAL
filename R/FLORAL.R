@@ -1,10 +1,10 @@
-#' FLORAL: Fit Log-ratio lasso regression for clinical outcomes 
+#' FLORAL: Fit Log-ratio lasso regression for compositional covariates 
 #'
 #' @description Conduct log-ratio lasso regression for continuous, binary and survival outcomes. 
 #' @param x Count data matrix, where rows specify subjects and columns specify features. If `x` contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in `y`.
 #' @param y Outcome. For a continuous or binary outcome, `y` is a vector. For survival outcome, `y` is a `Surv` object.
-#' @param family Available options are `gaussian`, `binomial`, `cox`, `finegray`.
-#' @param longitudinal TRUE or FALSE, indicating whether longitudinal data matrix is specified for input `x`.
+#' @param family Available options are `gaussian`, `binomial`, `cox`, `finegray`. `finegray` is still under development. Please use with caution.
+#' @param longitudinal TRUE or FALSE, indicating whether longitudinal data matrix is specified for input `x`. (Still under development. Please use with caution)
 #' @param id If `longitudinal` is TRUE, `id` specifies subject IDs corresponding to the rows of input `x`.
 #' @param tobs If `longitudinal` is TRUE, `tobs` specifies time points corresponding to the rows of input `x`.
 #' @param failcode If `family = finegray`, `failcode` specifies the failure type of interest. This must be a positive integer.
@@ -246,21 +246,40 @@ FLORAL <- function(x,
   res$best.beta$add.1se <- NULL
   
   if (step2){
-    res$selected.taxa <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
-                              `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
-                              min.2stage=na.omit(unique(names(res$best.beta$min)[res$step2.feature.min])),
-                              `1se.2stage`=na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se]))
+    res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                 `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
+                                 min.2stage=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.min]))),
+                                 `1se.2stage`=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se])))
     )
+    
+    res$step2.ratios <- list(min=character(0),
+                             `1se`=character(0),
+                             min.idx=character(0),
+                             `1se.idx`=character(0))
+    
+    if (length(res$selected.feature$min.2stage)>0){
+      namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
+      res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+      res$step2.ratios$min.idx <- res$step2.feature.min[,!is.na(colSums(res$step2.feature.min))]
+    }
+    
+    if (length(res$selected.feature$`1se.2stage`)>0){
+      namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
+      res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+      res$step2.ratios$`1se.idx` <- res$step2.feature.1se[,!is.na(colSums(res$step2.feature.1se))]
+    }
+
+    
   }else{
-    res$selected.taxa <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
-                              `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)]
+    res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                 `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)]
     )
   }
   
   res$step2.feature.min <- NULL
   res$step2.feature.1se <- NULL
   
-  res$selected.taxa <- lapply(res$selected.taxa,sort)
+  res$selected.feature <- lapply(res$selected.feature,sort)
   
   return(res)
   

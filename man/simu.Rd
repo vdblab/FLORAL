@@ -10,8 +10,8 @@ simu(
   model = "linear",
   weak = 4,
   strong = 6,
-  weaksize = 0.25,
-  strongsize = 0.5,
+  weaksize = 0.125,
+  strongsize = 0.25,
   pct.sparsity = 0.5,
   rho = 0,
   intercept = FALSE

@@ -2,7 +2,7 @@
 % Please edit documentation in R/FLORAL.R
 \name{FLORAL}
 \alias{FLORAL}
-\title{FLORAL: Fit Log-ratio lasso regression for clinical outcomes}
+\title{FLORAL: Fit Log-ratio lasso regression for compositional covariates}
 \usage{
 FLORAL(
   x,
@@ -28,9 +28,9 @@ FLORAL(
 
 \item{y}{Outcome. For a continuous or binary outcome, `y` is a vector. For survival outcome, `y` is a `Surv` object.}
 
-\item{family}{Available options are `gaussian`, `binomial`, `cox`, `finegray`.}
+\item{family}{Available options are `gaussian`, `binomial`, `cox`, `finegray`. `finegray` is still under development. Please use with caution.}
 
-\item{longitudinal}{TRUE or FALSE, indicating whether longitudinal data matrix is specified for input `x`.}
+\item{longitudinal}{TRUE or FALSE, indicating whether longitudinal data matrix is specified for input `x`. (Still under development. Please use with caution)}
 
 \item{id}{If `longitudinal` is TRUE, `id` specifies subject IDs corresponding to the rows of input `x`.}
 
