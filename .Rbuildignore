@@ -1,7 +1,5 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^R/simulation\.R$
-^R/main_script\.R$
 ^LICENSE$
 ^\.github$
 ^README\.Rmd$
