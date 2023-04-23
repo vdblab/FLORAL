@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-# FLORAL: Log-ratio Lasso Regression
+# FLORAL: Fit LOg-RAtio Lasso regression
 
 <!-- badges: start -->
 [![R-CMD-check](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml)

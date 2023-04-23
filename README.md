@@ -1,7 +1,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# FLORAL: Log-ratio Lasso Regression
+# FLORAL: Fit LOg-RAtio Lasso regression
 
 <!-- badges: start -->
 
