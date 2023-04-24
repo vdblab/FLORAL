@@ -5,7 +5,10 @@ Version: 0.1
 Date: 2023-04-23
 Authors@R: c(
     person("Teng", "Fei", , "feit1@mskcc.org", role = c("aut", "cre", "cph"),
-           comment = c(ORCID = "0000-0001-7888-1715"))
+           comment = c(ORCID = "0000-0001-7888-1715")),
+    person("Tyler", "Funnell", role=c("ctb")),
+    person("Nicholas", "Waters", role=c("ctb")),
+    person("Sandeep", "Raj", role=c("ctb"))
   )
 Description: Log-ratio Lasso Regression.
 License: GPL (>= 3)

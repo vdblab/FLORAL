@@ -10,12 +10,12 @@
 coverage](https://codecov.io/gh/vdblab/FLORAL/branch/master/graph/badge.svg)](https://app.codecov.io/gh/vdblab/FLORAL?branch=master)
 <!-- badges: end -->
 
-`FLORAL` is an open-source computational tool to perform log-ratio lasso
-regression modeling and compositional feature selection for continuous,
-binary, time-to-event, and competing risk outcomes. The proposed method
-adapts the augmented Lagrangian algorithm for a zero-sum constraint
-optimization problem while enabling a two-stage screening process for
-extended false-positive control.
+The `FLORAL` package is an open-source computational tool to perform
+log-ratio lasso regression modeling and compositional feature selection
+for continuous, binary, time-to-event, and competing risk outcomes. The
+proposed method adapts the augmented Lagrangian algorithm for a zero-sum
+constraint optimization problem while enabling a two-stage screening
+process for extended false-positive control.
 
 ## Installation
 
@@ -47,7 +47,7 @@ fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE,table=TRU
 To view plots of cross-validated prediction error and parameter
 coefficients, use `fit$pmse` or `fit$pcoef`:
 
-<img src="man/figures/README-plot-1.png" width="100%" /><img src="man/figures/README-plot-2.png" width="100%" />
+<img src="man/figures/README-plot-1.png" width="50%" /><img src="man/figures/README-plot-2.png" width="50%" />
 
 To view selected compositional features, use `fit$selected.feature`,
 where features are sorted by their names. Features under `min` and `1se`
@@ -138,3 +138,12 @@ fit.bin <- FLORAL(dat.bin$xcount,dat.bin$y,family="binomial",ncv=10,progress=FAL
 dat.cox <- simu(n=50,p=100,model="cox")
 fit.cox <- FLORAL(dat.cox$xcount,survival::Surv(dat.cox$t,dat.cox$d),family="cox",ncv=10,progress=FALSE)
 ```
+
+## Contributing
+
+The `FLORAL` package is jointly managed by [MSKCC Biostatistics
+service](https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics)
+and [the Marcel van den Brink Lab](https://vandenbrinklab.org/). Please
+note that the `FLORAL` project is released with a Contributor Code of
+Conduct. By contributing to this project, you agree to abide by its
+terms. Thank you to all contributors!
