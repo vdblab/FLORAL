@@ -41,7 +41,7 @@ set.seed(23420)
 library(FLORAL)
 
 dat <- simu(n=50,p=100,model="linear")
-fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE,table=TRUE)
+fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE)
 ```
 
 To view plots of cross-validated prediction error and parameter
@@ -51,10 +51,10 @@ coefficients, use `fit$pmse` or `fit$pcoef`:
 
 To view selected compositional features, use `fit$selected.feature`,
 where features are sorted by their names. Features under `min` and `1se`
-correspond to penalty parameter *λ*<sub>min</sub> and *λ*<sub>1se</sub>,
-respectively. Features under `min.2stage` and `1se.2stage` are obtained
-after applying 2-stage filtering based on features under `min` and
-`1se`, respectively.
+correspond to penalty parameter $\lambda_{\min}$ and
+$\lambda_{\text{1se}}$, respectively. Features under `min.2stage` and
+`1se.2stage` are obtained after applying 2-stage filtering based on
+features under `min` and `1se`, respectively.
 
 We recommend interpreting the selected compositional features as
 potential predictive markers to the outcome in the regression model in
@@ -116,9 +116,9 @@ from the constrained lasso estimate. Moreover, as guided by the
 association table between log-ratios and the outcome, it is possible to
 interpret the directions of the covariate effects associated with
 certain log-ratios on the outcome. To view detailed associations between
-selected log-ratios and the outcome, set `table=TRUE` and use
-`fit$step2.tables` to print `gtsummary` tables for the multivariable
-stepwise regression models obtained by the 2-stage procedure.
+selected log-ratios and the outcome, use `fit$step2.tables` to print
+summary tables for the multivariable stepwise regression models obtained
+by the 2-stage procedure.
 
 ``` r
 fit$step2.tables$min

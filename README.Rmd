@@ -42,7 +42,7 @@ set.seed(23420)
 library(FLORAL)
 
 dat <- simu(n=50,p=100,model="linear")
-fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE,table=TRUE)
+fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=10,progress=FALSE)
 ```
 
 To view plots of cross-validated prediction error and parameter coefficients, use `fit$pmse` or `fit$pcoef`:
@@ -66,7 +66,7 @@ To get specific log-ratios selected by the 2-stage procedure, use `fit$step2.log
 fit$step2.ratios
 ```
 
-More detailed interpretations can be obtained for the selected log-ratios. First, the selected log-ratios also improve the cross-validated prediction errors because these log-ratios are derived from the constrained lasso estimate. Moreover, as guided by the association table between log-ratios and the outcome, it is possible to interpret the directions of the covariate effects associated with certain log-ratios on the outcome. To view detailed associations between selected log-ratios and the outcome, set `table=TRUE` and use `fit$step2.tables` to print `gtsummary` tables for the multivariable stepwise regression models obtained by the 2-stage procedure. 
+More detailed interpretations can be obtained for the selected log-ratios. First, the selected log-ratios also improve the cross-validated prediction errors because these log-ratios are derived from the constrained lasso estimate. Moreover, as guided by the association table between log-ratios and the outcome, it is possible to interpret the directions of the covariate effects associated with certain log-ratios on the outcome. To view detailed associations between selected log-ratios and the outcome, use `fit$step2.tables` to print summary tables for the multivariable stepwise regression models obtained by the 2-stage procedure. 
 
 ```{r gtsummary1, eval=FALSE}
 fit$step2.tables$min
