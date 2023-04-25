@@ -1,0 +1,101 @@
+---
+title: "a-worked-example"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{a-worked-example}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(FLORAL)
+if (! "BiocManager" %in% installed.packages()) install.packages("BiocManager")
+if (! "curatedMetagenomicData" %in% installed.packages()) BiocManager::install("curatedMetagenomicData")
+library(curatedMetagenomicData)
+library(dplyr)
+library(patchwork)
+```
+
+# Using FLORAL for microbiome analysis
+
+## Data
+We will be using data from the [`curatedMetagenomicData`]() package. Take a look at the summary of the studies available:
+
+```{r}
+
+
+sampleMetadata  |> group_by(study_name, study_condition) |> count() |> arrange(study_name) 
+
+
+```
+
+As an example, lets look at the `HMP_2019_ibdmdb` study between healthy controls and IBD patients.
+
+
+```{r}
+curatedMetagenomicData("HMP_2019_ibdmdb") 
+# note --  if you are behind a firewall, see the solutions to 500 errors here:
+# https://support.bioconductor.org/p/132864/
+rawdata <- curatedMetagenomicData("2021-10-14.HMP_2019_ibdmdb.relative_abundance", dryrun = FALSE, rownames = "short") |>  mergeData()
+
+```
+
+The authors here are more familiar with `phyloseq` objects; if you are a SummarizedExperiment guru, feel free to bypass this!
+
+```{r}
+if (! "mia" %in% installed.packages()) BiocManager::install("mia")
+
+ibd_phy_raw <- mia::makePhyloseqFromTreeSummarizedExperiment(rawdata, abund_values = "relative_abundance")
+
+keepsamples <- phyloseq::sample_data(ibd_phy_raw)
+keepsamples <- keepsamples |> data.frame() |> sample_frac(.1) 
+ibd_phy <- phyloseq::prune_samples(rownames(keepsamples), ibd_phy_raw)
+
+
+```
+
+## Running FLORAL
+
+Here we extract the data from the phyloseq object to two matrices: the taxa matrix and the "outcomes" of whether a patient is healthy or has Irritable Bowel Disease (IBD).
+```{r}
+#y <- phyloseq::get_variable(ibd_phy, varName = "study_condition")
+y <- phyloseq::sample_data(ibd_phy)[,"study_condition"] 
+y$study_condition_int <- as.numeric(as.factor(y$study_condition))
+
+x <- phyloseq::otu_table(ibd_phy) |> t()
+
+fit <- FLORAL(x = x, y=y$study_condition_int, family="gaussian", ncv=10,progress=TRUE,table=FALSE)
+```
+
+## Interpretting the Model
+
+FLORAL, like other methods that have an optimization step, has two "best" solutions for \lambda available: one minimizing the mean squared error, and one maximising the value of \lambda withing 1 standard error or the minimum mean squared error.  these are refered to as the `min` and `1se` solutions, respectively.
+
+We can see the mean squared error and the coefficients vs log(\lambda) as follows:
+
+```{R}
+
+fit$pmse + fit$pcoef
+
+```
+
+
+In the coefficient plot, the colored lines represent taxa, and the vertical dashed line represents the solution for \lambda.  At that dashed line, the non-zero taxa/lines are taxa predictive of the outcome.
+
+To determine which taxa those represent, view the `fit$selected.feature$min` or `fit$selected.feature$1se` vectors.  These are tall the taxa involved in predictive pairs
+
+
+## The Two-step procedure.
+
+Given the list of taxa in predictive pairs, the next question is which pairs are significantly associated with (in this case) IBD?
+
+
