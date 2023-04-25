@@ -51,13 +51,18 @@ rawdata <- curatedMetagenomicData("2021-10-14.HMP_2019_ibdmdb.relative_abundance
 
 The authors here are more familiar with `phyloseq` objects; if you are a SummarizedExperiment guru, feel free to bypass this!
 
+
 ```{r}
 if (! "mia" %in% installed.packages()) BiocManager::install("mia")
-
 ibd_phy_raw <- mia::makePhyloseqFromTreeSummarizedExperiment(rawdata, abund_values = "relative_abundance")
+```
 
+
+To make this vignette run quickly, we could subset to a fraction of the original samples:
+```{r}
+set.seed(12543)
 keepsamples <- phyloseq::sample_data(ibd_phy_raw)
-keepsamples <- keepsamples |> data.frame() |> sample_frac(.1) 
+keepsamples <- keepsamples |> data.frame() |> sample_frac(1) 
 ibd_phy <- phyloseq::prune_samples(rownames(keepsamples), ibd_phy_raw)
 
 
@@ -67,13 +72,12 @@ ibd_phy <- phyloseq::prune_samples(rownames(keepsamples), ibd_phy_raw)
 
 Here we extract the data from the phyloseq object to two matrices: the taxa matrix and the "outcomes" of whether a patient is healthy or has Irritable Bowel Disease (IBD).
 ```{r}
-#y <- phyloseq::get_variable(ibd_phy, varName = "study_condition")
 y <- phyloseq::sample_data(ibd_phy)[,"study_condition"] 
 y$study_condition_int <- as.numeric(as.factor(y$study_condition))
 
 x <- phyloseq::otu_table(ibd_phy) |> t()
 
-fit <- FLORAL(x = x, y=y$study_condition_int, family="gaussian", ncv=10,progress=TRUE,table=FALSE)
+fit <- FLORAL(x = x, y = y$study_condition_int, family="gaussian", ncv=10, progress=TRUE)
 ```
 
 ## Interpretting the Model
@@ -98,4 +102,10 @@ To determine which taxa those represent, view the `fit$selected.feature$min` or 
 
 Given the list of taxa in predictive pairs, the next question is which pairs are significantly associated with (in this case) IBD?
 
+```{r}
+
+fit$step2.tables$`1se` |> data.frame() |> dplyr::filter(Pr...t.. < .05) |> arrange(desc(abs(Estimate)))
+# or fit$step2.tables$min
+
+```
 
