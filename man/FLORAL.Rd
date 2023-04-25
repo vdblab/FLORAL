@@ -20,8 +20,7 @@ FLORAL(
   foldid = NULL,
   step2 = TRUE,
   progress = TRUE,
-  plot = TRUE,
-  table = FALSE
+  plot = TRUE
 )
 }
 \arguments{
@@ -56,8 +55,6 @@ FLORAL(
 \item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
 
 \item{plot}{TRUE or FALSE, indicating whether returning plots of model fitting.}
-
-\item{table}{TRUE or FALSE, indicating whether returning gtsummary tables for the 2-stage stepwise model results.}
 }
 \value{
 A list with path-specific estimates (beta), path (lambda), and many others.
