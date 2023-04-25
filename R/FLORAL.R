@@ -17,7 +17,7 @@
 #' @param step2 TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
-#' @param table TRUE or FALSE, indicating whether returning gtsummary tables for the 2-stage stepwise model results.
+#' @param table TRUE or FALSE, indicating whether returning gtsummary tables for the 2-stage stepwise model results. Required gtsummary package
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' 
@@ -43,7 +43,6 @@
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
-#' @importFrom gtsummary tbl_regression
 #' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
 #' @useDynLib FLORAL
 #' @export
@@ -271,22 +270,34 @@ FLORAL <- function(x,
       res$step2.ratios$min.idx <- res$step2.feature.min[,!is.na(colSums(res$step2.feature.min))]
       
       if (table){
-        res$step2.tables$min <- suppressMessages(res$step2fit.min %>% tbl_regression())
-        res$step2.tables$min$table_body$label <- res$step2.ratios$min
+        if (!requireNamespace("gtsummary", quietly = TRUE)) {
+          warning("The gtsummary package must be installed for full table functionality")
+          res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
+          res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
+          rownames(res$step2.tables$`min`) <- res$step2.ratios$`min`
+        } else{
+          res$step2.tables$min <- suppressMessages(res$step2fit.min %>% gtsummary::tbl_regression())
+          res$step2.tables$min$table_body$label <- res$step2.ratios$min
+        }
       }
     }
-    
     if (length(res$selected.feature$`1se.2stage`)>0){
       namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
       res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
       res$step2.ratios$`1se.idx` <- res$step2.feature.1se[,!is.na(colSums(res$step2.feature.1se))]
       
       if (table){
-        res$step2.tables$`1se` <- suppressMessages(res$step2fit.1se %>% tbl_regression())
-        res$step2.tables$`1se`$table_body$label <- res$step2.ratios$`1se`
+        if (!requireNamespace("gtsummary", quietly = TRUE)) {
+          warning("The gtsummary package must be installed for full table functionality")
+          res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
+          res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
+          rownames(res$step2.tables$`1se`) <- res$step2.ratios$`1se`
+        } else{
+          res$step2.tables$`1se` <- suppressMessages(res$step2fit.1se %>% gtsummary::tbl_regression())
+          res$step2.tables$`1se`$table_body$label <- res$step2.ratios$`1se`
+        }
       }
     }
-    
     
   }else{
     res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
