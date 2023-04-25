@@ -1,34 +1,3 @@
-#' LogRatioCoxLasso: Cox log-ratio lasso regression
-#'
-#' @description Conduct Cox proportional hazards log-ratio lasso regression
-#' @param x Covariate data matrix
-#' @param y A `survival::Surv` object
-#' @param length.lambda Number of penalty parameters used in the path
-#' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is `NULL`, where the ratio is chosen as 1e-2 if n < p and 1e-4 otherwise.
-#' @param mu Value of penalty for the augmented Lagrangian
-#' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
-#' @param foldid A vector of fold indicator. Default is `NULL`.
-#' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
-#' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
-#' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
-#' @param mcv Metric for cross validation prediction assessment. Default is `Deviance`. An alternative option is `Cindex`.
-#' @param loop1 Boolean, testing an alternative computational iterative option in loops (experimental purposes).
-#' @param loop2 Boolean, testing an alternative computational iterative option in loops (experimental purposes).
-#' @return A list with path-specific estimates (beta), path (lambda), and many others.
-#' @author Teng Fei. Email: feit1@mskcc.org
-#'
-#' @examples 
-#' 
-#' set.seed(23420)
-#' dat <- simu(n=50,p=100,model="cox")
-#' fit <- LogRatioCoxLasso(dat$x,survival::Surv(dat$t,dat$d),progress=FALSE)
-#'
-#' @import survival Rcpp RcppArmadillo ggplot2 RcppProgress glmnet grDevices utils stats
-#' @importFrom survcomp concordance.index
-#' @importFrom reshape melt
-#' @useDynLib LogRatioReg
-#' @export
-
 LogRatioCoxLasso <- function(x,
                              y,
                              length.lambda=100,
@@ -203,13 +172,13 @@ LogRatioCoxLasso <- function(x,
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 
         theme(legend.position = "none") +
-        xlab("log(lambda)") +
+        xlab(expression(paste("log(",lambda,")"))) +
         ylab("Coefficient") +
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
-        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
+        # annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
         annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
-        ggtitle("Coefficients versus log(lambda)")
+        ggtitle(expression(paste("Coefficients versus log(",lambda,")")))
       
       devplot <- data.frame(loglambda=log(ret$lambda),
                             dev=ret$cvdev.mean,
@@ -221,12 +190,12 @@ LogRatioCoxLasso <- function(x,
         geom_errorbar(aes(ymin=.data$devminse,ymax=.data$devaddse),color="grey")+
         geom_point(color="red")+
         theme_bw() +
-        xlab("log(lambda)") +
+        xlab(expression(paste("log(",lambda,")"))) +
         ylab("Partial Likelihood Deviance")+
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
         geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
         annotate("text",x=lambda_count$loglambda,y=max(devplot$devaddse)+0.05,label=as.character(lambda_count$count))+
-        ggtitle("Cross-validated deviance versus log(lambda)")
+        ggtitle(expression(paste("Cross-validated deviance versus log(",lambda,")")))
       
       ret$pcoef <- pcoef
       ret$pdev <- pdev
@@ -251,7 +220,7 @@ LogRatioCoxLasso <- function(x,
         }
         
         df_step2 <- data.frame(t=t,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
+        step2fit <- suppressWarnings(step(coxph(Surv(t,d)~.,data=df_step2),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){
@@ -280,7 +249,7 @@ LogRatioCoxLasso <- function(x,
         }
         
         df_step2 <- data.frame(t=t,d=d,x=x.select.min)
-        step2fit <- step(coxph(Surv(t,d)~.,data=df_step2),trace=0)
+        step2fit <- suppressWarnings(step(coxph(Surv(t,d)~.,data=df_step2),trace=0))
         vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
         
         if (is.null(ncol(idxs))){
@@ -327,11 +296,11 @@ LogRatioCoxLasso <- function(x,
         scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
         theme_bw() + 
         theme(legend.position = "none") +
-        xlab("log(lambda)") +
+        xlab(expression(paste("log(",lambda,")"))) +
         ylab("Coefficient") +
-        annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
+        # annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
         annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
-        ggtitle("Coefficients versus log(lambda)")
+        ggtitle(expression(paste("Coefficients versus log(",lambda,")")))
       
       ret$pcoef <- pcoef
       

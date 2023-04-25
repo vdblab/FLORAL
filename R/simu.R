@@ -19,8 +19,14 @@
 #' set.seed(23420)
 #' dat <- simu(n=50,p=100,model="linear")
 #' 
-#' @import survival grDevices utils stats mvtnorm
-#' @useDynLib LogRatioReg
+#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
+#' @importFrom survcomp concordance.index
+#' @importFrom reshape melt
+#' @importFrom utils combn
+#' @importFrom grDevices rainbow
+#' @importFrom caret createFolds
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @useDynLib FLORAL
 #' @export
 
 simu <- function(n = 100, 
@@ -28,8 +34,8 @@ simu <- function(n = 100,
                  model = "linear",
                  weak = 4,
                  strong = 6,
-                 weaksize = 0.25,
-                 strongsize = 0.5,
+                 weaksize = 0.125,
+                 strongsize = 0.25,
                  pct.sparsity = 0.5,
                  rho=0,
                  intercept=FALSE){
@@ -77,6 +83,7 @@ simu <- function(n = 100,
     x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
   }
   xcount = x
+  colnames(xcount) <- paste0("taxa",1:p)
   x = log(x+1)
   
   if (model == "linear"){

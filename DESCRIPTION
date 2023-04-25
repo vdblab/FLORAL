@@ -1,10 +1,15 @@
 Package: FLORAL
 Type: Package
-Title: FLORAL: Fit LOg-RAtio Lasso regression for clinical outcomes
+Title: FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates
 Version: 0.1
-Date: 2023-04-19
-Author: Teng Fei
-Maintainer: Teng Fei <feit1@mskcc.org>
+Date: 2023-04-23
+Authors@R: c(
+    person("Teng", "Fei", , "feit1@mskcc.org", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0000-0001-7888-1715")),
+    person("Tyler", "Funnell", role=c("ctb")),
+    person("Nicholas", "Waters", role=c("ctb")),
+    person("Sandeep", "Raj", role=c("ctb"))
+  )
 Description: Log-ratio Lasso Regression.
 License: GPL (>= 3)
 biocViews:
@@ -22,7 +27,14 @@ Imports:
   caret, 
   grDevices,
   utils,
-  mvtnorm
+  mvtnorm,
+  gtsummary
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.2.3
 Encoding: UTF-8
+Suggests: 
+    covr,
+    spelling,
+    testthat (>= 3.0.0)
+Language: en-US
+Config/testthat/edition: 3

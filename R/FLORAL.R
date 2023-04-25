@@ -1,10 +1,10 @@
-#' FLORAL: Fit Log-ratio lasso regression for clinical outcomes 
+#' FLORAL: Fit Log-ratio lasso regression for compositional covariates 
 #'
 #' @description Conduct log-ratio lasso regression for continuous, binary and survival outcomes. 
 #' @param x Count data matrix, where rows specify subjects and columns specify features. If `x` contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in `y`.
 #' @param y Outcome. For a continuous or binary outcome, `y` is a vector. For survival outcome, `y` is a `Surv` object.
-#' @param family Available options are `gaussian`, `binomial`, `cox`, `finegray`.
-#' @param longitudinal TRUE or FALSE, indicating whether longitudinal data matrix is specified for input `x`.
+#' @param family Available options are `gaussian`, `binomial`, `cox`, `finegray`. `finegray` is still under development. Please use with caution.
+#' @param longitudinal TRUE or FALSE, indicating whether longitudinal data matrix is specified for input `x`. (Still under development. Please use with caution)
 #' @param id If `longitudinal` is TRUE, `id` specifies subject IDs corresponding to the rows of input `x`.
 #' @param tobs If `longitudinal` is TRUE, `tobs` specifies time points corresponding to the rows of input `x`.
 #' @param failcode If `family = finegray`, `failcode` specifies the failure type of interest. This must be a positive integer.
@@ -14,9 +14,10 @@
 #' @param ncv Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.
 #' @param intercept TRUE or FALSE, indicating whether an intercept should be estimated.
 #' @param foldid A vector of fold indicator. Default is `NULL`.
-#' @param step2 TRUE or FALSE, indicating whether a stepwise feature selection should be performed for features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
+#' @param step2 TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
+#' @param table TRUE or FALSE, indicating whether returning gtsummary tables for the 2-stage stepwise model results.
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' 
@@ -26,19 +27,24 @@
 #' 
 #' # Continuous outcome
 #' dat <- simu(n=50,p=100,model="linear")
-#' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE)
+#' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE)
 #' 
 #' # Binary outcome
 #' dat <- simu(n=50,p=100,model="binomial")
-#' fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE)
+#' fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
 #' 
 #' # Survival outcome
 #' dat <- simu(n=50,p=100,model="cox")
-#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE)
+#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)
 #' 
-#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr grDevices utils stats
+#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
+#' @importFrom utils combn
+#' @importFrom grDevices rainbow
+#' @importFrom caret createFolds
+#' @importFrom gtsummary tbl_regression
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
 #' @useDynLib FLORAL
 #' @export
 
@@ -55,9 +61,10 @@ FLORAL <- function(x,
                    ncv=5,
                    intercept=FALSE,
                    foldid=NULL,
-                   step2=FALSE,
+                   step2=TRUE,
                    progress=TRUE,
-                   plot=TRUE){
+                   plot=TRUE,
+                   table=FALSE){
   
   x <- log(x+1)
   
@@ -233,5 +240,67 @@ FLORAL <- function(x,
     }
     
   }
+  
+  res$loss <- NULL
+  res$mse <- NULL
+  res$best.beta$min <- res$best.beta$min.mse
+  res$best.beta$`1se` <- res$best.beta$add.1se
+  res$best.beta$min.mse <- NULL
+  res$best.beta$add.1se <- NULL
+  
+  if (step2){
+    res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                 `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
+                                 min.2stage=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.min]))),
+                                 `1se.2stage`=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se])))
+    )
+    
+    res$step2.ratios <- list(min=character(0),
+                             `1se`=character(0),
+                             min.idx=character(0),
+                             `1se.idx`=character(0))
+    
+    if (table){
+      res$step2.tables <- list(min=character(0),
+                               `1se`=character(0))
+    }
+    
+    if (length(res$selected.feature$min.2stage)>0){
+      namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
+      res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+      res$step2.ratios$min.idx <- res$step2.feature.min[,!is.na(colSums(res$step2.feature.min))]
+      
+      if (table){
+        res$step2.tables$min <- suppressMessages(res$step2fit.min %>% tbl_regression())
+        res$step2.tables$min$table_body$label <- res$step2.ratios$min
+      }
+    }
+    
+    if (length(res$selected.feature$`1se.2stage`)>0){
+      namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
+      res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+      res$step2.ratios$`1se.idx` <- res$step2.feature.1se[,!is.na(colSums(res$step2.feature.1se))]
+      
+      if (table){
+        res$step2.tables$`1se` <- suppressMessages(res$step2fit.1se %>% tbl_regression())
+        res$step2.tables$`1se`$table_body$label <- res$step2.ratios$`1se`
+      }
+    }
+    
+    
+  }else{
+    res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                 `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)]
+    )
+  }
+  
+  res$step2.feature.min <- NULL
+  res$step2.feature.1se <- NULL
+  res$step2fit.min <- NULL
+  res$step2fit.1se <- NULL
+  
+  res$selected.feature <- lapply(res$selected.feature,sort)
+  
+  return(res)
   
 }
