@@ -17,7 +17,6 @@
 #' @param step2 TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
 #' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
-#' @param table TRUE or FALSE, indicating whether returning gtsummary tables for the 2-stage stepwise model results. Required gtsummary package
 #' @return A list with path-specific estimates (beta), path (lambda), and many others.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' 
@@ -62,8 +61,7 @@ FLORAL <- function(x,
                    foldid=NULL,
                    step2=TRUE,
                    progress=TRUE,
-                   plot=TRUE,
-                   table=FALSE){
+                   plot=TRUE){
   
   x <- log(x+1)
   
@@ -259,44 +257,26 @@ FLORAL <- function(x,
                              min.idx=character(0),
                              `1se.idx`=character(0))
     
-    if (table){
-      res$step2.tables <- list(min=character(0),
-                               `1se`=character(0))
-    }
-    
+    res$step2.tables <- list(min=character(0),
+                             `1se`=character(0))
+
     if (length(res$selected.feature$min.2stage)>0){
       namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
       res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
       res$step2.ratios$min.idx <- res$step2.feature.min[,!is.na(colSums(res$step2.feature.min))]
       
-      if (table){
-        if (!requireNamespace("gtsummary", quietly = TRUE)) {
-          warning("The gtsummary package must be installed for full table functionality")
-          res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
-          res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
-          rownames(res$step2.tables$`min`) <- res$step2.ratios$`min`
-        } else{
-          res$step2.tables$min <- suppressMessages(res$step2fit.min %>% gtsummary::tbl_regression())
-          res$step2.tables$min$table_body$label <- res$step2.ratios$min
-        }
-      }
+      res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
+      res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
+      rownames(res$step2.tables$`min`) <- res$step2.ratios$`min`
     }
     if (length(res$selected.feature$`1se.2stage`)>0){
       namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
       res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
       res$step2.ratios$`1se.idx` <- res$step2.feature.1se[,!is.na(colSums(res$step2.feature.1se))]
       
-      if (table){
-        if (!requireNamespace("gtsummary", quietly = TRUE)) {
-          warning("The gtsummary package must be installed for full table functionality")
-          res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
-          res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
-          rownames(res$step2.tables$`1se`) <- res$step2.ratios$`1se`
-        } else{
-          res$step2.tables$`1se` <- suppressMessages(res$step2fit.1se %>% gtsummary::tbl_regression())
-          res$step2.tables$`1se`$table_body$label <- res$step2.ratios$`1se`
-        }
-      }
+      res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
+      res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
+      rownames(res$step2.tables$`1se`) <- res$step2.ratios$`1se`
     }
     
   }else{
@@ -307,9 +287,7 @@ FLORAL <- function(x,
   
   res$step2.feature.min <- NULL
   res$step2.feature.1se <- NULL
-  res$step2fit.min <- NULL
-  res$step2fit.1se <- NULL
-  
+
   res$selected.feature <- lapply(res$selected.feature,sort)
   
   return(res)
