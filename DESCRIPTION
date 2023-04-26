@@ -38,9 +38,8 @@ Suggests:
     spelling,
     testthat (>= 3.0.0),
     BiocManager,
-    mia,
-    phyloseq,
     curatedMetagenomicData,
+    SummarizedExperiment,
     patchwork
 Language: en-US
 Config/testthat/edition: 3

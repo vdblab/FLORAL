@@ -48,22 +48,15 @@ curatedMetagenomicData::curatedMetagenomicData("YachidaS_2019")
 rawdata <- curatedMetagenomicData::curatedMetagenomicData("2021-03-31.YachidaS_2019.relative_abundance", dryrun = FALSE, counts = TRUE) |>  mergeData()
 ```
 
-The authors here are more familiar with `phyloseq` objects; if you are a SummarizedExperiment guru, feel free to bypass this!
-
-```{r transform, warning=FALSE, message=FALSE}
-if (! "mia" %in% installed.packages()) BiocManager::install("mia")
-crc_phy_raw <- mia::makePhyloseqFromTreeSE(rawdata, assay_name = "relative_abundance", abund_values = "relative_abundance")
-```
-
 ## Running FLORAL
 
-Here we extract the data from the `phyloseq` object to two matrices: the taxa matrix and the "outcomes" of whether a patient is healthy or has colorectal cancer (CRC). Note that for binary outcomes, the input vector `y` needs to be formatted with entries equal to either `0` or `1`. In addition, we need to specify `family = "binomial"` in `FLORAL` to fit the logistic regression model. To print the progress bar as the algorithm runs, please use `progress = TRUE`. 
+Here we extract the data from the `TreeSummarizedExperiment` object to two objects: the taxa matrix `x` and the "outcomes" vector `y` of whether a patient is healthy or has colorectal cancer (CRC). Note that for binary outcomes, the input vector `y` needs to be formatted with entries equal to either `0` or `1`. In addition, we need to specify `family = "binomial"` in `FLORAL` to fit the logistic regression model. To print the progress bar as the algorithm runs, please use `progress = TRUE`. 
 
 ```{r floral}
-x <- phyloseq::otu_table(crc_phy_raw) |> t()
+x <- SummarizedExperiment::assays(rawdata)$relative_abundance %>% t()
 
-y <- phyloseq::sample_data(crc_phy_raw)[,"disease"] %>% t()
-
+y <- rawdata@colData$disease
+  
 x <- x[y %in% c("CRC","healthy"),]
 x <- x[,colSums(x >= 100) >= nrow(x)*0.2] # filter low abundance taxa
 
@@ -77,7 +70,7 @@ FLORAL, like other methods that have an optimization step, has two "best" soluti
 
 We can see the mean squared error (MSE) and the coefficients vs log($\lambda$) as follows:
 
-```{r plots,out.width = "50%",fig.height=4,fig.width=6,dpi=300}
+```{r plots,fig.height=4,fig.width=10,dpi=300}
 fit$pmse + fit$pcoef
 ```
 
