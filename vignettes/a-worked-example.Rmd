@@ -52,7 +52,7 @@ The authors here are more familiar with `phyloseq` objects; if you are a Summari
 
 ```{r transform, warning=FALSE, message=FALSE}
 if (! "mia" %in% installed.packages()) BiocManager::install("mia")
-crc_phy_raw <- mia::makePhyloseqFromTreeSummarizedExperiment(rawdata, abund_values = "relative_abundance")
+crc_phy_raw <- mia::makePhyloseqFromTreeSE(rawdata, assay_name = "relative_abundance", abund_values = "relative_abundance")
 ```
 
 ## Running FLORAL
