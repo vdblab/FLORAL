@@ -12,14 +12,16 @@ editor_options:
 ```{r, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  out.width = "100%"
 )
 ```
 
-```{r setup}
+```{r setup, warning=FALSE, message=FALSE}
 library(FLORAL)
 if (! "BiocManager" %in% installed.packages()) install.packages("BiocManager")
 if (! "curatedMetagenomicData" %in% installed.packages()) BiocManager::install("curatedMetagenomicData")
+if (! "patchwork" %in% installed.packages()) install.packages("patchwork")
 library(curatedMetagenomicData)
 library(dplyr)
 library(patchwork)
@@ -32,7 +34,7 @@ We will be using data from the [`curatedMetagenomicData`]() package. Take a look
 
 ```{r viewData}
 
-sampleMetadata  |> group_by(study_name, study_condition) |> count() |> arrange(study_name) 
+curatedMetagenomicData::sampleMetadata  |> group_by(.data$study_name, .data$study_condition) |> count() |> arrange(.data$study_name) 
 
 ```
 
@@ -40,15 +42,15 @@ As an example, let us look at the `YachidaS_2019` study between healthy controls
 
 
 ```{r getData}
-curatedMetagenomicData("YachidaS_2019") 
+curatedMetagenomicData::curatedMetagenomicData("YachidaS_2019") 
 # note --  if you are behind a firewall, see the solutions to 500 errors here:
 # https://support.bioconductor.org/p/132864/
-rawdata <- curatedMetagenomicData("2021-03-31.YachidaS_2019.relative_abundance", dryrun = FALSE, counts = TRUE) |>  mergeData()
+rawdata <- curatedMetagenomicData::curatedMetagenomicData("2021-03-31.YachidaS_2019.relative_abundance", dryrun = FALSE, counts = TRUE) |>  mergeData()
 ```
 
 The authors here are more familiar with `phyloseq` objects; if you are a SummarizedExperiment guru, feel free to bypass this!
 
-```{r transform}
+```{r transform, warning=FALSE, message=FALSE}
 if (! "mia" %in% installed.packages()) BiocManager::install("mia")
 crc_phy_raw <- mia::makePhyloseqFromTreeSummarizedExperiment(rawdata, abund_values = "relative_abundance")
 ```
@@ -63,22 +65,20 @@ x <- phyloseq::otu_table(crc_phy_raw) |> t()
 y <- phyloseq::sample_data(crc_phy_raw)[,"disease"] %>% t()
 
 x <- x[y %in% c("CRC","healthy"),]
-x <- x[,colSums(x >= 100) >= nrow(x)*0.1] # filter low abundance taxa
+x <- x[,colSums(x >= 100) >= nrow(x)*0.2] # filter low abundance taxa
 
 y <- as.numeric(as.factor(y[y %in% c("CRC","healthy")]))-1
 fit <- FLORAL(x = x, y = y, family="binomial", ncv=10, progress=TRUE)
 ```
 
-## Interpretting the Model
+## Interpreting the Model
 
 FLORAL, like other methods that have an optimization step, has two "best" solutions for $\lambda$ available: one minimizing the mean squared error ($\lambda_\min$), and one maximizing the value of $\lambda$ withing 1 standard error of the minimum mean squared error ($\lambda_{\text{1se}}$). These are referred to as the `min` and `1se` solutions, respectively.
 
 We can see the mean squared error (MSE) and the coefficients vs log($\lambda$) as follows:
 
-```{r plots}
-
+```{r plots,out.width = "50%",fig.height=4,fig.width=6,dpi=300}
 fit$pmse + fit$pcoef
-
 ```
 
 In both plots, the vertical dashed line and dotted line represent $\lambda_\min$ and $\lambda_{\text{1se}}$, respectively. In the MSE plot, the bands represent plus minus one standard error of the MSE. In the coefficient plot, the colored lines represent individual taxa, where taxa with non-zero values at $\lambda_\min$ and $\lambda_{\text{1se}}$ are selected as predictive of the outcome. 
@@ -105,7 +105,9 @@ fit$step2.ratios$`1se.idx`
 
 ```
 
-To further interpret the positive or negative associations between the outcome, please refer to the output `step` regression tables, where the effect sizes of the ratios can be found.
+To further interpret the positive or negative associations between the outcome, please refer to the output `step` regression tables, where the effect sizes of the ratios can be found. 
+
+While the corresponding p-values are also available, we recommend only using the p-values as a criterion to rank the strength of the association. We do not recommend directly reporting the p-values for inference, because these p-values were obtained after running the first step lasso model without rigorous post-selective inference. However, it is still valid to claim these selected log-ratios are predictive of the outcome, as demonstrated by the improved 10-fold cross-validated prediction errors.
 
 ```{r viewTable}
 
