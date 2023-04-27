@@ -1,8 +1,8 @@
 ---
-title: "a-worked-example"
+title: "Using FLORAL for Microbiome Analysis"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{a-worked-example}
+  %\VignetteIndexEntry{Using FLORAL for Microbiome Analysis}
   %\VignetteEncoding{UTF-8}
   %\VignetteEngine{knitr::rmarkdown}
 editor_options: 
@@ -22,8 +22,6 @@ library(FLORAL)
 library(dplyr)
 library(patchwork)
 ```
-
-# Using FLORAL for Microbiome Analysis
 
 ## Data
 We will be using data from the [`curatedMetagenomicData`]() package. For easier installation, we saved a flat copy of the data, but the steps below show how that was created. 
@@ -46,8 +44,6 @@ y <- rawdata@colData$disease
 
 save(list = c("x", "y"),  file = file.path("inst", "extdata", "YachidaS_2019.Rdata"))
 ```
-
-
 
 ```{r getData}
 load(system.file("extdata", "YachidaS_2019.Rdata", package="FLORAL"))
