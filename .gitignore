@@ -8,3 +8,6 @@ src/*.dll
 R/simulation.R
 R/main_script.R
 docs
+inst/doc
+/doc/
+/Meta/
