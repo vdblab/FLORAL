@@ -17,7 +17,7 @@
 #' @examples 
 #' 
 #' set.seed(23420)
-#' dat <- simu(n=50,p=100,model="linear")
+#' dat <- simu(n=50,p=30,model="linear")
 #' 
 #' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
 #' @importFrom survcomp concordance.index
