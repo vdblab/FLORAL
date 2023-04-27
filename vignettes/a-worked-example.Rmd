@@ -19,10 +19,6 @@ knitr::opts_chunk$set(
 
 ```{r setup, warning=FALSE, message=FALSE}
 library(FLORAL)
-if (! "BiocManager" %in% installed.packages()) install.packages("BiocManager")
-if (! "curatedMetagenomicData" %in% installed.packages()) BiocManager::install("curatedMetagenomicData")
-if (! "patchwork" %in% installed.packages()) install.packages("patchwork")
-library(curatedMetagenomicData)
 library(dplyr)
 library(patchwork)
 ```
@@ -30,32 +26,38 @@ library(patchwork)
 # Using FLORAL for Microbiome Analysis
 
 ## Data
-We will be using data from the [`curatedMetagenomicData`]() package. Take a look at the summary of the studies available:
+We will be using data from the [`curatedMetagenomicData`]() package. For easier installation, we saved a flat copy of the data, but the steps below show how that was created. 
 
-```{r viewData}
+```r
+if (! "BiocManager" %in% installed.packages()) install.packages("BiocManager")
+if (! "curatedMetagenomicData" %in% installed.packages()) BiocManager::install("curatedMetagenomicData")
+if (! "patchwork" %in% installed.packages()) install.packages("patchwork")
+library(curatedMetagenomicData)
 
+# Take a look at the summary of the studies available:
 curatedMetagenomicData::sampleMetadata  |> group_by(.data$study_name, .data$study_condition) |> count() |> arrange(.data$study_name) 
-
-```
-
-As an example, let us look at the `YachidaS_2019` study between healthy controls and colorectal cancer (CRC) patients.
-
-
-```{r getData}
+#As an example, let us look at the `YachidaS_2019` study between healthy controls and colorectal cancer (CRC) patients.
 curatedMetagenomicData::curatedMetagenomicData("YachidaS_2019") 
 # note --  if you are behind a firewall, see the solutions to 500 errors here:
 # https://support.bioconductor.org/p/132864/
 rawdata <- curatedMetagenomicData::curatedMetagenomicData("2021-03-31.YachidaS_2019.relative_abundance", dryrun = FALSE, counts = TRUE) |>  mergeData()
+x <- SummarizedExperiment::assays(rawdata)$relative_abundance %>% t()
+y <- rawdata@colData$disease
+
+save(list = c("x", "y"),  file = file.path("inst", "extdata", "YachidaS_2019.Rdata"))
+```
+
+
+
+```{r getData}
+load(system.file("extdata", "YachidaS_2019.Rdata", package="FLORAL"))
 ```
 
 ## Running FLORAL
 
-Here we extract the data from the `TreeSummarizedExperiment` object to two objects: the taxa matrix `x` and the "outcomes" vector `y` of whether a patient is healthy or has colorectal cancer (CRC). Note that for binary outcomes, the input vector `y` needs to be formatted with entries equal to either `0` or `1`. In addition, we need to specify `family = "binomial"` in `FLORAL` to fit the logistic regression model. To print the progress bar as the algorithm runs, please use `progress = TRUE`. 
+We extracted the data from the `TreeSummarizedExperiment` object to two objects: the taxa matrix `x` and the "outcomes" vector `y` of whether a patient is healthy or has colorectal cancer (CRC). Note that for binary outcomes, the input vector `y` needs to be formatted with entries equal to either `0` or `1`. In addition, we need to specify `family = "binomial"` in `FLORAL` to fit the logistic regression model. To print the progress bar as the algorithm runs, please use `progress = TRUE`. 
 
 ```{r floral}
-x <- SummarizedExperiment::assays(rawdata)$relative_abundance %>% t()
-
-y <- rawdata@colData$disease
   
 x <- x[y %in% c("CRC","healthy"),]
 x <- x[,colSums(x >= 100) >= nrow(x)*0.2] # filter low abundance taxa
