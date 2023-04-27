@@ -47,7 +47,7 @@ Simulate a dataset from log-ratio model
 \examples{
 
 set.seed(23420)
-dat <- simu(n=50,p=100,model="linear")
+dat <- simu(n=50,p=30,model="linear")
 
 }
 \author{
