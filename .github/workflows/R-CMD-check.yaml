@@ -48,7 +48,7 @@ jobs:
         with:
           upload-snapshots: true
       - name: Test coverage
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.config.os == 'ubuntu-latest'
         run: |
           covr::codecov(
             quiet = FALSE,
@@ -58,14 +58,14 @@ jobs:
         shell: Rscript {0}
 
       - name: Show testthat output
-        if: matrix.os == 'ubuntu-latest'
+        if: matrix.config.os == 'ubuntu-latest'
         run: |
           ## --------------------------------------------------------------------
           find ${{ runner.temp }}/package -name 'testthat.Rout*' -exec cat '{}' \; || true
         shell: bash
 
       - name: Upload test results
-        if: failure() && matrix.os == 'ubuntu-latest'
+        if: failure() && matrix.config.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v3
         with:
           name: coverage-test-failures
