@@ -3,7 +3,7 @@
 #' @description Simulate a dataset from log-ratio model
 #' @param n An integer of sample size
 #' @param p An integer of number of features (taxa).
-#' @param model Type of models associated with outcome variable, can be `"linear"`, `"binomial"`, or `"cox"`.
+#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", or "finegray".
 #' @param weak Number of features with `weak` effect size.
 #' @param strong Number of features with `strong` effect size.
 #' @param weaksize Actual effect size for `weak` effect size. Must be positive.
@@ -11,7 +11,7 @@
 #' @param pct.sparsity Percentage of zero counts for each sample.
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
 #' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for `"linear"` or `"binomial"` models.
-#' @return A list with simulated count matrx `xcount`, `log1p`-transformed count matrix `x`, outcome (continuous `y`, continuous centered `y0`, binary `y`, or survival `t`,`d`), true coefficient vector `beta`, list of non-zero features `idx`, value of intercept `intercept` (if applicable).
+#' @return A list with simulated count matrx xcount, log1p-transformed count matrix x, outcome (continuous y, continuous centered y0, binary y, or survival t, d), true coefficient vector beta, list of non-zero features idx, value of intercept intercept (if applicable).
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
 #' @examples 
@@ -54,6 +54,9 @@ simu <- function(n = 100,
     y <- rep(NA,length=n)
   }else if (model == "cox"){
     t <- rep(NA,length=n)
+    d <- rep(NA,length=n)
+  }else if (model == "finegray"){
+    t <- t0 <- rep(NA,length=n)
     d <- rep(NA,length=n)
   }
   
@@ -136,6 +139,42 @@ simu <- function(n = 100,
       t[i] <- min(t0,c0)
       d[i] <- as.numeric(I(t0 <= c0))
     }
+    
+    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    
+  }else if(model == "finegray"){
+    
+    eta <- x[,true_set] %*% beta
+    p.cif = 0.66
+    lambda <- exp(eta)
+    cl=0.19
+    cu=1.09
+    
+    P1 <- 1-(1-p.cif)^(lambda)
+    epsilon <- rep(0,n)
+    for (i in 1:n){
+      epsilon[i] <- 2 - rbinom(1,1,P1[i])
+    }
+    
+    #generate the event time based on the type of outcome
+    t0 <- rep(0,n)
+    u <- runif(n)
+    for (i in 1:n){
+      if (epsilon[i] == 1){
+        t0[i] <- -log(1 - (1 - (1-u[i]*(1-(1-p.cif)^lambda[i]))^(1/(lambda[i]+0.001)))/p.cif)
+      }
+      if (epsilon[i] == 2){
+        t0[i] <- -log((1-u[i])^(1/(lambda[i]+0.001)))
+      }
+    }
+    
+    #generate censoring time
+    c <- runif(n,cl,cu)
+    #observed time
+    t <- t0*I(t0<=c) + c*I(t0>c)
+    
+    # outcome
+    d <- 0*I(t == c) + epsilon*I(t < c)
     
     ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
     
