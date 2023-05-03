@@ -209,6 +209,8 @@ LogRatioFGLasso <- function(x,
     
     if (step2){ # need to develop a equivalent lasso procedure for this. Stepwise selection is too slow for a big number of selected variables.
       
+      if(progress) cat("Step 2 filtering started.\n")
+      
       if (length(which(ret$best.beta$min.mse!=0)) > 1){
         
         idxs <- combn(which(ret$best.beta$min.mse!=0),2)
@@ -219,7 +221,7 @@ LogRatioFGLasso <- function(x,
         }
         
         if (ncol(x.select.min) > 1){
-          stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox")
+          stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
           x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
         }
@@ -253,7 +255,7 @@ LogRatioFGLasso <- function(x,
         }
         
         if (ncol(x.select.min) > 1){
-          stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox")
+          stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
           x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
         }

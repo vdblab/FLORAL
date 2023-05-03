@@ -17,6 +17,9 @@ proposed method adapts the augmented Lagrangian algorithm for a zero-sum
 constraint optimization problem while enabling a two-stage screening
 process for extended false-positive control.
 
+The associated preprint for `FLORAL` is available on
+[bioRxiv](https://www.biorxiv.org/content/10.1101/2023.05.02.538599v1).
+
 ## Installation
 
 You can install the development version of `FLORAL` from
@@ -51,10 +54,10 @@ coefficients, use `fit$pmse` or `fit$pcoef`:
 
 To view selected compositional features, use `fit$selected.feature`,
 where features are sorted by their names. Features under `min` and `1se`
-correspond to penalty parameter $\lambda_{\min}$ and
-$\lambda_{\text{1se}}$, respectively. Features under `min.2stage` and
-`1se.2stage` are obtained after applying 2-stage filtering based on
-features under `min` and `1se`, respectively.
+correspond to penalty parameter *λ*<sub>min</sub> and *λ*<sub>1se</sub>,
+respectively. Features under `min.2stage` and `1se.2stage` are obtained
+after applying 2-stage filtering based on features under `min` and
+`1se`, respectively.
 
 We recommend interpreting the selected compositional features as
 potential predictive markers to the outcome in the regression model in
@@ -128,8 +131,8 @@ fit$step2.tables$min
 fit$step2.tables$`1se`
 ```
 
-For binary and survival outcomes, please specify `family="binomial"` and
-`family="cox"` accordingly.
+For binary and survival outcomes, please specify `family="binomial"`,
+`family="cox"`, or `family="finegray"` accordingly.
 
 ``` r
 dat.bin <- simu(n=50,p=100,model="binomial")
@@ -137,6 +140,9 @@ fit.bin <- FLORAL(dat.bin$xcount,dat.bin$y,family="binomial",ncv=10,progress=FAL
 
 dat.cox <- simu(n=50,p=100,model="cox")
 fit.cox <- FLORAL(dat.cox$xcount,survival::Surv(dat.cox$t,dat.cox$d),family="cox",ncv=10,progress=FALSE)
+
+dat.fg <- simu(n=50,p=100,model="finegray")
+fit.fg <- FLORAL(dat.cox$xcount,survival::Surv(dat.cox$t,dat.cox$d,type="mstate"),family="finegray",ncv=10,progress=FALSE,step2=FALSE)
 ```
 
 ## Contributing
@@ -148,3 +154,11 @@ note that the `FLORAL` project is released with a [Contributor Code of
 Conduct](https://github.com/vdblab/FLORAL/blob/master/.github/CODE_OF_CONDUCT.md).
 By contributing to this project, you agree to abide by its terms. Thank
 you to all contributors!
+
+## Reference
+
+Fei T, Funnell T, Waters NR, Raj SS, Devlin SM, Dai A, Miltiadous O,
+Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink
+MRM, Scalable Log-ratio Lasso Regression Enhances Microbiome Feature
+Selection for Predictive Models, bioRxiv 2023.05.02.538599; doi:
+<https://doi.org/10.1101/2023.05.02.538599>.

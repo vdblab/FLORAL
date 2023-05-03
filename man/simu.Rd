@@ -22,7 +22,7 @@ simu(
 
 \item{p}{An integer of number of features (taxa).}
 
-\item{model}{Type of models associated with outcome variable, can be `"linear"`, `"binomial"`, or `"cox"`.}
+\item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "cox", or "finegray".}
 
 \item{weak}{Number of features with `weak` effect size.}
 
@@ -39,7 +39,7 @@ simu(
 \item{intercept}{Boolean. If TRUE, then a random intercept will be generated in the model. Only works for `"linear"` or `"binomial"` models.}
 }
 \value{
-A list with simulated count matrx `xcount`, `log1p`-transformed count matrix `x`, outcome (continuous `y`, continuous centered `y0`, binary `y`, or survival `t`,`d`), true coefficient vector `beta`, list of non-zero features `idx`, value of intercept `intercept` (if applicable).
+A list with simulated count matrx xcount, log1p-transformed count matrix x, outcome (continuous y, continuous centered y0, binary y, or survival t, d), true coefficient vector beta, list of non-zero features idx, value of intercept intercept (if applicable).
 }
 \description{
 Simulate a dataset from log-ratio model
