@@ -17,6 +17,9 @@ proposed method adapts the augmented Lagrangian algorithm for a zero-sum
 constraint optimization problem while enabling a two-stage screening
 process for extended false-positive control.
 
+The associated preprint for `FLORAL` is available on
+[bioRxiv](https://www.biorxiv.org/content/10.1101/2023.05.02.538599v1).
+
 ## Installation
 
 You can install the development version of `FLORAL` from
@@ -157,4 +160,5 @@ you to all contributors!
 Fei T, Funnell T, Waters NR, Raj SS, Devlin SM, Dai A, Miltiadous O,
 Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink
 MRM, Scalable Log-ratio Lasso Regression Enhances Microbiome Feature
-Selection for Predictive Models, bioRxiv.
+Selection for Predictive Models, bioRxiv 2023.05.02.538599; doi:
+<https://doi.org/10.1101/2023.05.02.538599>.
