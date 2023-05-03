@@ -173,25 +173,25 @@ which is derived from the log-ratio model assumption.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">selected.feature</span><span class="op">$</span><span class="va">min</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Actinomycetales|f__Actinomycetaceae|g__Actinomyces|s__Actinomyces_sp_HMSC035G02"                </span></span>
-<span><span class="co">#&gt; [2] "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Actinomycetales|f__Actinomycetaceae|g__Actinomyces|s__Actinomyces_sp_ICM47"                     </span></span>
-<span><span class="co">#&gt; [3] "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Bifidobacteriales|f__Bifidobacteriaceae|g__Bifidobacterium|s__Bifidobacterium_pseudocatenulatum"</span></span>
-<span><span class="co">#&gt; [4] "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Micrococcales|f__Micrococcaceae|g__Rothia|s__Rothia_mucilaginosa"                               </span></span>
-<span><span class="co">#&gt; [5] "k__Bacteria|p__Actinobacteria|c__Coriobacteriia|o__Coriobacteriales|f__Coriobacteriaceae|g__Collinsella|s__Collinsella_aerofaciens"                </span></span>
-<span><span class="co">#&gt; [6] "k__Bacteria|p__Actinobacteria|c__Coriobacteriia|o__Eggerthellales|f__Eggerthellaceae|g__Asaccharobacter|s__Asaccharobacter_celatus"</span></span>
+<span><span class="co">#&gt; [2] "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Bifidobacteriales|f__Bifidobacteriaceae|g__Bifidobacterium|s__Bifidobacterium_pseudocatenulatum"</span></span>
+<span><span class="co">#&gt; [3] "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Micrococcales|f__Micrococcaceae|g__Rothia|s__Rothia_mucilaginosa"                               </span></span>
+<span><span class="co">#&gt; [4] "k__Bacteria|p__Actinobacteria|c__Coriobacteriia|o__Coriobacteriales|f__Coriobacteriaceae|g__Collinsella|s__Collinsella_aerofaciens"                </span></span>
+<span><span class="co">#&gt; [5] "k__Bacteria|p__Actinobacteria|c__Coriobacteriia|o__Eggerthellales|f__Eggerthellaceae|g__Asaccharobacter|s__Asaccharobacter_celatus"                </span></span>
+<span><span class="co">#&gt; [6] "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__Bacteroides_caccae"</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">best.beta</span><span class="op">$</span><span class="va">min</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                  k__Bacteria|p__Firmicutes|c__Tissierellia|o__Tissierellales|f__Peptoniphilaceae|g__Parvimonas|s__Parvimonas_micra </span></span>
-<span><span class="co">#&gt;                                                                                                                        -0.07745931 </span></span>
+<span><span class="co">#&gt;                                                                                                                        -0.07388088 </span></span>
 <span><span class="co">#&gt; k__Bacteria|p__Actinobacteria|c__Coriobacteriia|o__Coriobacteriales|f__Coriobacteriaceae|g__Collinsella|s__Collinsella_aerofaciens </span></span>
-<span><span class="co">#&gt;                                                                                                                        -0.04532596 </span></span>
-<span><span class="co">#&gt; k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Actinomycetales|f__Actinomycetaceae|g__Actinomyces|s__Actinomyces_sp_HMSC035G02 </span></span>
-<span><span class="co">#&gt;                                                                                                                        -0.03744493 </span></span>
+<span><span class="co">#&gt;                                                                                                                        -0.04301084 </span></span>
 <span><span class="co">#&gt;  k__Bacteria|p__Firmicutes|c__Erysipelotrichia|o__Erysipelotrichales|f__Erysipelotrichaceae|g__Holdemania|s__Holdemania_filiformis </span></span>
-<span><span class="co">#&gt;                                                                                                                        -0.03314198 </span></span>
+<span><span class="co">#&gt;                                                                                                                        -0.02855722 </span></span>
+<span><span class="co">#&gt; k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Actinomycetales|f__Actinomycetaceae|g__Actinomyces|s__Actinomyces_sp_HMSC035G02 </span></span>
+<span><span class="co">#&gt;                                                                                                                        -0.02817869 </span></span>
 <span><span class="co">#&gt;          k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Ruminococcaceae|g__Anaerotruncus|s__Anaerotruncus_colihominis </span></span>
-<span><span class="co">#&gt;                                                                                                                        -0.02707009 </span></span>
+<span><span class="co">#&gt;                                                                                                                        -0.02147405 </span></span>
 <span><span class="co">#&gt;      k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__Bacteroides_cellulosilyticus </span></span>
-<span><span class="co">#&gt;                                                                                                                        -0.02092297</span></span></code></pre></div>
+<span><span class="co">#&gt;                                                                                                                        -0.01905402</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="the-two-step-procedure">The Two-step Procedure<a class="anchor" aria-label="anchor" href="#the-two-step-procedure"></a>
