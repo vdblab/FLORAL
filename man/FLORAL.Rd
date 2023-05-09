@@ -30,11 +30,11 @@ FLORAL(
 
 \item{family}{Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.}
 
-\item{longitudinal}{TRUE or FALSE, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)}
+\item{longitudinal}{\code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)}
 
-\item{id}{If \code{longitudinal} is TRUE, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.}
+\item{id}{If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.}
 
-\item{tobs}{If \code{longitudinal} is TRUE, \code{tobs} specifies time points corresponding to the rows of input \code{x}.}
+\item{tobs}{If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.}
 
 \item{failcode}{If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.}
 
@@ -46,15 +46,15 @@ FLORAL(
 
 \item{ncv}{Number of cross-validation runs. Use \code{NULL} if cross-validation is not wanted.}
 
-\item{intercept}{TRUE or FALSE, indicating whether an intercept should be estimated.}
+\item{intercept}{\code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.}
 
 \item{foldid}{A vector of fold indicator. Default is \code{NULL}.}
 
-\item{step2}{TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.}
+\item{step2}{\code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.}
 
-\item{progress}{TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.}
+\item{progress}{\code{TRUE} or \code{FALSE}, indicating whether printing progress bar as the algorithm runs.}
 
-\item{plot}{TRUE or FALSE, indicating whether returning plots of model fitting.}
+\item{plot}{\code{TRUE} or \code{FALSE}, indicating whether returning plots of model fitting.}
 }
 \value{
 A list with path-specific estimates (beta), path (lambda), and others. Details can be found in \code{README.md}.
@@ -83,6 +83,9 @@ dat <- simu(n=50,p=30,model="finegray")
 fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
               family="finegray",progress=FALSE,step2=FALSE)
 
+}
+\references{
+Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599 <https://doi.org/10.1101/2023.05.02.538599>.
 }
 \author{
 Teng Fei. Email: feit1@mskcc.org

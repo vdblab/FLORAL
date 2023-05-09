@@ -4,21 +4,22 @@
 #' @param x Count data matrix, where rows specify subjects and columns specify features. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
 #' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
-#' @param longitudinal TRUE or FALSE, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
-#' @param id If \code{longitudinal} is TRUE, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
-#' @param tobs If \code{longitudinal} is TRUE, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
+#' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
+#' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use \code{NULL} if cross-validation is not wanted.
-#' @param intercept TRUE or FALSE, indicating whether an intercept should be estimated.
+#' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
 #' @param foldid A vector of fold indicator. Default is \code{NULL}.
-#' @param step2 TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
-#' @param progress TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.
-#' @param plot TRUE or FALSE, indicating whether returning plots of model fitting.
+#' @param step2 \code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
+#' @param progress \code{TRUE} or \code{FALSE}, indicating whether printing progress bar as the algorithm runs.
+#' @param plot \code{TRUE} or \code{FALSE}, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and others. Details can be found in \code{README.md}.
 #' @author Teng Fei. Email: feit1@mskcc.org
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599 <https://doi.org/10.1101/2023.05.02.538599>.
 #' 
 #' @examples 
 #' 
