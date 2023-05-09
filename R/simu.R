@@ -1,17 +1,17 @@
 #' simu: Simulate data following log-ratio model
 #'
-#' @description Simulate a dataset from log-ratio model
+#' @description Simulate a dataset from log-ratio model.
 #' @param n An integer of sample size
 #' @param p An integer of number of features (taxa).
 #' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", or "finegray".
-#' @param weak Number of features with `weak` effect size.
-#' @param strong Number of features with `strong` effect size.
-#' @param weaksize Actual effect size for `weak` effect size. Must be positive.
-#' @param strongsize Actual effect size for `strong` effect size. Must be positive.
+#' @param weak Number of features with \code{weak} effect size.
+#' @param strong Number of features with \code{strong} effect size.
+#' @param weaksize Actual effect size for \code{weak} effect size. Must be positive.
+#' @param strongsize Actual effect size for \code{strong} effect size. Must be positive.
 #' @param pct.sparsity Percentage of zero counts for each sample.
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
-#' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for `"linear"` or `"binomial"` models.
-#' @return A list with simulated count matrx xcount, log1p-transformed count matrix x, outcome (continuous y, continuous centered y0, binary y, or survival t, d), true coefficient vector beta, list of non-zero features idx, value of intercept intercept (if applicable).
+#' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.
+#' @return A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
 #' @author Teng Fei. Email: feit1@mskcc.org
 #'
 #' @examples 
