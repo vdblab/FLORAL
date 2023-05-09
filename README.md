@@ -22,6 +22,12 @@ The associated preprint for `FLORAL` is available on
 
 ## Installation
 
+You can install `FLORAL` with the following code.
+
+``` r
+install.packages("FLORAL")
+```
+
 You can install the development version of `FLORAL` from
 [GitHub](https://github.com/) with:
 

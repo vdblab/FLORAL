@@ -26,6 +26,12 @@ The associated preprint for `FLORAL` is available on [bioRxiv](https://www.biorx
 
 ## Installation
 
+You can install `FLORAL` with the following code.
+
+``` r
+install.packages("FLORAL")
+```
+
 You can install the development version of `FLORAL` from [GitHub](https://github.com/) with:
 
 ``` r

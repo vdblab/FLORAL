@@ -10,7 +10,8 @@ Authors@R: c(
            comment = c(ORCID = "0000-0003-1612-5644")),
     person("Nicholas", "Waters", role=c("aut"),
            comment = c(ORCID = "0000-0002-9035-2143")),
-    person("Sandeep", "Raj", role=c("aut"))
+    person("Sandeep", "Raj", role=c("aut"),
+           comment = c(ORCID = "0000-0003-4629-0528"))
   )
 Description: Log-ratio Lasso Regression for continuous, binary, and survival outcomes with compositional covariates. See Fei et al (2023) <https://doi.org/10.1101/2023.05.02.538599>.
 License: GPL (>= 3)
