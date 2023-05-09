@@ -19,7 +19,7 @@
 #' @param plot \code{TRUE} or \code{FALSE}, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and others. Details can be found in \code{README.md}.
 #' @author Teng Fei. Email: feit1@mskcc.org
-#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599 <https://doi.org/10.1101/2023.05.02.538599>.
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599.
 #' 
 #' @examples 
 #' 
