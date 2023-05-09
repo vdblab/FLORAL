@@ -24,25 +24,25 @@ simu(
 
 \item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "cox", or "finegray".}
 
-\item{weak}{Number of features with `weak` effect size.}
+\item{weak}{Number of features with \code{weak} effect size.}
 
-\item{strong}{Number of features with `strong` effect size.}
+\item{strong}{Number of features with \code{strong} effect size.}
 
-\item{weaksize}{Actual effect size for `weak` effect size. Must be positive.}
+\item{weaksize}{Actual effect size for \code{weak} effect size. Must be positive.}
 
-\item{strongsize}{Actual effect size for `strong` effect size. Must be positive.}
+\item{strongsize}{Actual effect size for \code{strong} effect size. Must be positive.}
 
 \item{pct.sparsity}{Percentage of zero counts for each sample.}
 
 \item{rho}{Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.}
 
-\item{intercept}{Boolean. If TRUE, then a random intercept will be generated in the model. Only works for `"linear"` or `"binomial"` models.}
+\item{intercept}{Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.}
 }
 \value{
-A list with simulated count matrx xcount, log1p-transformed count matrix x, outcome (continuous y, continuous centered y0, binary y, or survival t, d), true coefficient vector beta, list of non-zero features idx, value of intercept intercept (if applicable).
+A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
 }
 \description{
-Simulate a dataset from log-ratio model
+Simulate a dataset from log-ratio model.
 }
 \examples{
 
