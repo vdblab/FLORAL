@@ -2,7 +2,7 @@ Package: FLORAL
 Type: Package
 Title: FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates
 Version: 0.1.0
-Date: 2023-04-23
+Date: 2023-05-09
 Authors@R: c(
     person("Teng", "Fei", , "feit1@mskcc.org", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0001-7888-1715")),
