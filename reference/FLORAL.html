@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -26,6 +26,9 @@
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
     <a class="dropdown-item" href="../articles/Using-FLORAL-for-Microbiome-Analysis.html">Using FLORAL for Microbiome Analysis</a>
   </div>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="../news/index.html">Changelog</a>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
@@ -71,31 +74,31 @@
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>x</dt>
-<dd><p>Count data matrix, where rows specify subjects and columns specify features. If `x` contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in `y`.</p></dd>
+<dd><p>Count data matrix, where rows specify subjects and columns specify features. If <code>x</code> contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in <code>y</code>.</p></dd>
 
 
 <dt>y</dt>
-<dd><p>Outcome. For a continuous or binary outcome, `y` is a vector. For survival outcome, `y` is a `Surv` object.</p></dd>
+<dd><p>Outcome. For a continuous or binary outcome, <code>y</code> is a vector. For survival outcome, <code>y</code> is a <code>Surv</code> object.</p></dd>
 
 
 <dt>family</dt>
-<dd><p>Available options are `gaussian`, `binomial`, `cox`, `finegray`. `finegray` is still under development. Please use with caution.</p></dd>
+<dd><p>Available options are <code>gaussian</code>, <code>binomial</code>, <code>cox</code>, <code>finegray</code>.</p></dd>
 
 
 <dt>longitudinal</dt>
-<dd><p>TRUE or FALSE, indicating whether longitudinal data matrix is specified for input `x`. (Still under development. Please use with caution)</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>, indicating whether longitudinal data matrix is specified for input <code>x</code>. (Still under development. Please use with caution)</p></dd>
 
 
 <dt>id</dt>
-<dd><p>If `longitudinal` is TRUE, `id` specifies subject IDs corresponding to the rows of input `x`.</p></dd>
+<dd><p>If <code>longitudinal</code> is <code>TRUE</code>, <code>id</code> specifies subject IDs corresponding to the rows of input <code>x</code>.</p></dd>
 
 
 <dt>tobs</dt>
-<dd><p>If `longitudinal` is TRUE, `tobs` specifies time points corresponding to the rows of input `x`.</p></dd>
+<dd><p>If <code>longitudinal</code> is <code>TRUE</code>, <code>tobs</code> specifies time points corresponding to the rows of input <code>x</code>.</p></dd>
 
 
 <dt>failcode</dt>
-<dd><p>If `family = finegray`, `failcode` specifies the failure type of interest. This must be a positive integer.</p></dd>
+<dd><p>If <code>family = finegray</code>, <code>failcode</code> specifies the failure type of interest. This must be a positive integer.</p></dd>
 
 
 <dt>length.lambda</dt>
@@ -103,7 +106,7 @@
 
 
 <dt>lambda.min.ratio</dt>
-<dd><p>Ratio between the minimum and maximum choice of lambda. Default is `NULL`, where the ratio is chosen as 1e-2 if n &lt; p and 1e-4 otherwise.</p></dd>
+<dd><p>Ratio between the minimum and maximum choice of lambda. Default is <code>NULL</code>, where the ratio is chosen as 1e-2.</p></dd>
 
 
 <dt>mu</dt>
@@ -111,34 +114,38 @@
 
 
 <dt>ncv</dt>
-<dd><p>Number of cross-validation runs. Use `NULL` if cross-validation is not wanted.</p></dd>
+<dd><p>Number of cross-validation runs. Use <code>NULL</code> if cross-validation is not wanted.</p></dd>
 
 
 <dt>intercept</dt>
-<dd><p>TRUE or FALSE, indicating whether an intercept should be estimated.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>, indicating whether an intercept should be estimated.</p></dd>
 
 
 <dt>foldid</dt>
-<dd><p>A vector of fold indicator. Default is `NULL`.</p></dd>
+<dd><p>A vector of fold indicator. Default is <code>NULL</code>.</p></dd>
 
 
 <dt>step2</dt>
-<dd><p>TRUE or FALSE, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.</p></dd>
 
 
 <dt>progress</dt>
-<dd><p>TRUE or FALSE, indicating whether printing progress bar as the algorithm runs.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>, indicating whether printing progress bar as the algorithm runs.</p></dd>
 
 
 <dt>plot</dt>
-<dd><p>TRUE or FALSE, indicating whether returning plots of model fitting.</p></dd>
+<dd><p><code>TRUE</code> or <code>FALSE</code>, indicating whether returning plots of model fitting.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     
 
-<p>A list with path-specific estimates (beta), path (lambda), and many others.</p>
+<p>A list with path-specific estimates (beta), path (lambda), and others. Details can be found in <code>README.md</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599 &lt;https://doi.org/10.1101/2023.05.02.538599&gt;.</p>
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
@@ -164,7 +171,8 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Competing risks outcome</span></span></span>
 <span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="simu.html">simu</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>,p<span class="op">=</span><span class="fl">30</span>,model<span class="op">=</span><span class="st">"finegray"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,<span class="fu">survival</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">t</span>,<span class="va">dat</span><span class="op">$</span><span class="va">d</span>,type<span class="op">=</span><span class="st">"mstate"</span><span class="op">)</span>,failcode<span class="op">=</span><span class="fl">1</span>,family<span class="op">=</span><span class="st">"finegray"</span>,progress<span class="op">=</span><span class="cn">FALSE</span>,step2<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,<span class="fu">survival</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">t</span>,<span class="va">dat</span><span class="op">$</span><span class="va">d</span>,type<span class="op">=</span><span class="st">"mstate"</span><span class="op">)</span>,failcode<span class="op">=</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>              family<span class="op">=</span><span class="st">"finegray"</span>,progress<span class="op">=</span><span class="cn">FALSE</span>,step2<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
