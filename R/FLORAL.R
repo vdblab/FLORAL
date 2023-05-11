@@ -1,4 +1,4 @@
-#' FLORAL: Fit Log-ratio lasso regression for compositional covariates 
+#' Fit Log-ratio lasso regression for compositional covariates 
 #'
 #' @description Conduct log-ratio lasso regression for continuous, binary and survival outcomes. 
 #' @param x Count data matrix, where rows specify subjects and columns specify features. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
@@ -29,20 +29,7 @@
 #' dat <- simu(n=50,p=30,model="linear")
 #' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE)
 #' 
-#' # Binary outcome
-#' dat <- simu(n=50,p=30,model="binomial")
-#' fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
-#' 
-#' # Survival outcome
-#' dat <- simu(n=50,p=30,model="cox")
-#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)
-#' 
-#' # Competing risks outcome
-#' dat <- simu(n=50,p=30,model="finegray")
-#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
-#'               family="finegray",progress=FALSE,step2=FALSE)
-#' 
-#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
+#' @import Rcpp ggplot2 survival glmnet dplyr
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn

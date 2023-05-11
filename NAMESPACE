@@ -3,8 +3,6 @@
 export(FLORAL)
 export(simu)
 import(Rcpp)
-import(RcppArmadillo)
-import(RcppProgress)
 import(dplyr)
 import(ggplot2)
 import(glmnet)

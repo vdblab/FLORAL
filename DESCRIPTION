@@ -1,6 +1,6 @@
 Package: FLORAL
 Type: Package
-Title: FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates
+Title: Fit Log-Ratio Lasso Regression for Compositional Data
 Version: 0.1.0
 Date: 2023-05-09
 Authors@R: c(
@@ -13,7 +13,7 @@ Authors@R: c(
     person("Sandeep", "Raj", role=c("aut"),
            comment = c(ORCID = "0000-0003-4629-0528"))
   )
-Description: Log-ratio Lasso Regression for continuous, binary, and survival outcomes with compositional covariates. See Fei et al (2023) <https://doi.org/10.1101/2023.05.02.538599>.
+Description: Log-ratio Lasso regression for continuous, binary, and survival outcomes with compositional features. See Fei and others (2023) <doi:10.1101/2023.05.02.538599>.
 License: GPL (>= 3)
 URL: https://vdblab.github.io/FLORAL/
 BugReports: https://github.com/vdblab/FLORAL/issues
@@ -29,8 +29,6 @@ Imports:
   reshape,
   dplyr,
   glmnet,
-  RcppArmadillo,
-  RcppProgress,
   caret,
   grDevices,
   utils,

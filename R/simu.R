@@ -1,4 +1,4 @@
-#' simu: Simulate data following log-ratio model
+#' Simulate data following log-ratio model
 #'
 #' @description Simulate a dataset from log-ratio model.
 #' @param n An integer of sample size
@@ -19,7 +19,7 @@
 #' set.seed(23420)
 #' dat <- simu(n=50,p=30,model="linear")
 #' 
-#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
+#' @import ggplot2 survival glmnet dplyr
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
