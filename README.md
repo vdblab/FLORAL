@@ -6,8 +6,10 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/vdblab/FLORAL/actions/workflows/R-CMD-check.yaml)
-[![Codecov test
-coverage](https://codecov.io/gh/vdblab/FLORAL/branch/master/graph/badge.svg)](https://app.codecov.io/gh/vdblab/FLORAL?branch=master)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/FLORAL)](https://cran.r-project.org/package=FLORAL)
+[![](https://cranlogs.r-pkg.org/badges/FLORAL)](https://cran.r-project.org/package=FLORAL)
+[![](https://cranlogs.r-pkg.org/badges/grand-total/FLORAL)](https://cran.r-project.org/package=FLORAL)
 <!-- badges: end -->
 
 The `FLORAL` package is an open-source computational tool to perform
