@@ -40,6 +40,8 @@ library(curatedMetagenomicData)
 curatedMetagenomicData::sampleMetadata  |> group_by(.data$study_name, .data$study_condition) |> count() |> arrange(.data$study_name) 
 #As an example, let us look at the `YachidaS_2019` study between healthy controls and colorectal cancer (CRC) patients.
 curatedMetagenomicData::curatedMetagenomicData("YachidaS_2019") 
+# note --  if you are behind a firewall, see the solutions to 500 errors here:
+# https://support.bioconductor.org/p/132864/
 rawdata <- curatedMetagenomicData::curatedMetagenomicData("2021-03-31.YachidaS_2019.relative_abundance", dryrun = FALSE, counts = TRUE) |>  mergeData()
 x <- SummarizedExperiment::assays(rawdata)$relative_abundance %>% t()
 y <- rawdata@colData$disease
