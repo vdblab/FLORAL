@@ -1,6 +1,10 @@
 ---
 title: "Using FLORAL for Microbiome Analysis"
-output: rmarkdown::html_vignette
+output: 
+  rmarkdown::html_vignette:
+    md_extensions: [ 
+      "-autolink_bare_uris" 
+    ]
 vignette: >
   %\VignetteIndexEntry{Using FLORAL for Microbiome Analysis}
   %\VignetteEncoding{UTF-8}
@@ -24,7 +28,7 @@ library(patchwork)
 ```
 
 ## Data
-We will be using data from the [`curatedMetagenomicData`]() package. For easier installation, we saved a flat copy of the data, but the steps below show how that was created. 
+We will be using data from the `curatedMetagenomicData` package. For easier installation, we saved a flat copy of the data, but the steps below show how that was created. 
 
 ```r
 if (! "BiocManager" %in% installed.packages()) install.packages("BiocManager")

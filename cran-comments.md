@@ -1,5 +1,12 @@
+## Test environments
+* windows-latest (release) (on github actions)
+* ubuntu-latest (release) (on github actions)
+
 ## R CMD check results
+Maintainer: 'Teng Fei <feit1@mskcc.org>'
 
-0 errors | 0 warnings | 1 note
+New submission
+  
+## Additional Comments
 
-* This is a new release.
+Thank you for your time.

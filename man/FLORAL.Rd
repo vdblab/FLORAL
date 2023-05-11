@@ -2,7 +2,7 @@
 % Please edit documentation in R/FLORAL.R
 \name{FLORAL}
 \alias{FLORAL}
-\title{FLORAL: Fit Log-ratio lasso regression for compositional covariates}
+\title{Fit Log-ratio lasso regression for compositional covariates}
 \usage{
 FLORAL(
   x,
@@ -85,7 +85,7 @@ fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
 
 }
 \references{
-Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599 <https://doi.org/10.1101/2023.05.02.538599>.
+Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599.
 }
 \author{
 Teng Fei. Email: feit1@mskcc.org

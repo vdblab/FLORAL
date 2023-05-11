@@ -1,4 +1,4 @@
-#' FLORAL: Fit Log-ratio lasso regression for compositional covariates 
+#' Fit Log-ratio lasso regression for compositional covariates 
 #'
 #' @description Conduct log-ratio lasso regression for continuous, binary and survival outcomes. 
 #' @param x Count data matrix, where rows specify subjects and columns specify features. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
@@ -19,7 +19,7 @@
 #' @param plot \code{TRUE} or \code{FALSE}, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and others. Details can be found in \code{README.md}.
 #' @author Teng Fei. Email: feit1@mskcc.org
-#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599 <https://doi.org/10.1101/2023.05.02.538599>.
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599.
 #' 
 #' @examples 
 #' 
@@ -42,7 +42,7 @@
 #' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
 #'               family="finegray",progress=FALSE,step2=FALSE)
 #' 
-#' @import Rcpp RcppArmadillo ggplot2 RcppProgress survival glmnet dplyr
+#' @import Rcpp ggplot2 survival glmnet dplyr
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn

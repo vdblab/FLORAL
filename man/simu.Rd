@@ -2,7 +2,7 @@
 % Please edit documentation in R/simu.R
 \name{simu}
 \alias{simu}
-\title{simu: Simulate data following log-ratio model}
+\title{Simulate data following log-ratio model}
 \usage{
 simu(
   n = 100,
