@@ -1,8 +1,10 @@
 LogRatioTDCoxLasso <- function(x,
                                y,
                                id,
+                               ncov,
                                length.lambda=100,
                                lambda.min.ratio=NULL,
+                               a=1,
                                mu=1,
                                ncv=5,
                                foldid=NULL,
@@ -39,14 +41,17 @@ LogRatioTDCoxLasso <- function(x,
   sfun = d - expect
   # hfun <- expect - sapply(t,function(x) sum(1/denomj[which(tj <= x)]^2)) + 1e-8 # hessian
   # z <- sfun/hfun
-  lambda0 <- max(abs(t(sfun) %*% x))/n
+  lambda0 <- max(abs(t(sfun) %*% x))/(a*n)
+  
+  adjust = FALSE
+  if (ncov > 0) adjust = TRUE
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- cox_timedep_lasso_al(x,t0,t1,d,tj,length.lambda,mu,100,lambda,devnull,progress)
+  fullfit <- cox_timedep_enet_al(x,t0,t1,d,tj,length.lambda,mu,100,lambda,a,adjust,ncov,devnull,progress)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
@@ -101,7 +106,7 @@ LogRatioTDCoxLasso <- function(x,
       }
       cv.devnull <- 2*cv.devnull
       
-      cvfit <- cox_timedep_lasso_al(train.x,train.t0,train.t1,train.d,train.tj,length(lidx),mu,100,lambda[lidx],cv.devnull,progress)
+      cvfit <- cox_timedep_enet_al(train.x,train.t0,train.t1,train.d,train.tj,length(lidx),mu,100,lambda[lidx],a,adjust,ncov,cv.devnull,progress)
       
       cv.devnull <- 0
       loglik <- rep(0,length(lidx))
@@ -147,6 +152,7 @@ LogRatioTDCoxLasso <- function(x,
     
     ret <- list(beta=fullfit$beta[,lidx],
                 lambda=fullfit$lambda[lidx],
+                a=a,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx],
                 cvdev.mean=mean.cvdev,
@@ -280,6 +286,7 @@ LogRatioTDCoxLasso <- function(x,
     
     ret <- list(beta=fullfit$beta[,lidx],
                 lambda=fullfit$lambda[lidx],
+                a=a,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx]
     )

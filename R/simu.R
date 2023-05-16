@@ -10,6 +10,8 @@
 #' @param strongsize Actual effect size for \code{strong} effect size. Must be positive.
 #' @param pct.sparsity Percentage of zero counts for each sample.
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
+#' @param ncov Number of covariates that are not compositional features.
+#' @param betacov Coefficients corresponding to the covariates that are not compositional features.
 #' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.
 #' @return A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
 #' @author Teng Fei. Email: feit1@mskcc.org
@@ -38,6 +40,8 @@ simu <- function(n = 100,
                  strongsize = 0.25,
                  pct.sparsity = 0.5,
                  rho=0,
+                 ncov=0,
+                 betacov=0,
                  intercept=FALSE){
   
   true_set <- 1:(weak+strong)
@@ -89,9 +93,16 @@ simu <- function(n = 100,
   colnames(xcount) <- paste0("taxa",1:p)
   x = log(x+1)
   
+  if (ncov > 0){
+    xcov <- mvtnorm::rmvnorm(n=n,mean=rep(0,ncov))
+    colnames(xcov) <- paste0("cov",1:ncov)
+  }
+  
   if (model == "linear"){
     
     y <- x[,true_set] %*% beta + rnorm(n,mean=0,sd=1)
+    
+    if(ncov > 0) y <- y + xcov %*% betacov
     
     if(intercept) {
       
@@ -105,9 +116,13 @@ simu <- function(n = 100,
     
     if (intercept) ret$intercept=intcpt
     
+    if (ncov > 0) ret$xcov=xcov
+    
   }else if(model == "binomial"){
     
     eta <- x[,true_set] %*% beta
+    
+    if (ncov > 0) eta <- eta + xcov %*% betacov
     
     if(intercept) {
       
@@ -126,9 +141,13 @@ simu <- function(n = 100,
     
     if (intercept) ret$intercept=intcpt
     
+    if (ncov > 0) ret$xcov=xcov
+    
   }else if(model == "cox"){
     
     eta <- x[,true_set] %*% beta
+    
+    if (ncov > 0) eta <- eta + xcov %*% betacov
     
     lambda <- exp(eta)
     
@@ -142,9 +161,14 @@ simu <- function(n = 100,
     
     ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
     
+    if (ncov > 0) ret$xcov=xcov
+    
   }else if(model == "finegray"){
     
     eta <- x[,true_set] %*% beta
+    
+    if (ncov > 0) eta <- eta + xcov %*% betacov
+    
     p.cif = 0.66
     lambda <- exp(eta)
     cl=0.19
@@ -177,6 +201,8 @@ simu <- function(n = 100,
     d <- 0*I(t == c) + epsilon*I(t < c)
     
     ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    
+    if (ncov > 0) ret$xcov=xcov
     
   }
   

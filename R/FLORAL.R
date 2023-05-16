@@ -1,8 +1,9 @@
 #' Fit Log-ratio lasso regression for compositional covariates 
 #'
 #' @description Conduct log-ratio lasso regression for continuous, binary and survival outcomes. 
-#' @param x Count data matrix, where rows specify subjects and columns specify features. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
+#' @param x Feature matrix, where rows specify subjects and columns specify features. The first \code{ncov} columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
+#' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
 #' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
 #' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
@@ -10,6 +11,7 @@
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
+#' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Number of cross-validation runs. Use \code{NULL} if cross-validation is not wanted.
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
@@ -54,6 +56,7 @@
 
 FLORAL <- function(x,
                    y,
+                   ncov=0,
                    family="gaussian",
                    longitudinal=FALSE,
                    id=NULL,
@@ -61,6 +64,7 @@ FLORAL <- function(x,
                    failcode=NULL,
                    length.lambda=100,
                    lambda.min.ratio=NULL,
+                   a=1,
                    mu=1,
                    ncv=5,
                    intercept=FALSE,
@@ -69,7 +73,11 @@ FLORAL <- function(x,
                    progress=TRUE,
                    plot=TRUE){
   
-  x <- log(x+1)
+  if (ncov < 0){
+    stop("`ncov` must be a non-negative integer.")
+  }
+  
+  x[,(ncov+1):ncol(x)] <- log(x[,(ncov+1):ncol(x)]+1)
   
   if (family == "gaussian"){
     
@@ -78,8 +86,10 @@ FLORAL <- function(x,
     }else{
       res <- LogRatioLasso(x,
                            y,
+                           ncov,
                            length.lambda,
                            lambda.min.ratio,
+                           a,
                            mu,
                            ncv,
                            intercept,
@@ -96,8 +106,10 @@ FLORAL <- function(x,
     }else{
       res <- LogRatioLogisticLasso(x,
                                    y,
+                                   ncov,
                                    length.lambda,
                                    lambda.min.ratio,
+                                   a,
                                    mu,
                                    ncv,
                                    foldid,
@@ -135,8 +147,10 @@ FLORAL <- function(x,
         res <- LogRatioTDCoxLasso(newx,
                                   newy,
                                   newid,
+                                  ncov,
                                   length.lambda,
                                   lambda.min.ratio,
+                                  a,
                                   mu,
                                   ncv,
                                   foldid,
@@ -150,8 +164,10 @@ FLORAL <- function(x,
       
       res <- LogRatioCoxLasso(x,
                               y,
+                              ncov,
                               length.lambda,
                               lambda.min.ratio,
+                              a,
                               mu,
                               ncv,
                               foldid,
@@ -198,8 +214,10 @@ FLORAL <- function(x,
                                newy,
                                newid,
                                weight,
+                               ncov,
                                length.lambda,
                                lambda.min.ratio,
+                               a,
                                mu,
                                ncv,
                                foldid,
@@ -231,8 +249,10 @@ FLORAL <- function(x,
                              newy,
                              newid,
                              weight,
+                             ncov,
                              length.lambda,
                              lambda.min.ratio,
+                             a,
                              mu,
                              ncv,
                              foldid,
@@ -272,8 +292,8 @@ FLORAL <- function(x,
       res$step2.ratios$min.idx <- res$step2.feature.min[,!is.na(colSums(res$step2.feature.min))]
       
       res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
-      res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
-      rownames(res$step2.tables$`min`) <- res$step2.ratios$`min`
+      # res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
+      rownames(res$step2.tables$`min`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`min`
     }
     if (length(res$selected.feature$`1se.2stage`)>0){
       namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
@@ -281,8 +301,8 @@ FLORAL <- function(x,
       res$step2.ratios$`1se.idx` <- res$step2.feature.1se[,!is.na(colSums(res$step2.feature.1se))]
       
       res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
-      res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
-      rownames(res$step2.tables$`1se`) <- res$step2.ratios$`1se`
+      # res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
+      rownames(res$step2.tables$`1se`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`1se`
     }
     
   }else{

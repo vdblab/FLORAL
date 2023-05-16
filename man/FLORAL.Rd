@@ -7,6 +7,7 @@
 FLORAL(
   x,
   y,
+  ncov = 0,
   family = "gaussian",
   longitudinal = FALSE,
   id = NULL,
@@ -14,6 +15,7 @@ FLORAL(
   failcode = NULL,
   length.lambda = 100,
   lambda.min.ratio = NULL,
+  a = 1,
   mu = 1,
   ncv = 5,
   intercept = FALSE,
@@ -24,9 +26,11 @@ FLORAL(
 )
 }
 \arguments{
-\item{x}{Count data matrix, where rows specify subjects and columns specify features. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.}
+\item{x}{Feature matrix, where rows specify subjects and columns specify features. The first \code{ncov} columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.}
 
 \item{y}{Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.}
+
+\item{ncov}{An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.}
 
 \item{family}{Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.}
 
@@ -41,6 +45,8 @@ FLORAL(
 \item{length.lambda}{Number of penalty parameters used in the path}
 
 \item{lambda.min.ratio}{Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.}
+
+\item{a}{A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.}
 
 \item{mu}{Value of penalty for the augmented Lagrangian}
 

@@ -1,7 +1,9 @@
 LogRatioLogisticLasso <- function(x,
                                   y,
+                                  ncov,
                                   length.lambda=100,
                                   lambda.min.ratio=NULL,
+                                  a=1,
                                   mu=1,
                                   ncv=5,
                                   foldid=NULL,
@@ -16,7 +18,10 @@ LogRatioLogisticLasso <- function(x,
   n <- length(y)
   p <- ncol(x)
   sfun = y-0.5
-  lambda0 <- max(abs(t(sfun) %*% x))/n
+  lambda0 <- max(abs(t(sfun) %*% x))/(a*n)
+  
+  adjust = FALSE
+  if (ncov > 0) adjust = TRUE
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   
@@ -24,7 +29,7 @@ LogRatioLogisticLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- logistic_lasso_al(x,y,length.lambda,mu,100,lambda,progress,loop1,loop2)
+  fullfit <- logistic_enet_al(x,y,length.lambda,mu,100,lambda,a,adjust,ncov,progress,loop1,loop2)
   
   if (!is.null(colnames(x))){
     rownames(fullfit$beta) = colnames(x)
@@ -52,7 +57,7 @@ LogRatioLogisticLasso <- function(x,
       test.x <- x[labels==cv,]
       test.y <- y[labels==cv]
       
-      cvfit <- logistic_lasso_al(train.x,train.y,length.lambda,mu,100,lambda,progress,loop1,loop2)
+      cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,100,lambda,a,adjust,ncov,progress,loop1,loop2)
       
       cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
       
@@ -78,6 +83,7 @@ LogRatioLogisticLasso <- function(x,
     ret <- list(beta=fullfit$beta,
                 beta0=fullfit$beta0,
                 lambda=fullfit$lambda,
+                a=a,
                 loss=fullfit$loss,
                 mse=fullfit$mse,
                 cvmse.mean=mean.cvmse,
@@ -223,6 +229,7 @@ LogRatioLogisticLasso <- function(x,
     ret <- list(beta=fullfit$beta,
                 beta0=fullfit$beta0,
                 lambda=fullfit$lambda,
+                a=a,
                 loss=fullfit$loss,
                 mse=fullfit$mse
     )

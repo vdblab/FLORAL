@@ -14,6 +14,8 @@ simu(
   strongsize = 0.25,
   pct.sparsity = 0.5,
   rho = 0,
+  ncov = 0,
+  betacov = 0,
   intercept = FALSE
 )
 }
@@ -35,6 +37,10 @@ simu(
 \item{pct.sparsity}{Percentage of zero counts for each sample.}
 
 \item{rho}{Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.}
+
+\item{ncov}{Number of covariates that are not compositional features.}
+
+\item{betacov}{Coefficients corresponding to the covariates that are not compositional features.}
 
 \item{intercept}{Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.}
 }

@@ -1,7 +1,9 @@
 LogRatioCoxLasso <- function(x,
                              y,
+                             ncov,
                              length.lambda=100,
                              lambda.min.ratio=NULL,
+                             a=1,
                              mu=1,
                              ncv=5,
                              foldid=NULL,
@@ -34,14 +36,17 @@ LogRatioCoxLasso <- function(x,
   sfun = d - expect
   # hfun <- expect - sapply(t,function(x) sum(1/denomj[which(tj <= x)]^2)) + 1e-8 # hessian
   # z <- sfun/hfun
-  lambda0 <- max(abs(t(sfun) %*% x))/n
+  lambda0 <- max(abs(t(sfun) %*% x))/(a*n)
+  
+  adjust = FALSE
+  if (ncov > 0) adjust = TRUE
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- cox_lasso_al(x,t,d,tj,length.lambda,mu,100,lambda,devnull,progress,loop1,loop2,notcv=TRUE)
+  fullfit <- cox_enet_al(x,t,d,tj,length.lambda,mu,100,lambda,a,adjust,ncov,devnull,progress,loop1,loop2,notcv=TRUE)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
@@ -91,7 +96,7 @@ LogRatioCoxLasso <- function(x,
       }
       cv.devnull <- 2*cv.devnull
       
-      cvfit <- cox_lasso_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],cv.devnull,progress,loop1,loop2,notcv=FALSE)
+      cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],a,adjust,ncov,cv.devnull,progress,loop1,loop2,notcv=FALSE)
       
       cv.devnull <- 0
       loglik <- rep(0,length(lidx))
@@ -145,6 +150,7 @@ LogRatioCoxLasso <- function(x,
     
     ret <- list(beta=fullfit$beta[,lidx],
                 lambda=fullfit$lambda[lidx],
+                a=a,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx],
                 cvdev.mean=mean.cvdev,
@@ -274,6 +280,7 @@ LogRatioCoxLasso <- function(x,
     
     ret <- list(beta=fullfit$beta[,lidx],
                 lambda=fullfit$lambda[lidx],
+                a=a,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx]
     )
