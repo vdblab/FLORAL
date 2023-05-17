@@ -244,22 +244,33 @@ LogRatioLasso <- function(x,
           }
           
           
-          if(is.null(x.select.min)) break
+          # if(is.null(x.select.min)) break
           
-          if (ncol(x.select.min) > 0){
+          if (ncol(x.select.min) > 1){
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
             
-            if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+            if (length(taxidx) == 0){
+              
+              idxs <- NULL
+              
+              # covs <- colnames(x.select.min)[which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+            }else{
+              
+              if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+              if (length(covidx) > 0){
+                
+                # covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                #                                        1:ncol(idxs))]
+                
+                idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                                      (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
+                
+              }
+              
+            }
             
-            if (length(covidx) > 0){
-              
-              covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
-                                                     1:ncol(idxs))]
-              
-              idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
-                                    (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
-              
-            }  
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           }
           
@@ -304,22 +315,32 @@ LogRatioLasso <- function(x,
             colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
           }
           
-          if(is.null(x.select.min)) break
+          # if(is.null(x.select.min)) break
           
-          if (ncol(x.select.min) > 0){
+          if (ncol(x.select.min) > 1){
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
             
-            if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+            if (length(taxidx) == 0){
+              
+              idxs <- NULL
+              
+              # covs <- colnames(x.select.min)[which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+            }else{
+              
+              if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+              if (length(covidx) > 0){
+                
+                # covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),1:ncol(idxs))]
+                
+                idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                                      (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
+                
+              }
+              
+            }
             
-            if (length(covidx) > 0){
-              
-              covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
-                                                     1:ncol(idxs))]
-              
-              idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
-                                    (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
-              
-            }  
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           }
           

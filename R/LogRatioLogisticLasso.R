@@ -144,82 +144,231 @@ LogRatioLogisticLasso <- function(x,
     
     if (step2){
       
-      if (length(which(ret$best.beta$min.mse!=0)) > 1){
+      if (!adjust){
         
-        idxs <- combn(which(ret$best.beta$min.mse!=0),2)
-        x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
-        for (k in 1:ncol(idxs)){
-          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
-        }
-        
-        if (ncol(x.select.min) > 1){
-          stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
-          x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-          idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-        }
-        
-        df_step2 <- data.frame(y=y,x=x.select.min)
-        step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
-        vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
-        
-        if (ncol(idxs) == 1 & length(vars) == 2){
-          vars = 1
-        }
-        
-        if (is.null(ncol(idxs))){
-          if (length(vars) == 2){
-            selected <- idxs
-          }else{
-            selected <- NULL
+        if (length(which(ret$best.beta$min.mse!=0)) > 1){
+          
+          idxs <- combn(which(ret$best.beta$min.mse!=0),2)
+          x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
+          for (k in 1:ncol(idxs)){
+            x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
           }
-        }else{
-          selected <- idxs[,vars]
-        }
-        
-        # for (k1 in 1:nrow(selected)){
-        #   for (k2 in 1:ncol(selected)){
-        #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
-        #   }
-        # }
-        ret$step2.feature.min = selected
-        ret$step2fit.min <- step2fit
-      }
-      
-      if (length(which(ret$best.beta$add.1se!=0)) > 1){
-        
-        idxs <- combn(which(ret$best.beta$add.1se!=0),2)
-        
-        x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
-        for (k in 1:ncol(idxs)){
-          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
-        }
-        
-        if (ncol(x.select.min) > 1){
-          stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
-          x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-          idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-        }
-        
-        df_step2 <- data.frame(y=y,x=x.select.min)
-        step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
-        vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
-        
-        if (is.null(ncol(idxs))){
-          if (length(vars) == 2){
-            selected <- idxs
-          }else{
-            selected <- NULL
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+            idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           }
-        }else{
-          selected <- idxs[,vars]
+          
+          df_step2 <- data.frame(y=y,x=x.select.min)
+          step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
+          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          
+          if (ncol(idxs) == 1 & length(vars) == 2){
+            vars = 1
+          }
+          
+          if (is.null(ncol(idxs))){
+            if (length(vars) == 2){
+              selected <- idxs
+            }else{
+              selected <- NULL
+            }
+          }else{
+            selected <- idxs[,vars]
+          }
+          
+          # for (k1 in 1:nrow(selected)){
+          #   for (k2 in 1:ncol(selected)){
+          #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+          #   }
+          # }
+          ret$step2.feature.min = selected
+          ret$step2fit.min <- step2fit
         }
-        # for (k1 in 1:nrow(selected)){
-        #   for (k2 in 1:ncol(selected)){
-        #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
-        #   }
-        # }
-        ret$step2.feature.1se = selected
-        ret$step2fit.1se <- step2fit
+        
+        if (length(which(ret$best.beta$add.1se!=0)) > 1){
+          
+          idxs <- combn(which(ret$best.beta$add.1se!=0),2)
+          
+          x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
+          for (k in 1:ncol(idxs)){
+            x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+          }
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+            idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }
+          
+          df_step2 <- data.frame(y=y,x=x.select.min)
+          step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
+          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          
+          if (is.null(ncol(idxs))){
+            if (length(vars) == 2){
+              selected <- idxs
+            }else{
+              selected <- NULL
+            }
+          }else{
+            selected <- idxs[,vars]
+          }
+          # for (k1 in 1:nrow(selected)){
+          #   for (k2 in 1:ncol(selected)){
+          #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+          #   }
+          # }
+          ret$step2.feature.1se = selected
+          ret$step2fit.1se <- step2fit
+        }
+        
+      }else{
+        
+        if (length(which(ret$best.beta$min.mse!=0)) > 0){
+          
+          allidx <- which(ret$best.beta$min.mse!=0)
+          
+          covidx <- allidx[allidx <= ncov]
+          taxidx <- allidx[allidx > ncov]
+          
+          x.select.min <- NULL
+          
+          if (length(taxidx) > 1){
+            idxs <- combn(taxidx,2)
+            for (k in 1:ncol(idxs)){
+              x.select.min <- cbind(x.select.min, x[,idxs[1,k]] - x[,idxs[2,k]])
+            }
+            colnames(x.select.min) <- rep("",ncol(x.select.min))
+          }
+          
+          if (length(covidx) > 0){
+            x.select.min <- cbind(x.select.min, x[,covidx])
+            colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+          }
+          
+          
+          # if(is.null(x.select.min)) break
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
+            
+            if (length(taxidx) == 0){
+              
+              idxs <- NULL
+              
+              # covs <- colnames(x.select.min)[which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+            }else{
+              
+              if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+              if (length(covidx) > 0){
+                
+                # covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                #                                        1:ncol(idxs))]
+                
+                idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                                      (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
+                
+              }
+              
+            }
+            
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }
+          
+          colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
+          df_step2 <- data.frame(y=y,x.select.min)
+          step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
+          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          
+          if (is.null(ncol(idxs))){
+            if (length(vars) == 2){
+              selected <- idxs
+            }else{
+              selected <- NULL
+            }
+          }else{
+            selected <- idxs[,vars]
+          }
+          
+          ret$step2.feature.min = selected
+          ret$step2fit.min <- step2fit
+        }
+        
+        if (length(which(ret$best.beta$add.1se!=0)) > 0){
+          
+          allidx <- which(ret$best.beta$add.1se!=0)
+          
+          covidx <- allidx[allidx <= ncov]
+          taxidx <- allidx[allidx > ncov]
+          
+          x.select.min <- NULL
+          
+          if (length(taxidx) > 1){
+            idxs <- combn(taxidx,2)
+            for (k in 1:ncol(idxs)){
+              x.select.min <- cbind(x.select.min, x[,idxs[1,k]] - x[,idxs[2,k]])
+            }
+            colnames(x.select.min) <- rep("",ncol(x.select.min))
+          }
+          
+          if (length(covidx) > 0){
+            x.select.min <- cbind(x.select.min, x[,covidx])
+            colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+          }
+          
+          # if(is.null(x.select.min)) break
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
+            
+            if (length(taxidx) == 0){
+              
+              idxs <- NULL
+              
+              # covs <- colnames(x.select.min)[which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+            }else{
+              
+              if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+              if (length(covidx) > 0){
+                
+                # covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),1:ncol(idxs))]
+                
+                idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                                      (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
+                
+              }
+              
+            }
+            
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }
+          
+          colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
+          df_step2 <- data.frame(y=y,x.select.min)
+          step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
+          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          
+          if (is.null(ncol(idxs))){
+            if (length(vars) == 2){
+              selected <- idxs
+            }else{
+              selected <- NULL
+            }
+          }else{
+            selected <- idxs[,vars]
+          }
+          
+          ret$step2.feature.1se = selected
+          ret$step2fit.1se <- step2fit
+          
+        }
+        
       }
       
     }
