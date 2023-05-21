@@ -221,7 +221,7 @@ LogRatioLasso <- function(x,
         
       }else{
         
-        if (length(which(ret$best.beta$min.mse!=0)) > 0){
+        if (length(which(ret$best.beta$min.mse!=0)) > 1){
           
           allidx <- which(ret$best.beta$min.mse!=0)
           
@@ -293,7 +293,7 @@ LogRatioLasso <- function(x,
           ret$step2fit.min <- step2fit
         }
         
-        if (length(which(ret$best.beta$add.1se!=0)) > 0){
+        if (length(which(ret$best.beta$add.1se!=0)) > 1){
           
           allidx <- which(ret$best.beta$add.1se!=0)
           
