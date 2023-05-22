@@ -13,7 +13,7 @@
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
 #' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
 #' @param mu Value of penalty for the augmented Lagrangian
-#' @param ncv Number of cross-validation runs. Use \code{NULL} if cross-validation is not wanted.
+#' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
 #' @param foldid A vector of fold indicator. Default is \code{NULL}.
 #' @param step2 \code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
@@ -285,7 +285,7 @@ FLORAL <- function(x,
     
     res$step2.tables <- list(min=character(0),
                              `1se`=character(0))
-
+    
     if (length(res$selected.feature$min.2stage)>0){
       namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
       res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
@@ -313,8 +313,164 @@ FLORAL <- function(x,
   
   res$step2.feature.min <- NULL
   res$step2.feature.1se <- NULL
-
+  
   res$selected.feature <- lapply(res$selected.feature,sort)
+  
+  return(res)
+  
+}
+
+#' Summarizing selected compositional features over multiple cross validations
+#' 
+#' @description Summarizing \code{FLORAL} outputs from multiple random k-fold cross validations
+#' @param mcv Number of random `ncv`-fold cross-validation to be performed.
+#' @param ncore Number of cores used for parallel computation. Default is to use only 1 core.
+#' @param seed A random seed for reproducibility of the results. By default the seed is the numeric form of \code{Sys.Date()}.
+#' @param x Feature matrix, where rows specify subjects and columns specify features. The first \code{ncov} columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
+#' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
+#' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
+#' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
+#' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
+#' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
+#' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
+#' @param length.lambda Number of penalty parameters used in the path
+#' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
+#' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
+#' @param mu Value of penalty for the augmented Lagrangian
+#' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
+#' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
+#' @param step2 \code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
+#' @param progress \code{TRUE} or \code{FALSE}, indicating whether printing progress bar as the algorithm runs.
+#' @return A list with relative frequencies of a certain feature being selected over \code{mcv} \code{ncv}-fold cross-validations.
+#' @author Teng Fei. Email: feit1@mskcc.org
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599.
+#' 
+#' @examples 
+#' 
+#' set.seed(23420)
+#' 
+#' dat <- simu(n=50,p=30,model="linear")
+#' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=TRUE)
+#' 
+#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG
+#' @importFrom survcomp concordance.index
+#' @importFrom reshape melt
+#' @importFrom utils combn
+#' @importFrom grDevices rainbow
+#' @importFrom caret createFolds
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @useDynLib FLORAL
+#' @export
+
+mcv.FLORAL <- function(mcv=10,
+                       ncore=1,
+                       seed=NULL,
+                       x,
+                       y,
+                       ncov=0,
+                       family="gaussian",
+                       longitudinal=FALSE,
+                       id=NULL,
+                       tobs=NULL,
+                       failcode=NULL,
+                       length.lambda=100,
+                       lambda.min.ratio=NULL,
+                       a=1,
+                       mu=1,
+                       ncv=5,
+                       intercept=FALSE,
+                       step2=TRUE,
+                       progress=TRUE){
+  
+  if (mcv <= 1){
+    
+    stop("`mcv` is less than 2. Please directly use `FLORAL` function.")
+    
+  }else if (mcv >= 2){
+    
+    if (ncore == 1){
+      
+      if (progress) warning("Using 1 core for computation.")
+      
+      FLORAL.res <- list()
+      if (is.null(seed)) seed <- as.numeric(Sys.Date())
+      set.seed(seed)
+      
+      for (i in 1:mcv){
+        
+        print(paste0("Random ",ncv,"-fold cross-validation: ",i))
+        
+        FLORAL.res[[i]] <- FLORAL(x,
+                                  y,
+                                  ncov,
+                                  family,
+                                  longitudinal,
+                                  id,
+                                  tobs,
+                                  failcode,
+                                  length.lambda,
+                                  lambda.min.ratio,
+                                  a,
+                                  mu,
+                                  ncv,
+                                  intercept,
+                                  foldid=NULL,
+                                  step2,
+                                  progress=FALSE,
+                                  plot=FALSE)$selected.feature
+        
+      }
+      
+      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$min)))/mcv,
+                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$`1se`)))/mcv,
+                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$min.2stage)))/mcv,
+                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$`1se.2stage`)))/mcv,
+                  mcv=mcv,
+                  seed=seed)
+      
+    }else if (ncore > 1){
+      
+      if (progress) warning(paste0("Using ", ncore ," core for computation."))
+      
+      registerDoParallel(cores=ncore)
+      random.seed <- as.numeric(Sys.Date())
+      if (is.null(seed)) seed <- as.numeric(Sys.Date())
+      registerDoRNG(seed=seed)
+      
+      FLORAL.res <- foreach(i=1:mcv) %dopar% {
+        
+        FLORAL(x,
+               y,
+               ncov,
+               family,
+               longitudinal,
+               id,
+               tobs,
+               failcode,
+               length.lambda,
+               lambda.min.ratio,
+               a,
+               mu,
+               ncv,
+               intercept,
+               foldid=NULL,
+               step2,
+               progress=FALSE,
+               plot=FALSE)$selected.feature
+        
+      }
+      
+      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$min)))/mcv,
+                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$`1se`)))/mcv,
+                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$min.2stage)))/mcv,
+                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$`1se.2stage`)))/mcv,
+                  mcv=mcv,
+                  seed=seed)
+      
+    }
+    
+  }
   
   return(res)
   
