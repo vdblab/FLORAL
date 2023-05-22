@@ -32,7 +32,10 @@ Imports:
   caret,
   grDevices,
   utils,
-  mvtnorm
+  mvtnorm,
+  doParallel,
+  doRNG,
+  foreach
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.2.3
 Encoding: UTF-8
