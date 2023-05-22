@@ -383,6 +383,8 @@ mcv.FLORAL <- function(mcv=10,
                        step2=TRUE,
                        progress=TRUE){
   
+  if (is.null(ncv) | ncv < 2) stop("Number of folds `ncv` must be larger than one for cross validation.")
+  
   if (mcv <= 1){
     
     stop("`mcv` is less than 2. Please directly use `FLORAL` function.")
@@ -399,7 +401,7 @@ mcv.FLORAL <- function(mcv=10,
       
       for (i in 1:mcv){
         
-        print(paste0("Random ",ncv,"-fold cross-validation: ",i))
+        if (progress) cat(paste0("Random ",ncv,"-fold cross-validation: ",i,"\n"))
         
         FLORAL.res[[i]] <- FLORAL(x,
                                   y,
@@ -473,5 +475,227 @@ mcv.FLORAL <- function(mcv=10,
   }
   
   return(res)
+  
+}
+
+
+
+#' Comparing prediction performances under different choices of weights for lasso/ridge penalty
+#' 
+#' @description Summarizing \code{FLORAL} outputs from various choices of \code{a}
+#' @param a vector of scalars between 0 and 1 for comparison.
+#' @param ncore Number of cores used for parallel computation. Default is to use only 1 core.
+#' @param seed A random seed for reproducibility of the results. By default the seed is the numeric form of \code{Sys.Date()}.
+#' @param x Feature matrix, where rows specify subjects and columns specify features. The first \code{ncov} columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
+#' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
+#' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
+#' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
+#' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
+#' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
+#' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
+#' @param length.lambda Number of penalty parameters used in the path
+#' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
+#' @param mu Value of penalty for the augmented Lagrangian
+#' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
+#' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
+#' @param step2 \code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
+#' @param progress \code{TRUE} or \code{FALSE}, indicating whether printing progress bar as the algorithm runs.
+#' @return A \code{ggplot2} object of cross-validated prediction metric versus \code{lambda}, stratified by \code{a}. Detailed data can be retrieved from the \code{ggplot2} object itself.
+#' @author Teng Fei. Email: feit1@mskcc.org
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599.
+#' 
+#' @examples 
+#' 
+#' set.seed(23420)
+#' 
+#' dat <- simu(n=50,p=30,model="linear")
+#' pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=FALSE)
+#' 
+#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG
+#' @importFrom survcomp concordance.index
+#' @importFrom reshape melt
+#' @importFrom utils combn
+#' @importFrom grDevices rainbow
+#' @importFrom caret createFolds
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @useDynLib FLORAL
+#' @export
+
+a.FLORAL <- function(a=c(0.1,0.5,1),
+                     ncore=1,
+                     seed=NULL,
+                     x,
+                     y,
+                     ncov=0,
+                     family="gaussian",
+                     longitudinal=FALSE,
+                     id=NULL,
+                     tobs=NULL,
+                     failcode=NULL,
+                     length.lambda=100,
+                     lambda.min.ratio=NULL,
+                     mu=1,
+                     ncv=5,
+                     intercept=FALSE,
+                     step2=TRUE,
+                     progress=TRUE){
+  
+  if (is.null(ncv) | ncv < 2) stop("Number of folds `ncv` must be larger than one for cross validation.")
+  
+  if (length(a) <= 1){
+    
+    stop("Length of `a` is less than 2. Please directly use `FLORAL` function.")
+    
+  }else if (length(a) >= 2){
+    
+    if (ncore == 1){
+      
+      if (progress) warning("Using 1 core for computation.")
+      
+      FLORAL.res <- list()
+      if (is.null(seed)) seed <- as.numeric(Sys.Date())
+      set.seed(seed)
+      
+      for (i in 1:length(a)){
+        
+        if (progress) cat(paste0("Running for a = ",a[i],"\n"))
+        
+        if (i == 1){
+          foldid=NULL
+        }else{
+          foldid=fit$foldid
+        }
+        
+        fit <- FLORAL(x,
+                      y,
+                      ncov,
+                      family,
+                      longitudinal,
+                      id,
+                      tobs,
+                      failcode,
+                      length.lambda,
+                      lambda.min.ratio,
+                      a = a[i],
+                      mu,
+                      ncv,
+                      intercept,
+                      foldid=foldid,
+                      step2,
+                      progress=FALSE,
+                      plot=FALSE)
+        
+        FLORAL.res[[i]] <- data.frame(a=fit$a,
+                                      lambda=as.vector(fit$lambda),
+                                      cv.metric=fit[[4]],
+                                      cv.metricse=fit[[5]]
+        )
+        
+      }
+      
+      FLORAL.res <- do.call(rbind,FLORAL.res) %>% 
+        group_by(a) %>% 
+        mutate(min.metric = min(cv.metric),
+               min.lambda = lambda[min.metric==cv.metric]) %>% 
+        ungroup()
+      
+      pmetric <- ggplot(aes(x=log(lambda),y=cv.metric,color=as.factor(a)),data=FLORAL.res) + 
+        geom_point(size=0.5) +
+        geom_hline(aes(yintercept = min.metric,color=as.factor(a)),
+                   alpha = 0.5) +
+        geom_vline(aes(xintercept = log(min.lambda),color=as.factor(a)),
+                   alpha = 0.5) +
+        theme_bw() +
+        xlab(expression(paste("log(",lambda,")"))) +
+        ylab("Cross-validated metric") + 
+        guides(color=guide_legend(title="a"))
+      
+    }else if (ncore > 1){
+      
+      if (progress) warning(paste0("Using ", ncore ," core for computation."))
+      
+      registerDoParallel(cores=ncore)
+      random.seed <- as.numeric(Sys.Date())
+      if (is.null(seed)) seed <- as.numeric(Sys.Date())
+      registerDoRNG(seed=seed)
+      
+      fit0 <- FLORAL(x,
+                     y,
+                     ncov,
+                     family,
+                     longitudinal,
+                     id,
+                     tobs,
+                     failcode,
+                     length.lambda,
+                     lambda.min.ratio,
+                     a = a[1],
+                     mu,
+                     ncv,
+                     intercept,
+                     foldid=NULL,
+                     step2,
+                     progress=FALSE,
+                     plot=FALSE)
+      
+      FLORAL.res0 <- data.frame(a=fit0$a,
+                                lambda=as.vector(fit0$lambda),
+                                cv.metric=fit0[[4]],
+                                cv.metricse=fit0[[5]])
+      
+      FLORAL.res <- foreach(i=2:length(a)) %dopar% {
+        
+        fit <- FLORAL(x,
+                      y,
+                      ncov,
+                      family,
+                      longitudinal,
+                      id,
+                      tobs,
+                      failcode,
+                      length.lambda,
+                      lambda.min.ratio,
+                      a = a[i],
+                      mu,
+                      ncv,
+                      intercept,
+                      foldid=fit0$foldid,
+                      step2,
+                      progress=FALSE,
+                      plot=FALSE)
+        
+        data.frame(a=fit$a,
+                   lambda=as.vector(fit$lambda),
+                   cv.metric=fit[[4]],
+                   cv.metricse=fit[[5]]
+        )
+        
+      }
+      
+      FLORAL.res[[length(a)]] <- FLORAL.res0
+      
+      FLORAL.res <- do.call(rbind,FLORAL.res) %>% 
+        group_by(a) %>% 
+        mutate(min.metric = min(cv.metric),
+               min.lambda = lambda[min.metric==cv.metric]) %>% 
+        ungroup()
+      
+      pmetric <- ggplot(aes(x=log(lambda),y=cv.metric,color=as.factor(a)),data=FLORAL.res) + 
+        geom_point(size=0.5) +
+        geom_hline(aes(yintercept = min.metric,color=as.factor(a)),
+                   alpha = 0.5) +
+        geom_vline(aes(xintercept = log(min.lambda),color=as.factor(a)),
+                   alpha = 0.5) +
+        theme_bw() +
+        xlab(expression(paste("log(",lambda,")"))) +
+        ylab("Cross-validated metric") + 
+        guides(color=guide_legend(title="a"))
+      
+    }
+    
+  }
+  
+  return(pmetric)
   
 }
