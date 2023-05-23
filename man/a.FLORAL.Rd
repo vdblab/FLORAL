@@ -18,10 +18,11 @@ a.FLORAL(
   failcode = NULL,
   length.lambda = 100,
   lambda.min.ratio = NULL,
+  ncov.lambda.weight = 0,
   mu = 1,
   ncv = 5,
   intercept = FALSE,
-  step2 = TRUE,
+  step2 = FALSE,
   progress = TRUE
 )
 }
@@ -52,6 +53,8 @@ a.FLORAL(
 
 \item{lambda.min.ratio}{Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.}
 
+\item{ncov.lambda.weight}{Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.}
+
 \item{mu}{Value of penalty for the augmented Lagrangian}
 
 \item{ncv}{Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.}
@@ -73,7 +76,7 @@ Summarizing \code{FLORAL} outputs from various choices of \code{a}
 set.seed(23420)
 
 dat <- simu(n=50,p=30,model="linear")
-pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=FALSE)
+pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE)
 
 }
 \references{

@@ -3,6 +3,7 @@ LogRatioLasso <- function(x,
                           ncov,
                           length.lambda=100,
                           lambda.min.ratio=NULL,
+                          wcov,
                           a=1,
                           mu=1,
                           ncv=5,
@@ -29,7 +30,7 @@ LogRatioLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- linear_enet_al(x,y,length.lambda,mu,100,lambda,a,adjust,ncov,progress)
+  fullfit <- linear_enet_al(x,y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress)
   
   if (!is.null(colnames(x))){
     rownames(fullfit$beta) = colnames(x)
@@ -61,7 +62,7 @@ LogRatioLasso <- function(x,
       test.x <- x[labels==cv,]
       test.y <- y[labels==cv]
       
-      cvfit <- linear_enet_al(train.x,train.y,length.lambda,mu,100,lambda,a,adjust,ncov,progress)
+      cvfit <- linear_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress)
       
       cvmse[,cv] <- apply(test.x %*% cvfit$beta,2,function(x) sum((test.y-x)^2)/length(test.y))
       

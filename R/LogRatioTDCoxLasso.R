@@ -4,6 +4,7 @@ LogRatioTDCoxLasso <- function(x,
                                ncov,
                                length.lambda=100,
                                lambda.min.ratio=NULL,
+                               wcov,
                                a=1,
                                mu=1,
                                ncv=5,
@@ -51,7 +52,7 @@ LogRatioTDCoxLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- cox_timedep_enet_al(x,t0,t1,d,tj,length.lambda,mu,100,lambda,a,adjust,ncov,devnull,progress)
+  fullfit <- cox_timedep_enet_al(x,t0,t1,d,tj,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,devnull,progress)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
@@ -106,7 +107,7 @@ LogRatioTDCoxLasso <- function(x,
       }
       cv.devnull <- 2*cv.devnull
       
-      cvfit <- cox_timedep_enet_al(train.x,train.t0,train.t1,train.d,train.tj,length(lidx),mu,100,lambda[lidx],a,adjust,ncov,cv.devnull,progress)
+      cvfit <- cox_timedep_enet_al(train.x,train.t0,train.t1,train.d,train.tj,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress)
       
       cv.devnull <- 0
       loglik <- rep(0,length(lidx))

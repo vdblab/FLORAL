@@ -11,6 +11,7 @@
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
+#' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
 #' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
@@ -64,6 +65,7 @@ FLORAL <- function(x,
                    failcode=NULL,
                    length.lambda=100,
                    lambda.min.ratio=NULL,
+                   ncov.lambda.weight=0,
                    a=1,
                    mu=1,
                    ncv=5,
@@ -89,6 +91,7 @@ FLORAL <- function(x,
                            ncov,
                            length.lambda,
                            lambda.min.ratio,
+                           ncov.lambda.weight,
                            a,
                            mu,
                            ncv,
@@ -109,6 +112,7 @@ FLORAL <- function(x,
                                    ncov,
                                    length.lambda,
                                    lambda.min.ratio,
+                                   ncov.lambda.weight,
                                    a,
                                    mu,
                                    ncv,
@@ -150,6 +154,7 @@ FLORAL <- function(x,
                                   ncov,
                                   length.lambda,
                                   lambda.min.ratio,
+                                  ncov.lambda.weight,
                                   a,
                                   mu,
                                   ncv,
@@ -167,6 +172,7 @@ FLORAL <- function(x,
                               ncov,
                               length.lambda,
                               lambda.min.ratio,
+                              ncov.lambda.weight,
                               a,
                               mu,
                               ncv,
@@ -217,6 +223,7 @@ FLORAL <- function(x,
                                ncov,
                                length.lambda,
                                lambda.min.ratio,
+                               ncov.lambda.weight,
                                a,
                                mu,
                                ncv,
@@ -252,6 +259,7 @@ FLORAL <- function(x,
                              ncov,
                              length.lambda,
                              lambda.min.ratio,
+                             ncov.lambda.weight,
                              a,
                              mu,
                              ncv,
@@ -336,6 +344,7 @@ FLORAL <- function(x,
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
+#' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
 #' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
@@ -376,6 +385,7 @@ mcv.FLORAL <- function(mcv=10,
                        failcode=NULL,
                        length.lambda=100,
                        lambda.min.ratio=NULL,
+                       ncov.lambda.weight=0,
                        a=1,
                        mu=1,
                        ncv=5,
@@ -413,6 +423,7 @@ mcv.FLORAL <- function(mcv=10,
                                   failcode,
                                   length.lambda,
                                   lambda.min.ratio,
+                                  ncov.lambda.weight,
                                   a,
                                   mu,
                                   ncv,
@@ -452,6 +463,7 @@ mcv.FLORAL <- function(mcv=10,
                failcode,
                length.lambda,
                lambda.min.ratio,
+               ncov.lambda.weight,
                a,
                mu,
                ncv,
@@ -496,6 +508,7 @@ mcv.FLORAL <- function(mcv=10,
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
+#' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
@@ -510,7 +523,7 @@ mcv.FLORAL <- function(mcv=10,
 #' set.seed(23420)
 #' 
 #' dat <- simu(n=50,p=30,model="linear")
-#' pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=FALSE)
+#' pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE)
 #' 
 #' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG
 #' @importFrom survcomp concordance.index
@@ -535,10 +548,11 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                      failcode=NULL,
                      length.lambda=100,
                      lambda.min.ratio=NULL,
+                     ncov.lambda.weight=0,
                      mu=1,
                      ncv=5,
                      intercept=FALSE,
-                     step2=TRUE,
+                     step2=FALSE,
                      progress=TRUE){
   
   if (is.null(ncv) | ncv < 2) stop("Number of folds `ncv` must be larger than one for cross validation.")
@@ -577,6 +591,7 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                       failcode,
                       length.lambda,
                       lambda.min.ratio,
+                      ncov.lambda.weight,
                       a = a[i],
                       mu,
                       ncv,
@@ -596,15 +611,15 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
       
       FLORAL.res <- do.call(rbind,FLORAL.res) %>% 
         group_by(a) %>% 
-        mutate(min.metric = min(cv.metric),
-               min.lambda = lambda[min.metric==cv.metric]) %>% 
+        mutate(min.metric = min(.data$cv.metric),
+               min.lambda = .data$lambda[.data$min.metric==.data$cv.metric]) %>% 
         ungroup()
       
-      pmetric <- ggplot(aes(x=log(lambda),y=cv.metric,color=as.factor(a)),data=FLORAL.res) + 
+      pmetric <- ggplot(aes(x=log(.data$lambda),y=.data$cv.metric,color=as.factor(.data$a)),data=FLORAL.res) + 
         geom_point(size=0.5) +
-        geom_hline(aes(yintercept = min.metric,color=as.factor(a)),
+        geom_hline(aes(yintercept = .data$min.metric,color=as.factor(.data$a)),
                    alpha = 0.5) +
-        geom_vline(aes(xintercept = log(min.lambda),color=as.factor(a)),
+        geom_vline(aes(xintercept = log(.data$min.lambda),color=as.factor(.data$a)),
                    alpha = 0.5) +
         theme_bw() +
         xlab(expression(paste("log(",lambda,")"))) +
@@ -630,6 +645,7 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                      failcode,
                      length.lambda,
                      lambda.min.ratio,
+                     ncov.lambda.weight,
                      a = a[1],
                      mu,
                      ncv,
@@ -677,15 +693,15 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
       
       FLORAL.res <- do.call(rbind,FLORAL.res) %>% 
         group_by(a) %>% 
-        mutate(min.metric = min(cv.metric),
-               min.lambda = lambda[min.metric==cv.metric]) %>% 
+        mutate(min.metric = min(.data$cv.metric),
+               min.lambda = .data$lambda[.data$min.metric==.data$cv.metric]) %>% 
         ungroup()
       
-      pmetric <- ggplot(aes(x=log(lambda),y=cv.metric,color=as.factor(a)),data=FLORAL.res) + 
+      pmetric <- ggplot(aes(x=log(.data$lambda),y=.data$cv.metric,color=as.factor(.data$a)),data=FLORAL.res) + 
         geom_point(size=0.5) +
-        geom_hline(aes(yintercept = min.metric,color=as.factor(a)),
+        geom_hline(aes(yintercept = .data$min.metric,color=as.factor(.data$a)),
                    alpha = 0.5) +
-        geom_vline(aes(xintercept = log(min.lambda),color=as.factor(a)),
+        geom_vline(aes(xintercept = log(.data$min.lambda),color=as.factor(.data$a)),
                    alpha = 0.5) +
         theme_bw() +
         xlab(expression(paste("log(",lambda,")"))) +

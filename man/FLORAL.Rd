@@ -15,6 +15,7 @@ FLORAL(
   failcode = NULL,
   length.lambda = 100,
   lambda.min.ratio = NULL,
+  ncov.lambda.weight = 0,
   a = 1,
   mu = 1,
   ncv = 5,
@@ -45,6 +46,8 @@ FLORAL(
 \item{length.lambda}{Number of penalty parameters used in the path}
 
 \item{lambda.min.ratio}{Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.}
+
+\item{ncov.lambda.weight}{Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.}
 
 \item{a}{A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.}
 
