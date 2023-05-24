@@ -246,7 +246,11 @@ LogRatioLogisticLasso <- function(x,
           
           if (length(covidx) > 0){
             x.select.min <- cbind(x.select.min, x[,covidx])
-            colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            if (!is.null(idxs)){
+              colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            }else{
+              colnames(x.select.min) <- colnames(x)[covidx]
+            }
           }
           
           
@@ -284,14 +288,12 @@ LogRatioLogisticLasso <- function(x,
           df_step2 <- data.frame(y=y,x.select.min)
           step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
           vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          vars <- vars[!is.na(vars)]
           
-          if (is.null(ncol(idxs))){
-            if (length(vars) == 2){
-              selected <- idxs
-            }else{
-              selected <- NULL
-            }
-          }else{
+          selected <- NULL
+          if (is.null(ncol(idxs)) & length(vars) > 0){
+            selected <- idxs
+          }else if (length(vars) > 0){
             selected <- idxs[,vars]
           }
           
@@ -318,7 +320,11 @@ LogRatioLogisticLasso <- function(x,
           
           if (length(covidx) > 0){
             x.select.min <- cbind(x.select.min, x[,covidx])
-            colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            if (!is.null(idxs)){
+              colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            }else{
+              colnames(x.select.min) <- colnames(x)[covidx]
+            }
           }
           
           # if(is.null(x.select.min)) break
@@ -354,14 +360,12 @@ LogRatioLogisticLasso <- function(x,
           df_step2 <- data.frame(y=y,x.select.min)
           step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
           vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          vars <- vars[!is.na(vars)]
           
-          if (is.null(ncol(idxs))){
-            if (length(vars) == 2){
-              selected <- idxs
-            }else{
-              selected <- NULL
-            }
-          }else{
+          selected <- NULL
+          if (is.null(ncol(idxs)) & length(vars) > 0){
+            selected <- idxs
+          }else if (length(vars) > 0){
             selected <- idxs[,vars]
           }
           

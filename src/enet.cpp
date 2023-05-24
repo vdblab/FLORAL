@@ -78,7 +78,7 @@ arma::vec gd_cov_al(arma::mat xx, arma::vec xy, int n, double l, double a, arma:
       double denom = accu(xx(idxx,idxx))/n + (1-a)*l*wcov;
       
       beta(i) = softthreshold(z, a*l*wcov)/denom;
-
+      
     }
     
     for (unsigned int j = ncov; j < p; ++j){
@@ -155,10 +155,23 @@ Rcpp::List linear_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, 
     int k1 = 0;
     
     arma::vec diff = y - x*betai;
-    double loss0 = accu(diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+
+    double loss0 = 0;
+    if (adjust){
+      loss0 = accu(diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betai.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betai.subvec(0,ncov-1),2))/2;
+    }else{
+      loss0 = accu(diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
+    
     arma::vec betatemp = gd_cov_al(xx,xy,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
     arma::vec difftemp = y - x*betatemp;
-    double lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    
+    double lossnew = 0;
+    if (adjust){
+      lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    }else{
+      lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+    }
     
     while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
       // Rcpp::Rcout << "lossnew: " << lossnew << endl;
@@ -166,7 +179,12 @@ Rcpp::List linear_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, 
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xy,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
       difftemp = y - x*betatemp;
-      lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      
+      if (adjust){
+        lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+      }
     }
     
     while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
@@ -181,7 +199,12 @@ Rcpp::List linear_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, 
       loss0 = accu(diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
       betatemp = gd_cov_al(xx,xy,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
       difftemp = y - x*betatemp;
-      lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      
+      if (adjust){
+        lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+      }
       
       k1 = 0;
       
@@ -191,7 +214,12 @@ Rcpp::List linear_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, 
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xy,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
         difftemp = y - x*betatemp;
-        lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        
+        if (adjust){
+          lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        }else{
+          lossnew = accu(difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+        }
       }
     }
     
@@ -255,10 +283,23 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
     arma::vec xz = x.t()*(z % hfun);
     
     arma::vec diff = z - x*betai;
-    double loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+    
+    double loss0 = 0;
+    if (adjust){
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betai.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betai.subvec(0,ncov-1),2))/2;
+    }else{
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
+    
     arma::vec betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
     arma::vec difftemp = z - x*betatemp;
-    double lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    
+    double lossnew = 0;
+    if (adjust){
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    }else{
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
     
     k1 = 0;
     
@@ -280,7 +321,11 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
     }
     
     while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
@@ -306,7 +351,11 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
       loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
       betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
       
       k1 = 0;
       
@@ -328,7 +377,11 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
         difftemp = z - x*betatemp;
-        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        if (adjust){
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        }else{
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+        }
       }
     }
     
@@ -449,10 +502,23 @@ Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int 
     arma::vec xz = x.t()*(z % hfun);
     
     arma::vec diff = z - x*betai;
-    double loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+    
+    double loss0 = 0;
+    if (adjust){
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betai.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betai.subvec(0,ncov-1),2))/2;
+    }else{
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
+    
     arma::vec betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
     arma::vec difftemp = z - x*betatemp;
-    double lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    
+    double lossnew = 0;
+    if (adjust){
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    }else{
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
     
     while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
       
@@ -489,7 +555,11 @@ Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int 
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
     }
     
     while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
@@ -531,7 +601,11 @@ Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int 
       loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
       betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
       
       k1 = 0;
       
@@ -571,7 +645,13 @@ Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int 
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
         difftemp = z - x*betatemp;
-        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        
+        if (adjust){
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        }else{
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+        }
+        
       }
     }
     
@@ -700,17 +780,35 @@ Rcpp::List cox_timedep_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::ve
     arma::vec xz = x.t()*(z % hfun);
     
     arma::vec diff = z - x*betai;
-    double loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+    
+    double loss0 = 0;
+    if (adjust){
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betai.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betai.subvec(0,ncov-1),2))/2;
+    }else{
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
+    
     arma::vec betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
     arma::vec difftemp = z - x*betatemp;
-    double lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    double lossnew = 0;
+    if (adjust){
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    }else{
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
     
     while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
       k1 = k1 + 1;
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
+      
     }
     
     while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
@@ -723,8 +821,13 @@ Rcpp::List cox_timedep_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::ve
       loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
       betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
       
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
+
       k1 = 0;
       
       while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
@@ -733,7 +836,13 @@ Rcpp::List cox_timedep_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::ve
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
         difftemp = z - x*betatemp;
-        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        
+        if (adjust){
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        }else{
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+        }
+        
       }
     }
     
@@ -862,17 +971,35 @@ Rcpp::List fg_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma
     arma::vec xz = x.t()*(z % hfun);
     
     arma::vec diff = z - x*betai;
-    double loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+    double loss0 = 0;
+    if (adjust){
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betai.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betai.subvec(0,ncov-1),2))/2;
+    }else{
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
+    
     arma::vec betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
     arma::vec difftemp = z - x*betatemp;
-    double lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    double lossnew = 0;
     
+    if (adjust){
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    }else{
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+    }
+
     while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
       k1 = k1 + 1;
       loss0 = lossnew;
       betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
+      
     }
     
     while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
@@ -885,8 +1012,13 @@ Rcpp::List fg_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma
       loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
       betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
       difftemp = z - x*betatemp;
-      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
       
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+      }
+
       k1 = 0;
       
       while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
@@ -895,7 +1027,12 @@ Rcpp::List fg_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma
         loss0 = lossnew;
         betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
         difftemp = z - x*betatemp;
-        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        
+        if (adjust){
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        }else{
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;    
+        }
       }
     }
     

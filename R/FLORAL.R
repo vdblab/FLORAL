@@ -297,20 +297,31 @@ FLORAL <- function(x,
     if (length(res$selected.feature$min.2stage)>0){
       namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
       res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-      res$step2.ratios$min.idx <- res$step2.feature.min[,!is.na(colSums(res$step2.feature.min))]
+      res$step2.ratios$min.idx <- res$step2.feature.min#[,!is.na(colSums(res$step2.feature.min))]
       
       res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
       # res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
-      rownames(res$step2.tables$`min`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`min`
+      
+      if ("(Intercept)" %in% rownames(res$step2.tables$min)){
+        rownames(res$step2.tables$`min`)[2:(2+length(res$step2.ratios$min)-1)] <- res$step2.ratios$`min`
+      }else{
+        rownames(res$step2.tables$`min`)[1:length(res$step2.ratios$min)] <- res$step2.ratios$`min`
+      }
+      
     }
     if (length(res$selected.feature$`1se.2stage`)>0){
       namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
       res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-      res$step2.ratios$`1se.idx` <- res$step2.feature.1se[,!is.na(colSums(res$step2.feature.1se))]
+      res$step2.ratios$`1se.idx` <- res$step2.feature.1se#[,!is.na(colSums(res$step2.feature.1se))]
       
       res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
       # res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
-      rownames(res$step2.tables$`1se`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`1se`
+      # rownames(res$step2.tables$`1se`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`1se`
+      if ("(Intercept)" %in% rownames(res$step2.tables$`1se`)){
+        rownames(res$step2.tables$`1se`)[2:(2+length(res$step2.ratios$`1se`)-1)] <- res$step2.ratios$`1se`
+      }else{
+        rownames(res$step2.tables$`1se`)[1:length(res$step2.ratios$`1se`)] <- res$step2.ratios$`1se`
+      }
     }
     
   }else{
@@ -362,7 +373,7 @@ FLORAL <- function(x,
 #' dat <- simu(n=50,p=30,model="linear")
 #' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=TRUE)
 #' 
-#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG
+#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
@@ -446,8 +457,8 @@ mcv.FLORAL <- function(mcv=10,
       
       if (progress) warning(paste0("Using ", ncore ," core for computation."))
       
-      registerDoParallel(cores=ncore)
-      random.seed <- as.numeric(Sys.Date())
+      cl <- makeCluster(ncore)
+      registerDoParallel(cl)
       if (is.null(seed)) seed <- as.numeric(Sys.Date())
       registerDoRNG(seed=seed)
       
@@ -474,6 +485,8 @@ mcv.FLORAL <- function(mcv=10,
                plot=FALSE)$selected.feature
         
       }
+      
+      stopCluster(cl)
       
       res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$min)))/mcv,
                   `1se`=table(unlist(lapply(FLORAL.res,function(x) x$`1se`)))/mcv,
@@ -525,7 +538,7 @@ mcv.FLORAL <- function(mcv=10,
 #' dat <- simu(n=50,p=30,model="linear")
 #' pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE)
 #' 
-#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG
+#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
@@ -630,8 +643,8 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
       
       if (progress) warning(paste0("Using ", ncore ," core for computation."))
       
-      registerDoParallel(cores=ncore)
-      random.seed <- as.numeric(Sys.Date())
+      cl <- makeCluster(ncore)
+      registerDoParallel(cl)
       if (is.null(seed)) seed <- as.numeric(Sys.Date())
       registerDoRNG(seed=seed)
       
@@ -672,6 +685,7 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                       failcode,
                       length.lambda,
                       lambda.min.ratio,
+                      ncov.lambda.weight,
                       a = a[i],
                       mu,
                       ncv,
@@ -688,6 +702,8 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
         )
         
       }
+      
+      stopCluster(cl)
       
       FLORAL.res[[length(a)]] <- FLORAL.res0
       

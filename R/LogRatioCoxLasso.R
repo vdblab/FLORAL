@@ -298,7 +298,11 @@ LogRatioCoxLasso <- function(x,
           
           if (length(covidx) > 0){
             x.select.min <- cbind(x.select.min, x[,covidx])
-            colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            if (!is.null(idxs)){
+              colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            }else{
+              colnames(x.select.min) <- colnames(x)[covidx]
+            }
           }
           
           
@@ -336,10 +340,12 @@ LogRatioCoxLasso <- function(x,
           df_step2 <- data.frame(t=t,d=d,x.select.min)
           step2fit <- suppressWarnings(step(coxph(Surv(t,d)~.,data=df_step2),trace=0))
           vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          vars <- vars[!is.na(vars)]
           
-          if (is.null(ncol(idxs))){
-            selected <- NULL
-          }else{
+          selected <- NULL
+          if (is.null(ncol(idxs)) & length(vars) > 0){
+            selected <- idxs
+          }else if (length(vars) > 0){
             selected <- idxs[,vars]
           }
           
@@ -366,7 +372,11 @@ LogRatioCoxLasso <- function(x,
           
           if (length(covidx) > 0){
             x.select.min <- cbind(x.select.min, x[,covidx])
-            colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            if (!is.null(idxs)){
+              colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            }else{
+              colnames(x.select.min) <- colnames(x)[covidx]
+            }
           }
           
           # if(is.null(x.select.min)) break
@@ -402,10 +412,12 @@ LogRatioCoxLasso <- function(x,
           df_step2 <- data.frame(t=t,d=d,x.select.min)
           step2fit <- suppressWarnings(step(coxph(Surv(t,d)~.,data=df_step2),trace=0))
           vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          vars <- vars[!is.na(vars)]
           
-          if (is.null(ncol(idxs))){
-            selected <- NULL
-          }else{
+          selected <- NULL
+          if (is.null(ncol(idxs)) & length(vars) > 0){
+            selected <- idxs
+          }else if (length(vars) > 0){
             selected <- idxs[,vars]
           }
           
