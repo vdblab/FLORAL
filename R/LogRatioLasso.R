@@ -229,6 +229,7 @@ LogRatioLasso <- function(x,
           covidx <- allidx[allidx <= ncov]
           taxidx <- allidx[allidx > ncov]
           
+          idxs <- NULL
           x.select.min <- NULL
           
           if (length(taxidx) > 1){
@@ -279,10 +280,10 @@ LogRatioLasso <- function(x,
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           }
           
-          colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
+          if (sum(colnames(x.select.min)=="") > 0)  colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
           df_step2 <- data.frame(y=y,x.select.min)
           step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=gaussian),trace=0))
-          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          vars <- suppressWarnings(as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2])))
           vars <- vars[!is.na(vars)]
           
           selected <- NULL
@@ -303,6 +304,7 @@ LogRatioLasso <- function(x,
           covidx <- allidx[allidx <= ncov]
           taxidx <- allidx[allidx > ncov]
           
+          idxs <- NULL
           x.select.min <- NULL
           
           if (length(taxidx) > 1){
@@ -351,10 +353,10 @@ LogRatioLasso <- function(x,
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           }
           
-          colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
+          if (sum(colnames(x.select.min)=="") > 0)  colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
           df_step2 <- data.frame(y=y,x.select.min)
           step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=gaussian),trace=0))
-          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          vars <- suppressWarnings(as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2])))
           vars <- vars[!is.na(vars)]
           
           selected <- NULL
