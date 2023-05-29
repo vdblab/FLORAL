@@ -255,7 +255,7 @@ LogRatioLasso <- function(x,
           if (ncol(x.select.min) > 1){
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
             
-            if (length(taxidx) == 0){
+            if (length(taxidx) < 2){
               
               idxs <- NULL
               
@@ -329,7 +329,7 @@ LogRatioLasso <- function(x,
           if (ncol(x.select.min) > 1){
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
             
-            if (length(taxidx) == 0){
+            if (length(taxidx) < 2){
               
               idxs <- NULL
               

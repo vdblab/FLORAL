@@ -318,7 +318,7 @@ LogRatioTDCoxLasso <- function(x,
           if (ncol(x.select.min) > 1){
             stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox")
             
-            if (length(taxidx) == 0){
+            if (length(taxidx) < 2){
               
               idxs <- NULL
               
@@ -392,7 +392,7 @@ LogRatioTDCoxLasso <- function(x,
           if (ncol(x.select.min) > 1){
             stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox")
             
-            if (length(taxidx) == 0){
+            if (length(taxidx) < 2){
               
               idxs <- NULL
               
