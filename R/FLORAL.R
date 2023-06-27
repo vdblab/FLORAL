@@ -442,16 +442,23 @@ mcv.FLORAL <- function(mcv=10,
                                   foldid=NULL,
                                   step2,
                                   progress=FALSE,
-                                  plot=FALSE)$selected.feature
+                                  plot=FALSE)
         
       }
       
-      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$min)))/mcv,
-                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$`1se`)))/mcv,
-                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$min.2stage)))/mcv,
-                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$`1se.2stage`)))/mcv,
+      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
+                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
+                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
+                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
+                  min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$min))))/mcv,
+                  `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$`1se`))))/mcv,
                   mcv=mcv,
                   seed=seed)
+      
+      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/mcv
+      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/mcv
+      res$min.2stage.ratios.coef = colSums(bind_rows(lapply(FLORAL.res,function(x) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]/mcv
+      res$`1se.2stage.ratios.coef` = colSums(bind_rows(lapply(FLORAL.res,function(x) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]/mcv
       
     }else if (ncore > 1){
       
@@ -482,18 +489,25 @@ mcv.FLORAL <- function(mcv=10,
                foldid=NULL,
                step2,
                progress=FALSE,
-               plot=FALSE)$selected.feature
+               plot=FALSE)
         
       }
       
       stopCluster(cl)
       
-      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$min)))/mcv,
-                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$`1se`)))/mcv,
-                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$min.2stage)))/mcv,
-                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$`1se.2stage`)))/mcv,
+      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
+                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
+                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
+                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
+                  min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$min))))/mcv,
+                  `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$`1se`))))/mcv,
                   mcv=mcv,
                   seed=seed)
+      
+      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/mcv
+      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/mcv
+      res$min.2stage.ratios.coef = colSums(bind_rows(lapply(FLORAL.res,function(x) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]/mcv
+      res$`1se.2stage.ratios.coef` = colSums(bind_rows(lapply(FLORAL.res,function(x) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]/mcv
       
     }
     
