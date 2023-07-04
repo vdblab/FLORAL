@@ -2,8 +2,11 @@ LogRatioFGLasso <- function(x,
                             y,
                             id,
                             weight,
+                            ncov,
                             length.lambda=100,
                             lambda.min.ratio=NULL,
+                            wcov,
+                            a=1,
                             mu=1,
                             ncv=5,
                             foldid=NULL,
@@ -40,14 +43,22 @@ LogRatioFGLasso <- function(x,
   sfun = d - expect
   # hfun <- expect - sapply(t,function(x) sum(1/denomj[which(tj <= x)]^2)) + 1e-8 # hessian
   # z <- sfun/hfun
-  lambda0 <- max(abs(t(sfun) %*% x))/n
+  
+  if (a > 0){
+    lambda0 <- max(abs(t(sfun) %*% x))/(a*n)
+  }else if (a == 0){
+    lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*n)
+  }
+  
+  adjust = FALSE
+  if (ncov > 0) adjust = TRUE
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- fg_lasso_al(x,t0,t1,d,tj,weight,length.lambda,mu,100,lambda,devnull,progress)
+  fullfit <- fg_enet_al(x,t0,t1,d,tj,weight,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,devnull,progress)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
@@ -104,7 +115,7 @@ LogRatioFGLasso <- function(x,
       }
       cv.devnull <- 2*cv.devnull
       
-      cvfit <- fg_lasso_al(train.x,train.t0,train.t1,train.d,train.tj,train.w,length(lidx),mu,100,lambda[lidx],cv.devnull,progress)
+      cvfit <- fg_enet_al(train.x,train.t0,train.t1,train.d,train.tj,train.w,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress)
       
       cv.devnull <- 0
       loglik <- rep(0,length(lidx))
@@ -150,6 +161,7 @@ LogRatioFGLasso <- function(x,
     
     ret <- list(beta=fullfit$beta[,lidx],
                 lambda=fullfit$lambda[lidx],
+                a=a,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx],
                 cvdev.mean=mean.cvdev,
@@ -209,74 +221,229 @@ LogRatioFGLasso <- function(x,
     
     if (step2){ # need to develop a equivalent lasso procedure for this. Stepwise selection is too slow for a big number of selected variables.
       
-      if(progress) cat("Step 2 filtering started.\n")
-      
-      if (length(which(ret$best.beta$min.mse!=0)) > 1){
+      if (!adjust){
         
-        idxs <- combn(which(ret$best.beta$min.mse!=0),2)
+        if(progress) cat("Step 2 filtering started.\n")
         
-        x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
-        for (k in 1:ncol(idxs)){
-          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+        if (length(which(ret$best.beta$min.mse!=0)) > 1){
+          
+          idxs <- combn(which(ret$best.beta$min.mse!=0),2)
+          
+          x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
+          for (k in 1:ncol(idxs)){
+            x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+          }
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+            idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }
+          
+          df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
+          step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
+          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          
+          if (is.null(ncol(idxs))){
+            selected <- idxs
+          }else{
+            selected <- idxs[,vars]
+          }
+          # for (k1 in 1:nrow(selected)){
+          #   for (k2 in 1:ncol(selected)){
+          #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+          #   }
+          # }
+          
+          ret$step2.feature.min = selected
+          ret$step2fit.min <- step2fit
         }
         
-        if (ncol(x.select.min) > 1){
-          stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
-          x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-          idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+        if (length(which(ret$best.beta$add.1se!=0)) > 1){
+          
+          idxs <- combn(which(ret$best.beta$add.1se!=0),2)
+          
+          x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
+          for (k in 1:ncol(idxs)){
+            x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+          }
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+            idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }
+          
+          df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
+          step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
+          vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+          
+          if (is.null(ncol(idxs))){
+            selected <- idxs
+          }else{
+            selected <- idxs[,vars]
+          }
+          # for (k1 in 1:nrow(selected)){
+          #   for (k2 in 1:ncol(selected)){
+          #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
+          #   }
+          # }
+          
+          ret$step2.feature.1se = selected
+          ret$step2fit.1se <- step2fit
         }
         
-        df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
-        step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
-        vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
+      }else{
         
-        if (is.null(ncol(idxs))){
-          selected <- idxs
-        }else{
-          selected <- idxs[,vars]
+        if (length(which(ret$best.beta$min.mse!=0)) > 1){
+          
+          allidx <- which(ret$best.beta$min.mse!=0)
+          
+          covidx <- allidx[allidx <= ncov]
+          taxidx <- allidx[allidx > ncov]
+          
+          idxs <- NULL
+          x.select.min <- NULL
+          
+          if (length(taxidx) > 1){
+            idxs <- combn(taxidx,2)
+            for (k in 1:ncol(idxs)){
+              x.select.min <- cbind(x.select.min, x[,idxs[1,k]] - x[,idxs[2,k]])
+            }
+            colnames(x.select.min) <- rep("",ncol(x.select.min))
+          }
+          
+          if (length(covidx) > 0){
+            x.select.min <- cbind(x.select.min, x[,covidx])
+            if (!is.null(idxs)){
+              colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            }else{
+              colnames(x.select.min) <- colnames(x)[covidx]
+            }
+          }
+          
+          
+          # if(is.null(x.select.min)) break
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox")
+            
+            if (length(taxidx) < 2){
+              
+              idxs <- NULL
+              
+              # covs <- colnames(x.select.min)[which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+            }else{
+              
+              if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+              if (length(covidx) > 0){
+                
+                # covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                #                                        1:ncol(idxs))]
+                
+                idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                                      (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
+                
+              }
+              
+            }
+            
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }
+          
+          if (sum(colnames(x.select.min)=="") > 0)  colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
+          df_step2 <- data.frame(t0=t0,t1=t1,d=d,x.select.min)
+          step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
+          vars <- suppressWarnings(as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2])))
+          vars <- vars[!is.na(vars)]
+          
+          selected <- NULL
+          if (is.null(ncol(idxs)) & length(vars) > 0){
+            selected <- idxs
+          }else if (length(vars) > 0){
+            selected <- idxs[,vars]
+          }
+          
+          ret$step2.feature.min = selected
+          ret$step2fit.min <- step2fit
         }
-        # for (k1 in 1:nrow(selected)){
-        #   for (k2 in 1:ncol(selected)){
-        #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
-        #   }
-        # }
         
-        ret$step2.feature.min = selected
-        ret$step2fit.min <- step2fit
-      }
-      
-      if (length(which(ret$best.beta$add.1se!=0)) > 1){
-        
-        idxs <- combn(which(ret$best.beta$add.1se!=0),2)
-        
-        x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
-        for (k in 1:ncol(idxs)){
-          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+        if (length(which(ret$best.beta$add.1se!=0)) > 1){
+          
+          allidx <- which(ret$best.beta$add.1se!=0)
+          
+          covidx <- allidx[allidx <= ncov]
+          taxidx <- allidx[allidx > ncov]
+          
+          idxs <- NULL
+          x.select.min <- NULL
+          
+          if (length(taxidx) > 1){
+            idxs <- combn(taxidx,2)
+            for (k in 1:ncol(idxs)){
+              x.select.min <- cbind(x.select.min, x[,idxs[1,k]] - x[,idxs[2,k]])
+            }
+            colnames(x.select.min) <- rep("",ncol(x.select.min))
+          }
+          
+          if (length(covidx) > 0){
+            x.select.min <- cbind(x.select.min, x[,covidx])
+            if (!is.null(idxs)){
+              colnames(x.select.min)[(ncol(idxs)+1):ncol(x.select.min)] = colnames(x)[covidx]
+            }else{
+              colnames(x.select.min) <- colnames(x)[covidx]
+            }
+          }
+          
+          # if(is.null(x.select.min)) break
+          
+          if (ncol(x.select.min) > 1){
+            stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox")
+            
+            if (length(taxidx) < 2){
+              
+              idxs <- NULL
+              
+              # covs <- colnames(x.select.min)[which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+            }else{
+              
+              if (length(covidx) == 0)  idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+              
+              if (length(covidx) > 0){
+                
+                # covs <- colnames(x.select.min)[setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),1:ncol(idxs))]
+                
+                idxs <- idxs[,setdiff(which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0),
+                                      (ncol(idxs)+1):(ncol(idxs)+length(covidx)))]
+                
+              }
+              
+            }
+            
+            x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }
+          
+          if (sum(colnames(x.select.min)=="") > 0)  colnames(x.select.min)[colnames(x.select.min)==""] <- paste0("x.",1:sum(colnames(x.select.min)==""))
+          df_step2 <- data.frame(t0=t0,t1=t1,d=d,x.select.min)
+          step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
+          vars <- suppressWarnings(as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2])))
+          vars <- vars[!is.na(vars)]
+          
+          selected <- NULL
+          if (is.null(ncol(idxs)) & length(vars) > 0){
+            selected <- idxs
+          }else if (length(vars) > 0){
+            selected <- idxs[,vars]
+          }
+          
+          ret$step2.feature.1se = selected
+          ret$step2fit.1se <- step2fit
+          
         }
         
-        if (ncol(x.select.min) > 1){
-          stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
-          x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-          idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
-        }
-        
-        df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
-        step2fit <- suppressWarnings(step(coxph(Surv(t0,t1,d)~.,weights=weight,data=df_step2),trace=0))
-        vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
-        
-        if (is.null(ncol(idxs))){
-          selected <- idxs
-        }else{
-          selected <- idxs[,vars]
-        }
-        # for (k1 in 1:nrow(selected)){
-        #   for (k2 in 1:ncol(selected)){
-        #     selected[k1,k2] <- colnames(x)[as.numeric(selected[k1,k2])]
-        #   }
-        # }
-        
-        ret$step2.feature.1se = selected
-        ret$step2fit.1se <- step2fit
       }
       
     }
@@ -285,6 +452,7 @@ LogRatioFGLasso <- function(x,
     
     ret <- list(beta=fullfit$beta[,lidx],
                 lambda=fullfit$lambda[lidx],
+                a=a,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx]
     )

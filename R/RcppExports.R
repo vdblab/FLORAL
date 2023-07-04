@@ -5,39 +5,31 @@ softthreshold <- function(x, lambda) {
     .Call('_FLORAL_softthreshold', PACKAGE = 'FLORAL', x, lambda)
 }
 
-gd_naive <- function(x, y, l, beta) {
-    .Call('_FLORAL_gd_naive', PACKAGE = 'FLORAL', x, y, l, beta)
-}
-
 gd_cov <- function(xx, xy, n, l, beta) {
     .Call('_FLORAL_gd_cov', PACKAGE = 'FLORAL', xx, xy, n, l, beta)
 }
 
-gd_cov_al <- function(xx, xy, n, l, beta, mu, alpha, intercept) {
-    .Call('_FLORAL_gd_cov_al', PACKAGE = 'FLORAL', xx, xy, n, l, beta, mu, alpha, intercept)
+gd_cov_al <- function(xx, xy, n, l, a, beta, mu, alpha, adjust = FALSE, ncov = 0L, wcov = 0) {
+    .Call('_FLORAL_gd_cov_al', PACKAGE = 'FLORAL', xx, xy, n, l, a, beta, mu, alpha, adjust, ncov, wcov)
 }
 
-linear_lasso <- function(x, y, len) {
-    .Call('_FLORAL_linear_lasso', PACKAGE = 'FLORAL', x, y, len)
+linear_enet_al <- function(x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress = TRUE) {
+    .Call('_FLORAL_linear_enet_al', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress)
 }
 
-linear_lasso_al <- function(x, y, len, mu, ub, lambda, intercept, display_progress = TRUE) {
-    .Call('_FLORAL_linear_lasso_al', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, intercept, display_progress)
+logistic_enet_al <- function(x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE) {
+    .Call('_FLORAL_logistic_enet_al', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress, loop1, loop2)
 }
 
-logistic_lasso_al <- function(x, y, len, mu, ub, lambda, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE) {
-    .Call('_FLORAL_logistic_lasso_al', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, display_progress, loop1, loop2)
+cox_enet_al <- function(x, t, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE, notcv = TRUE) {
+    .Call('_FLORAL_cox_enet_al', PACKAGE = 'FLORAL', x, t, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress, loop1, loop2, notcv)
 }
 
-cox_lasso_al <- function(x, t, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE, notcv = TRUE) {
-    .Call('_FLORAL_cox_lasso_al', PACKAGE = 'FLORAL', x, t, d, tj, len, mu, ub, lambda, devnull, display_progress, loop1, loop2, notcv)
+cox_timedep_enet_al <- function(x, t0, t1, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress = TRUE) {
+    .Call('_FLORAL_cox_timedep_enet_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress)
 }
 
-cox_timedep_lasso_al <- function(x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress = TRUE) {
-    .Call('_FLORAL_cox_timedep_lasso_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, len, mu, ub, lambda, devnull, display_progress)
-}
-
-fg_lasso_al <- function(x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress = TRUE) {
-    .Call('_FLORAL_fg_lasso_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, w, len, mu, ub, lambda, devnull, display_progress)
+fg_enet_al <- function(x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress = TRUE) {
+    .Call('_FLORAL_fg_enet_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress)
 }
 

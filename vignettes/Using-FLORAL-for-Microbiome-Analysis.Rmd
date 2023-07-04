@@ -58,9 +58,11 @@ load(system.file("extdata", "YachidaS_2019.Rdata", package="FLORAL"))
 We extracted the data from the `TreeSummarizedExperiment` object to two objects: the taxa matrix `x` and the "outcomes" vector `y` of whether a patient is healthy or has colorectal cancer (CRC). Note that for binary outcomes, the input vector `y` needs to be formatted with entries equal to either `0` or `1`. In addition, we need to specify `family = "binomial"` in `FLORAL` to fit the logistic regression model. To print the progress bar as the algorithm runs, please use `progress = TRUE`. 
 
 ```{r floral}
-  
+
 x <- x[y %in% c("CRC","healthy"),]
 x <- x[,colSums(x >= 100) >= nrow(x)*0.2] # filter low abundance taxa
+
+colnames(x) <- sapply(colnames(x), function(x) strsplit(x,split="[|]")[[1]][length(strsplit(x,split="[|]")[[1]])])
 
 y <- as.numeric(as.factor(y[y %in% c("CRC","healthy")]))-1
 fit <- FLORAL(x = x, y = y, family="binomial", ncv=10, progress=TRUE)
@@ -109,3 +111,51 @@ While the corresponding p-values are also available, we recommend only using the
 fit$step2.tables$`1se`
 
 ```
+
+## Generating taxa selection probabilities
+
+It is encouraged to run k-fold cross-validation for several times to account for the random fold splits. `FLORAL` provides `mcv.FLORAL` functions to repeat cross-validations for `mcv` times and on `ncore` cores. The output summarizes taxa selection probabilities, average coefficients based on $\lambda_\min$ and $\lambda_{\text{1se}}$. Interpretable plots can be created if `plot = TRUE` is specified.
+
+```{r mcv}
+
+mcv.fit <- mcv.FLORAL(mcv=5,
+                      ncore=1,
+                      x = x, 
+                      y = y, 
+                      family = "binomial", 
+                      ncv = 3,
+                      progress=TRUE)
+
+```
+
+```{r mcvplots,fig.height=6,fig.width=10,dpi=300}
+
+mcv.fit$p_min
+
+#Other options are also available
+#mcv.fit$p_min_ratio
+#mcv.fit$p_1se
+#mcv.fit$p_1se_ratio
+
+```
+
+## Elastic net
+
+Beyond lasso model, `FLORAL` also supports elastic net models by specifying the tuning parameter `a` between 0 and 1. Lasso penalty will be used when `a=1` while ridge penalty will be used when `a=0`. 
+
+The `a.FLORAL` function can help investigate the prediction performance for different choices of `a` and return a plot of the corresponding prediction metric trajectories against the choice of $\lambda$.
+
+```{r a.floral,fig.height=4,fig.width=4,dpi=300}
+
+a.fit <- a.FLORAL(a = c(0.1,0.5,1),
+                  ncore = 1,
+                  x = x, 
+                  y = y, 
+                  family = "binomial", 
+                  ncv = 3,
+                  progress=TRUE)
+
+a.fit
+
+```
+
