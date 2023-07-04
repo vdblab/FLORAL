@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,8 @@
 <span>  strongsize <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  pct.sparsity <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  rho <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  ncov <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  betacov <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  intercept <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -107,6 +109,14 @@
 
 <dt>rho</dt>
 <dd><p>Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.</p></dd>
+
+
+<dt>ncov</dt>
+<dd><p>Number of covariates that are not compositional features.</p></dd>
+
+
+<dt>betacov</dt>
+<dd><p>Coefficients corresponding to the covariates that are not compositional features.</p></dd>
 
 
 <dt>intercept</dt>

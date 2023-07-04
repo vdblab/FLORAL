@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,6 +60,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">FLORAL</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">y</span>,</span>
+<span>  ncov <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  family <span class="op">=</span> <span class="st">"gaussian"</span>,</span>
 <span>  longitudinal <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -67,6 +68,8 @@
 <span>  failcode <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  length.lambda <span class="op">=</span> <span class="fl">100</span>,</span>
 <span>  lambda.min.ratio <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  ncov.lambda.weight <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  a <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  mu <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  ncv <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  intercept <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -80,11 +83,15 @@
     <div class="section level2">
     <h2 id="arguments">Arguments<a class="anchor" aria-label="anchor" href="#arguments"></a></h2>
     <dl><dt>x</dt>
-<dd><p>Count data matrix, where rows specify subjects and columns specify features. If <code>x</code> contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in <code>y</code>.</p></dd>
+<dd><p>Feature matrix, where rows specify subjects and columns specify features. The first <code>ncov</code> columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If <code>x</code> contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in <code>y</code>.</p></dd>
 
 
 <dt>y</dt>
 <dd><p>Outcome. For a continuous or binary outcome, <code>y</code> is a vector. For survival outcome, <code>y</code> is a <code>Surv</code> object.</p></dd>
+
+
+<dt>ncov</dt>
+<dd><p>An integer indicating the number of first <code>ncov</code> columns in <code>x</code> that will not be subject to the zero-sum constraint.</p></dd>
 
 
 <dt>family</dt>
@@ -115,12 +122,20 @@
 <dd><p>Ratio between the minimum and maximum choice of lambda. Default is <code>NULL</code>, where the ratio is chosen as 1e-2.</p></dd>
 
 
+<dt>ncov.lambda.weight</dt>
+<dd><p>Weight of the penalty lambda applied to the first <code>ncov</code> covariates. Default is 0 such that the first <code>ncov</code> covariates are not penalized.</p></dd>
+
+
+<dt>a</dt>
+<dd><p>A scalar between 0 and 1: <code>a</code> is the weight for lasso penalty while <code>1-a</code> is the weight for ridge penalty.</p></dd>
+
+
 <dt>mu</dt>
 <dd><p>Value of penalty for the augmented Lagrangian</p></dd>
 
 
 <dt>ncv</dt>
-<dd><p>Number of cross-validation runs. Use <code>NULL</code> if cross-validation is not wanted.</p></dd>
+<dd><p>Folds of cross-validation. Use <code>NULL</code> if cross-validation is not wanted.</p></dd>
 
 
 <dt>intercept</dt>
