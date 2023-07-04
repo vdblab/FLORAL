@@ -76,7 +76,7 @@ Summarizing \code{FLORAL} outputs from various choices of \code{a}
 set.seed(23420)
 
 dat <- simu(n=50,p=30,model="linear")
-pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE)
+pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",ncv=2,progress=FALSE)
 
 }
 \references{

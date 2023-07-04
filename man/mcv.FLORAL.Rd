@@ -82,7 +82,7 @@ Summarizing \code{FLORAL} outputs from multiple random k-fold cross validations
 set.seed(23420)
 
 dat <- simu(n=50,p=30,model="linear")
-fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=TRUE)
+fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",ncv=2,progress=FALSE,step2=TRUE,plot=FALSE)
 
 }
 \references{
