@@ -465,8 +465,14 @@ mcv.FLORAL <- function(mcv=10,
       res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
       res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
       res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-      res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-      res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      
+      if (family %in% c("cox","finegray")){
+        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      }else if (family %in% c("gaussian","binomial")){
+        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      }
       
     }else if (ncore > 1){
       
@@ -516,9 +522,14 @@ mcv.FLORAL <- function(mcv=10,
       res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
       res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
       res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-      res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-      res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
       
+      if (family %in% c("cox","finegray")){
+        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      }else if (family %in% c("gaussian","binomial")){
+        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      }
       
     }
     
