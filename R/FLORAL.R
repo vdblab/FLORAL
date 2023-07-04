@@ -30,7 +30,7 @@
 #' 
 #' # Continuous outcome
 #' dat <- simu(n=50,p=30,model="linear")
-#' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE)
+#' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=2,progress=FALSE,step2=TRUE)
 #' 
 #' # Binary outcome
 #' # dat <- simu(n=50,p=30,model="binomial")
@@ -376,7 +376,7 @@ FLORAL <- function(x,
 #' set.seed(23420)
 #' 
 #' dat <- simu(n=50,p=30,model="linear")
-#' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=TRUE,plot=FALSE)
+#' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",ncv=2,progress=FALSE,step2=TRUE,plot=FALSE)
 #' 
 #' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
 #' @importFrom survcomp concordance.index
@@ -643,7 +643,7 @@ mcv.FLORAL <- function(mcv=10,
 #' set.seed(23420)
 #' 
 #' dat <- simu(n=50,p=30,model="linear")
-#' pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE)
+#' pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",ncv=2,progress=FALSE)
 #' 
 #' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
 #' @importFrom survcomp concordance.index
