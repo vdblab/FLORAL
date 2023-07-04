@@ -33,17 +33,17 @@
 #' fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE)
 #' 
 #' # Binary outcome
-#' dat <- simu(n=50,p=30,model="binomial")
-#' fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
+#' # dat <- simu(n=50,p=30,model="binomial")
+#' # fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
 #' 
 #' # Survival outcome
-#' dat <- simu(n=50,p=30,model="cox")
-#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)
+#' # dat <- simu(n=50,p=30,model="cox")
+#' # fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)
 #' 
 #' # Competing risks outcome
-#' dat <- simu(n=50,p=30,model="finegray")
-#' fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
-#'               family="finegray",progress=FALSE,step2=FALSE)
+#' # dat <- simu(n=50,p=30,model="finegray")
+#' # fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
+#'                 family="finegray",progress=FALSE,step2=FALSE)
 #' 
 #' @import Rcpp ggplot2 survival glmnet dplyr
 #' @importFrom survcomp concordance.index
@@ -376,7 +376,7 @@ FLORAL <- function(x,
 #' set.seed(23420)
 #' 
 #' dat <- simu(n=50,p=30,model="linear")
-#' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=TRUE)
+#' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,family="gaussian",progress=FALSE,step2=TRUE,plot=FALSE)
 #' 
 #' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
 #' @importFrom survcomp concordance.index

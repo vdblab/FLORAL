@@ -118,7 +118,7 @@ It is encouraged to run k-fold cross-validation for several times to account for
 
 ```{r mcv}
 
-mcv.fit <- mcv.FLORAL(mcv=5,
+mcv.fit <- mcv.FLORAL(mcv=2,
                       ncore=1,
                       x = x, 
                       y = y, 
@@ -145,9 +145,9 @@ Beyond lasso model, `FLORAL` also supports elastic net models by specifying the 
 
 The `a.FLORAL` function can help investigate the prediction performance for different choices of `a` and return a plot of the corresponding prediction metric trajectories against the choice of $\lambda$.
 
-```{r a.floral,fig.height=4,fig.width=4,dpi=300}
+```{r a.floral,out.width = '50%',fig.height=4,fig.width=4,dpi=300}
 
-a.fit <- a.FLORAL(a = c(0.1,0.5,1),
+a.fit <- a.FLORAL(a = c(0.1,1),
                   ncore = 1,
                   x = x, 
                   y = y, 
