@@ -19,7 +19,12 @@ LogRatioLasso <- function(x,
   y <- y - mean(y)
   n <- length(y)
   p <- ncol(x)
-  lambda0 <- max(abs(t(y) %*% x))/(a*n)
+  
+  if (a > 0){
+    lambda0 <- max(abs(t(y) %*% x))/(a*n)
+  }else if (a == 0){
+    lambda0 <- max(abs(t(y) %*% x))/(1e-3*n)
+  }
   
   adjust = FALSE
   if (ncov > 0) adjust = TRUE

@@ -43,7 +43,12 @@ LogRatioFGLasso <- function(x,
   sfun = d - expect
   # hfun <- expect - sapply(t,function(x) sum(1/denomj[which(tj <= x)]^2)) + 1e-8 # hessian
   # z <- sfun/hfun
-  lambda0 <- max(abs(t(sfun) %*% x))/(a*n)
+  
+  if (a > 0){
+    lambda0 <- max(abs(t(sfun) %*% x))/(a*n)
+  }else if (a == 0){
+    lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*n)
+  }
   
   adjust = FALSE
   if (ncov > 0) adjust = TRUE

@@ -8,7 +8,7 @@
 
 * Adds a function `mcv.FLORAL()` to perform multiple runs of k-fold cross-validation to summarize selection probabilities for features. (0.1.0.9001)
 
-* Adds a function `a.FLORAL()` to compare different choices of elastic net weight `a` for a fixed cross-validation setting.
+* Adds a function `a.FLORAL()` to compare different choices of elastic net weight `a` for a fixed cross-validation setting. (0.1.0.9001)
 
 # FLORAL 0.1.0
 

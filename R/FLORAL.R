@@ -79,6 +79,10 @@ FLORAL <- function(x,
     stop("`ncov` must be a non-negative integer.")
   }
   
+  if (a < 0 | a > 1){
+    stop("`a` must be within the range of 0 and 1.")
+  }
+  
   x[,(ncov+1):ncol(x)] <- log(x[,(ncov+1):ncol(x)]+1)
   
   if (family == "gaussian"){
@@ -362,6 +366,7 @@ FLORAL <- function(x,
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
 #' @param step2 \code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
 #' @param progress \code{TRUE} or \code{FALSE}, indicating whether printing progress bar as the algorithm runs.
+#' @param plot \code{TRUE} or \code{FALSE}, indicating whether returning summary plots of selection probability for taxa features.
 #' @return A list with relative frequencies of a certain feature being selected over \code{mcv} \code{ncv}-fold cross-validations.
 #' @author Teng Fei. Email: feit1@mskcc.org
 #' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599.
@@ -402,7 +407,8 @@ mcv.FLORAL <- function(mcv=10,
                        ncv=5,
                        intercept=FALSE,
                        step2=TRUE,
-                       progress=TRUE){
+                       progress=TRUE,
+                       plot=TRUE){
   
   if (is.null(ncv) | ncv < 2) stop("Number of folds `ncv` must be larger than one for cross validation.")
   
@@ -455,10 +461,12 @@ mcv.FLORAL <- function(mcv=10,
                   mcv=mcv,
                   seed=seed)
       
-      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/mcv
-      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/mcv
-      res$min.2stage.ratios.coef = colSums(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]/mcv
-      res$`1se.2stage.ratios.coef` = colSums(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]/mcv
+      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
+      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
+      res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+      res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+      res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
       
     }else if (ncore > 1){
       
@@ -504,12 +512,86 @@ mcv.FLORAL <- function(mcv=10,
                   mcv=mcv,
                   seed=seed)
       
-      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/mcv
-      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/mcv
-      res$min.2stage.ratios.coef = colSums(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]/mcv
-      res$`1se.2stage.ratios.coef` = colSums(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]/mcv
+      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
+      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
+      res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+      res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+      res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      
       
     }
+    
+  }
+  
+  if (plot){
+    
+    df_plot <- data.frame(taxa=names(sort(res$min.2stage)),
+                              prob=as.vector(sort(res$min.2stage)))
+    df_plot$Avg.coef <- res$min.coef[df_plot$taxa]
+    df_plot$coefsign <- sign(df_plot$Avg.coef)
+    
+    res$p_min <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+      geom_bar(aes(weight=.data$prob),color="darkgrey") +
+      scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+      xlab("Probability of being selected") +
+      ylab("Taxa") +
+      ggtitle(expression(paste(lambda," = ",lambda["min"]))) +
+      xlim(0,1) +
+      scale_fill_gradient2(low="blue",high="red")+
+      theme_bw()
+    
+    df_plot <- data.frame(taxa=names(sort(res$`1se.2stage`)),
+                              prob=as.vector(sort(res$`1se.2stage`)))
+    df_plot$Avg.coef <- res$`1se.coef`[df_plot$taxa]
+    df_plot$coefsign <- sign(df_plot$Avg.coef)
+    
+    res$p_1se <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+      geom_bar(aes(weight=.data$prob),color="darkgrey") +
+      scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+      xlab("Probability of being selected") +
+      ylab("Taxa") +
+      ggtitle(expression(paste(lambda," = ",lambda["1se"]))) +
+      xlim(0,1) +
+      scale_fill_gradient2(low="blue",high="red")+
+      theme_bw()
+    
+    df_plot <- data.frame(taxa=names(sort(res$min.2stage.ratios)),
+                              prob=as.vector(sort(res$min.2stage.ratios)))
+    df_plot$Avg.coef <- res$min.2stage.ratios.coef[df_plot$taxa]
+    df_plot$coefsign <- sign(df_plot$Avg.coef)
+    df_plot$p <- -log10(res$min.2stage.ratios.p[df_plot$taxa])
+    
+    res$p_min_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+      geom_bar(aes(weight=.data$prob),color="darkgrey") +
+      geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
+      scale_shape_binned() +
+      scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+      xlab("Probability of being selected") +
+      ylab("2 stage model covariates") +
+      ggtitle(expression(paste(lambda," = ",lambda["min"]))) +
+      xlim(0,1) +
+      scale_fill_gradient2(low="blue",high="red")+
+      theme_bw() + 
+      guides(size=guide_legend(title="Avg.-log10(p)"))
+    
+    df_plot <- data.frame(taxa=names(sort(res$`1se.2stage.ratios`)),
+                          prob=as.vector(sort(res$`1se.2stage.ratios`)))
+    df_plot$Avg.coef <- res$`1se.2stage.ratios.coef`[df_plot$taxa]
+    df_plot$coefsign <- sign(df_plot$Avg.coef)
+    df_plot$p <- -log10(res$`1se.2stage.ratios.p`[df_plot$taxa])
+    
+    res$p_1se_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+      geom_bar(aes(weight=.data$prob),color="darkgrey") +
+      geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
+      scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+      xlab("Probability of being selected") +
+      ylab("2 stage model covariates") +
+      ggtitle(expression(paste(lambda," = ",lambda["1se"]))) +
+      xlim(0,1) +
+      scale_fill_gradient2(low="blue",high="red")+
+      theme_bw() + 
+      guides(size=guide_legend(title="Avg.-log10(p)"))
     
   }
   

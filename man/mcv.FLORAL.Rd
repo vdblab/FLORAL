@@ -24,7 +24,8 @@ mcv.FLORAL(
   ncv = 5,
   intercept = FALSE,
   step2 = TRUE,
-  progress = TRUE
+  progress = TRUE,
+  plot = TRUE
 )
 }
 \arguments{
@@ -67,6 +68,8 @@ mcv.FLORAL(
 \item{step2}{\code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.}
 
 \item{progress}{\code{TRUE} or \code{FALSE}, indicating whether printing progress bar as the algorithm runs.}
+
+\item{plot}{\code{TRUE} or \code{FALSE}, indicating whether returning summary plots of selection probability for taxa features.}
 }
 \value{
 A list with relative frequencies of a certain feature being selected over \code{mcv} \code{ncv}-fold cross-validations.
