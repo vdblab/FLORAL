@@ -90,7 +90,7 @@ fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=2,progress=FALSE,step2=TRUE
 # Competing risks outcome
 # dat <- simu(n=50,p=30,model="finegray")
 # fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
-                family="finegray",progress=FALSE,step2=FALSE)
+#               family="finegray",progress=FALSE,step2=FALSE)
 
 }
 \references{
