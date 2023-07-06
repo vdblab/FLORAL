@@ -1,4 +1,4 @@
-# FLORAL (development version)
+# FLORAL 0.2.0
 
 * Including more examples in document compared to CRAN version (0.1.0.9000)
 
