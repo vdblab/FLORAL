@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -190,11 +190,11 @@ which is derived from the log-ratio model assumption.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">best.beta</span><span class="op">$</span><span class="va">min</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          s__Parvimonas_micra s__Actinomyces_sp_HMSC035G02 </span></span>
-<span><span class="co">#&gt;                  -0.08514883                  -0.06091512 </span></span>
+<span><span class="co">#&gt;                  -0.08252935                  -0.05314047 </span></span>
 <span><span class="co">#&gt;   s__Collinsella_aerofaciens     s__Holdemania_filiformis </span></span>
-<span><span class="co">#&gt;                  -0.04813102                  -0.04267987 </span></span>
+<span><span class="co">#&gt;                  -0.04716041                  -0.03963238 </span></span>
 <span><span class="co">#&gt; s__Anaerotruncus_colihominis      s__Bacteroides_plebeius </span></span>
-<span><span class="co">#&gt;                  -0.03821665                  -0.02492675</span></span></code></pre></div>
+<span><span class="co">#&gt;                  -0.03450502                  -0.02348108</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="the-two-step-procedure">The Two-step Procedure<a class="anchor" aria-label="anchor" href="#the-two-step-procedure"></a>
@@ -213,17 +213,17 @@ occur in multiple ratios.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">fit</span><span class="op">$</span><span class="va">step2.ratios</span><span class="op">$</span><span class="va">`1se`</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "s__Bacteroides_plebeius/s__Bacteroides_dorei"                   </span></span>
+<span><span class="co">#&gt; [1] "s__Bacteroides_plebeius/s__Lachnospira_pectinoschiza"           </span></span>
 <span><span class="co">#&gt; [2] "s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus"         </span></span>
 <span><span class="co">#&gt; [3] "s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum"</span></span>
-<span><span class="co">#&gt; [4] "s__Streptococcus_salivarius/s__Actinomyces_sp_HMSC035G02"       </span></span>
-<span><span class="co">#&gt; [5] "s__Haemophilus_parainfluenzae/s__Actinomyces_sp_HMSC035G02"     </span></span>
-<span><span class="co">#&gt; [6] "s__Erysipelatoclostridium_ramosum/s__Parvimonas_micra"</span></span>
+<span><span class="co">#&gt; [4] "s__Collinsella_aerofaciens/s__Coprobacter_fastidiosus"          </span></span>
+<span><span class="co">#&gt; [5] "s__Streptococcus_salivarius/s__Parvimonas_micra"                </span></span>
+<span><span class="co">#&gt; [6] "s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38"</span></span>
 <span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">step2.ratios</span><span class="op">$</span><span class="va">`1se.idx`</span></span>
-<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13]</span></span>
-<span><span class="co">#&gt; [1,]   NA    1    4   12   22   25   26   27   27    44    73    81   114</span></span>
-<span><span class="co">#&gt; [2,]   NA    2  113  102  128  128  131   90  151    64    80   128   131</span></span></code></pre></div>
+<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span></span>
+<span><span class="co">#&gt; [1,]   NA    1    4   12   12   22   27   27   64    80</span></span>
+<span><span class="co">#&gt; [2,]   NA   73  113  102  114  131   90  151  131    81</span></span></code></pre></div>
 <p>To further interpret the positive or negative associations between
 the outcome, please refer to the output <code>step</code> regression
 tables, where the effect sizes of the ratios can be found.</p>
@@ -239,61 +239,49 @@ prediction errors.</p>
 <code class="sourceCode R"><span></span>
 <span><span class="va">fit</span><span class="op">$</span><span class="va">step2.tables</span><span class="op">$</span><span class="va">`1se`</span></span>
 <span><span class="co">#&gt;                                                                    Estimate</span></span>
-<span><span class="co">#&gt; (Intercept)                                                     -1.13290845</span></span>
-<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Bacteroides_dorei                    -0.02844973</span></span>
-<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus           0.03778557</span></span>
-<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum -0.04968019</span></span>
-<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Actinomyces_sp_HMSC035G02         0.07512405</span></span>
-<span><span class="co">#&gt; s__Haemophilus_parainfluenzae/s__Actinomyces_sp_HMSC035G02       0.03696680</span></span>
-<span><span class="co">#&gt; s__Erysipelatoclostridium_ramosum/s__Parvimonas_micra            0.04781375</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               -0.03970198</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    -0.03442088</span></span>
-<span><span class="co">#&gt; s__Anaerotruncus_colihominis/s__Clostridium_aldenense           -0.07787635</span></span>
-<span><span class="co">#&gt; s__Lachnospira_pectinoschiza/s__Ruminococcus_torques             0.03472516</span></span>
-<span><span class="co">#&gt; s__Roseburia_faecis/s__Actinomyces_sp_HMSC035G02                 0.04784454</span></span>
-<span><span class="co">#&gt; s__Coprobacter_fastidiosus/s__Parvimonas_micra                   0.06889677</span></span>
+<span><span class="co">#&gt; (Intercept)                                                     -0.27720870</span></span>
+<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Lachnospira_pectinoschiza            -0.02919464</span></span>
+<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus           0.04723508</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum -0.03143593</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Coprobacter_fastidiosus           -0.04248963</span></span>
+<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Parvimonas_micra                  0.07394560</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               -0.04070714</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    -0.03969244</span></span>
+<span><span class="co">#&gt; s__Clostridium_aldenense/s__Parvimonas_micra                     0.07915905</span></span>
+<span><span class="co">#&gt; s__Ruminococcus_torques/s__Roseburia_faecis                     -0.03437834</span></span>
 <span><span class="co">#&gt;                                                                 Std. Error</span></span>
-<span><span class="co">#&gt; (Intercept)                                                     0.26269116</span></span>
-<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Bacteroides_dorei                    0.01109385</span></span>
-<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus          0.01394149</span></span>
-<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum 0.01517330</span></span>
-<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Actinomyces_sp_HMSC035G02        0.02810284</span></span>
-<span><span class="co">#&gt; s__Haemophilus_parainfluenzae/s__Actinomyces_sp_HMSC035G02      0.02287159</span></span>
-<span><span class="co">#&gt; s__Erysipelatoclostridium_ramosum/s__Parvimonas_micra           0.01975876</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               0.01630423</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    0.01847908</span></span>
-<span><span class="co">#&gt; s__Anaerotruncus_colihominis/s__Clostridium_aldenense           0.02175762</span></span>
-<span><span class="co">#&gt; s__Lachnospira_pectinoschiza/s__Ruminococcus_torques            0.01312878</span></span>
-<span><span class="co">#&gt; s__Roseburia_faecis/s__Actinomyces_sp_HMSC035G02                0.01770898</span></span>
-<span><span class="co">#&gt; s__Coprobacter_fastidiosus/s__Parvimonas_micra                  0.01828425</span></span>
+<span><span class="co">#&gt; (Intercept)                                                     0.21514372</span></span>
+<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Lachnospira_pectinoschiza            0.01105520</span></span>
+<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus          0.01351912</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum 0.01565520</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Coprobacter_fastidiosus           0.01667695</span></span>
+<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Parvimonas_micra                 0.02218330</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               0.01578675</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    0.01768932</span></span>
+<span><span class="co">#&gt; s__Clostridium_aldenense/s__Parvimonas_micra                    0.02322763</span></span>
+<span><span class="co">#&gt; s__Ruminococcus_torques/s__Roseburia_faecis                     0.01271141</span></span>
 <span><span class="co">#&gt;                                                                   z value</span></span>
-<span><span class="co">#&gt; (Intercept)                                                     -4.312701</span></span>
-<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Bacteroides_dorei                    -2.564460</span></span>
-<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus           2.710297</span></span>
-<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum -3.274185</span></span>
-<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Actinomyces_sp_HMSC035G02         2.673183</span></span>
-<span><span class="co">#&gt; s__Haemophilus_parainfluenzae/s__Actinomyces_sp_HMSC035G02       1.616276</span></span>
-<span><span class="co">#&gt; s__Erysipelatoclostridium_ramosum/s__Parvimonas_micra            2.419876</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               -2.435072</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    -1.862695</span></span>
-<span><span class="co">#&gt; s__Anaerotruncus_colihominis/s__Clostridium_aldenense           -3.579268</span></span>
-<span><span class="co">#&gt; s__Lachnospira_pectinoschiza/s__Ruminococcus_torques             2.644964</span></span>
-<span><span class="co">#&gt; s__Roseburia_faecis/s__Actinomyces_sp_HMSC035G02                 2.701711</span></span>
-<span><span class="co">#&gt; s__Coprobacter_fastidiosus/s__Parvimonas_micra                   3.768094</span></span>
+<span><span class="co">#&gt; (Intercept)                                                     -1.288481</span></span>
+<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Lachnospira_pectinoschiza            -2.640807</span></span>
+<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus           3.493947</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum -2.008018</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Coprobacter_fastidiosus           -2.547807</span></span>
+<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Parvimonas_micra                  3.333391</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               -2.578563</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    -2.243864</span></span>
+<span><span class="co">#&gt; s__Clostridium_aldenense/s__Parvimonas_micra                     3.407970</span></span>
+<span><span class="co">#&gt; s__Ruminococcus_torques/s__Roseburia_faecis                     -2.704526</span></span>
 <span><span class="co">#&gt;                                                                     Pr(&gt;|z|)</span></span>
-<span><span class="co">#&gt; (Intercept)                                                     0.0000161272</span></span>
-<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Bacteroides_dorei                    0.0103336444</span></span>
-<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus          0.0067222886</span></span>
-<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum 0.0010596731</span></span>
-<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Actinomyces_sp_HMSC035G02        0.0075135152</span></span>
-<span><span class="co">#&gt; s__Haemophilus_parainfluenzae/s__Actinomyces_sp_HMSC035G02      0.1060346352</span></span>
-<span><span class="co">#&gt; s__Erysipelatoclostridium_ramosum/s__Parvimonas_micra           0.0155258098</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               0.0148888266</span></span>
-<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    0.0625051926</span></span>
-<span><span class="co">#&gt; s__Anaerotruncus_colihominis/s__Clostridium_aldenense           0.0003445584</span></span>
-<span><span class="co">#&gt; s__Lachnospira_pectinoschiza/s__Ruminococcus_torques            0.0081699524</span></span>
-<span><span class="co">#&gt; s__Roseburia_faecis/s__Actinomyces_sp_HMSC035G02                0.0068983632</span></span>
-<span><span class="co">#&gt; s__Coprobacter_fastidiosus/s__Parvimonas_micra                  0.0001644988</span></span></code></pre></div>
+<span><span class="co">#&gt; (Intercept)                                                     0.1975784131</span></span>
+<span><span class="co">#&gt; s__Bacteroides_plebeius/s__Lachnospira_pectinoschiza            0.0082708898</span></span>
+<span><span class="co">#&gt; s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus          0.0004759361</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Bifidobacterium_pseudocatenulatum 0.0446413750</span></span>
+<span><span class="co">#&gt; s__Collinsella_aerofaciens/s__Coprobacter_fastidiosus           0.0108402505</span></span>
+<span><span class="co">#&gt; s__Streptococcus_salivarius/s__Parvimonas_micra                 0.0008579441</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Eubacterium_sp_CAG_38               0.0099212270</span></span>
+<span><span class="co">#&gt; s__Holdemania_filiformis/s__Proteobacteria_bacterium_CAG_139    0.0248411595</span></span>
+<span><span class="co">#&gt; s__Clostridium_aldenense/s__Parvimonas_micra                    0.0006544809</span></span>
+<span><span class="co">#&gt; s__Ruminococcus_torques/s__Roseburia_faecis                     0.0068401830</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="generating-taxa-selection-probabilities">Generating taxa selection probabilities<a class="anchor" aria-label="anchor" href="#generating-taxa-selection-probabilities"></a>
@@ -307,20 +295,17 @@ summarizes taxa selection probabilities, average coefficients based on
 can be created if <code>plot = TRUE</code> is specified.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="va">mcv.fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcv.FLORAL.html">mcv.FLORAL</a></span><span class="op">(</span>mcv<span class="op">=</span><span class="fl">5</span>,</span>
+<span><span class="va">mcv.fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mcv.FLORAL.html">mcv.FLORAL</a></span><span class="op">(</span>mcv<span class="op">=</span><span class="fl">2</span>,</span>
 <span>                      ncore<span class="op">=</span><span class="fl">1</span>,</span>
 <span>                      x <span class="op">=</span> <span class="va">x</span>, </span>
 <span>                      y <span class="op">=</span> <span class="va">y</span>, </span>
 <span>                      family <span class="op">=</span> <span class="st">"binomial"</span>, </span>
 <span>                      ncv <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>                      progress<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in mcv.FLORAL(mcv = 5, ncore = 1, x = x, y = y, family = "binomial", :</span></span>
+<span><span class="co">#&gt; Warning in mcv.FLORAL(mcv = 2, ncore = 1, x = x, y = y, family = "binomial", :</span></span>
 <span><span class="co">#&gt; Using 1 core for computation.</span></span>
 <span><span class="co">#&gt; Random 3-fold cross-validation: 1</span></span>
-<span><span class="co">#&gt; Random 3-fold cross-validation: 2</span></span>
-<span><span class="co">#&gt; Random 3-fold cross-validation: 3</span></span>
-<span><span class="co">#&gt; Random 3-fold cross-validation: 4</span></span>
-<span><span class="co">#&gt; Random 3-fold cross-validation: 5</span></span></code></pre></div>
+<span><span class="co">#&gt; Random 3-fold cross-validation: 2</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">mcv.fit</span><span class="op">$</span><span class="va">p_min</span></span></code></pre></div>
@@ -345,21 +330,20 @@ return a plot of the corresponding prediction metric trajectories
 against the choice of <span class="math inline">\(\lambda\)</span>.</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="va">a.fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a.FLORAL.html">a.FLORAL</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>,<span class="fl">0.5</span>,<span class="fl">1</span><span class="op">)</span>,</span>
+<span><span class="va">a.fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/a.FLORAL.html">a.FLORAL</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>,<span class="fl">1</span><span class="op">)</span>,</span>
 <span>                  ncore <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>                  x <span class="op">=</span> <span class="va">x</span>, </span>
 <span>                  y <span class="op">=</span> <span class="va">y</span>, </span>
 <span>                  family <span class="op">=</span> <span class="st">"binomial"</span>, </span>
 <span>                  ncv <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>                  progress<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Warning in a.FLORAL(a = c(0.1, 0.5, 1), ncore = 1, x = x, y = y, family =</span></span>
+<span><span class="co">#&gt; Warning in a.FLORAL(a = c(0.1, 1), ncore = 1, x = x, y = y, family =</span></span>
 <span><span class="co">#&gt; "binomial", : Using 1 core for computation.</span></span>
 <span><span class="co">#&gt; Running for a = 0.1</span></span>
-<span><span class="co">#&gt; Running for a = 0.5</span></span>
 <span><span class="co">#&gt; Running for a = 1</span></span>
 <span></span>
 <span><span class="va">a.fit</span></span></code></pre></div>
-<p><img src="Using-FLORAL-for-Microbiome-Analysis_files/figure-html/a.floral-1.png" width="100%"></p>
+<p><img src="Using-FLORAL-for-Microbiome-Analysis_files/figure-html/a.floral-1.png" width="50%"></p>
 </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
     </nav></aside>

@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -180,20 +180,20 @@
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Continuous outcome</span></span></span>
 <span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="simu.html">simu</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>,p<span class="op">=</span><span class="fl">30</span>,model<span class="op">=</span><span class="st">"linear"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,<span class="va">dat</span><span class="op">$</span><span class="va">y</span>,family<span class="op">=</span><span class="st">"gaussian"</span>,progress<span class="op">=</span><span class="cn">FALSE</span>,step2<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,<span class="va">dat</span><span class="op">$</span><span class="va">y</span>,family<span class="op">=</span><span class="st">"gaussian"</span>,ncv<span class="op">=</span><span class="fl">2</span>,progress<span class="op">=</span><span class="cn">FALSE</span>,step2<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Binary outcome</span></span></span>
-<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="simu.html">simu</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>,p<span class="op">=</span><span class="fl">30</span>,model<span class="op">=</span><span class="st">"binomial"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,<span class="va">dat</span><span class="op">$</span><span class="va">y</span>,family<span class="op">=</span><span class="st">"binomial"</span>,progress<span class="op">=</span><span class="cn">FALSE</span>,step2<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># dat &lt;- simu(n=50,p=30,model="binomial")</span></span></span>
+<span class="r-in"><span><span class="co"># fit &lt;- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Survival outcome</span></span></span>
-<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="simu.html">simu</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>,p<span class="op">=</span><span class="fl">30</span>,model<span class="op">=</span><span class="st">"cox"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,<span class="fu">survival</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">t</span>,<span class="va">dat</span><span class="op">$</span><span class="va">d</span><span class="op">)</span>,family<span class="op">=</span><span class="st">"cox"</span>,progress<span class="op">=</span><span class="cn">FALSE</span>,step2<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># dat &lt;- simu(n=50,p=30,model="cox")</span></span></span>
+<span class="r-in"><span><span class="co"># fit &lt;- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Competing risks outcome</span></span></span>
-<span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="simu.html">simu</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>,p<span class="op">=</span><span class="fl">30</span>,model<span class="op">=</span><span class="st">"finegray"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,<span class="fu">survival</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/survival/man/Surv.html" class="external-link">Surv</a></span><span class="op">(</span><span class="va">dat</span><span class="op">$</span><span class="va">t</span>,<span class="va">dat</span><span class="op">$</span><span class="va">d</span>,type<span class="op">=</span><span class="st">"mstate"</span><span class="op">)</span>,failcode<span class="op">=</span><span class="fl">1</span>,</span></span>
-<span class="r-in"><span>              family<span class="op">=</span><span class="st">"finegray"</span>,progress<span class="op">=</span><span class="cn">FALSE</span>,step2<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># dat &lt;- simu(n=50,p=30,model="finegray")</span></span></span>
+<span class="r-in"><span><span class="co"># fit &lt;- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,</span></span></span>
+<span class="r-in"><span><span class="co">#               family="finegray",progress=FALSE,step2=FALSE)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

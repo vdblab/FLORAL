@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -179,7 +179,7 @@
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">23420</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu"><a href="simu.html">simu</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>,p<span class="op">=</span><span class="fl">30</span>,model<span class="op">=</span><span class="st">"linear"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">pmetric</span> <span class="op">&lt;-</span> <span class="fu">a.FLORAL</span><span class="op">(</span>a<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>,<span class="fl">1</span><span class="op">)</span>,ncore<span class="op">=</span><span class="fl">1</span>,x<span class="op">=</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,y<span class="op">=</span><span class="va">dat</span><span class="op">$</span><span class="va">y</span>,family<span class="op">=</span><span class="st">"gaussian"</span>,progress<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pmetric</span> <span class="op">&lt;-</span> <span class="fu">a.FLORAL</span><span class="op">(</span>a<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>,<span class="fl">1</span><span class="op">)</span>,ncore<span class="op">=</span><span class="fl">1</span>,x<span class="op">=</span><span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>,y<span class="op">=</span><span class="va">dat</span><span class="op">$</span><span class="va">y</span>,family<span class="op">=</span><span class="st">"gaussian"</span>,ncv<span class="op">=</span><span class="fl">2</span>,progress<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
