@@ -195,10 +195,9 @@ simu <- function(n = 100,
     #generate censoring time
     c <- runif(n,cl,cu)
     #observed time
-    t <- t0*I(t0<=c) + c*I(t0>c)
-    
+    t <- ifelse(t0 == Inf, c ,t0*I(t0<=c) + c*I(t0>c))
     # outcome
-    d <- 0*I(t == c) + epsilon*I(t < c)
+    d <- ifelse(t0 == Inf, 0, 0*I(t == c) + epsilon*I(t < c))
     
     ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
     
