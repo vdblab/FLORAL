@@ -172,7 +172,7 @@ simu <- function(n = 100,
     p.cif = 0.66
     lambda <- exp(eta)
     cl=0.19
-    cu=1.09
+    cu=10
     
     P1 <- 1-(1-p.cif)^(lambda)
     epsilon <- rep(0,n)
