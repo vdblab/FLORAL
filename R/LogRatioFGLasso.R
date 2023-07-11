@@ -78,7 +78,7 @@ LogRatioFGLasso <- function(x,
     if (is.null(foldid)){
       labels <- coxsplitss(as.matrix(y),id,ncv)
     }else{
-      labels <- foldid
+      labels <- fgfoldid(id,foldid)
     }
     
     # labels <- caret::createFolds(factor(d),k=ncv)
