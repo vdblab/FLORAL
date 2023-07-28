@@ -15,6 +15,7 @@
 #' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
+#' @param ncore Number of cores for parallel computing for cross-validation. Default is 1.
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
 #' @param foldid A vector of fold indicator. Default is \code{NULL}.
 #' @param step2 \code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
@@ -45,7 +46,7 @@
 #' # fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
 #' #               family="finegray",progress=FALSE,step2=FALSE)
 #' 
-#' @import Rcpp ggplot2 survival glmnet dplyr
+#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
@@ -69,6 +70,7 @@ FLORAL <- function(x,
                    a=1,
                    mu=1,
                    ncv=5,
+                   ncore=1,
                    intercept=FALSE,
                    foldid=NULL,
                    step2=TRUE,
@@ -103,7 +105,8 @@ FLORAL <- function(x,
                            foldid,
                            step2,
                            progress,
-                           plot)
+                           plot,
+                           ncore=ncore)
     }
     
   }else if(family == "binomial"){
@@ -123,7 +126,8 @@ FLORAL <- function(x,
                                    foldid,
                                    step2,
                                    progress,
-                                   plot)
+                                   plot,
+                                   ncore=ncore)
     }
     
   }else if(family == "cox"){
@@ -165,7 +169,8 @@ FLORAL <- function(x,
                                   foldid,
                                   step2,
                                   progress,
-                                  plot)
+                                  plot,
+                                  ncore=ncore)
         
       }
       
@@ -183,7 +188,8 @@ FLORAL <- function(x,
                               foldid,
                               step2,
                               progress,
-                              plot)
+                              plot,
+                              ncore=ncore)
       
     }
   }else if (family == "finegray"){
@@ -234,7 +240,8 @@ FLORAL <- function(x,
                                foldid,
                                step2,
                                progress,
-                               plot)
+                               plot,
+                               ncore=ncore)
         
       }
       
@@ -270,7 +277,8 @@ FLORAL <- function(x,
                              foldid,
                              step2,
                              progress,
-                             plot)
+                             plot,
+                             ncore=ncore)
       
     }
     
@@ -378,7 +386,7 @@ FLORAL <- function(x,
 #' dat <- simu(n=50,p=30,model="linear")
 #' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,ncv=2,progress=FALSE,step2=TRUE,plot=FALSE)
 #' 
-#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
+#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach parallel
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn

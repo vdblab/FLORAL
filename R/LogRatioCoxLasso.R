@@ -13,7 +13,8 @@ LogRatioCoxLasso <- function(x,
                              plot=TRUE,
                              mcv="Deviance",
                              loop1=FALSE,
-                             loop2=FALSE){
+                             loop2=FALSE,
+                             ncore=1){
   
   ptm <- proc.time()
   
@@ -66,7 +67,7 @@ LogRatioCoxLasso <- function(x,
   if (!is.null(ncv)){
     
     cvdev <- matrix(0,nrow=length(lidx),ncol=ncv)
-    cvdevnull <- rep(0,ncol=ncv)
+    # cvdevnull <- rep(0,ncol=ncv)
     
     if (is.null(foldid)){
       labels <- coxsplity(as.matrix(y),ncv)
@@ -76,66 +77,112 @@ LogRatioCoxLasso <- function(x,
     
     # labels <- caret::createFolds(factor(d),k=ncv)
     
-    for (cv in 1:ncv){
+    if (ncore == 1){
       
-      if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
-      
-      # train.x <- x[-labels[[cv]],]
-      # train.d <- d[-labels[[cv]]]
-      # train.t <- t[-labels[[cv]]]
-      # test.x <- x[labels[[cv]],]
-      # test.d <- d[labels[[cv]]]
-      # test.t <- t[labels[[cv]]]
-      
-      train.x <- x[labels!=cv,]
-      train.d <- d[labels!=cv]
-      train.t <- t[labels!=cv]
-      test.x <- x[labels==cv,]
-      test.d <- d[labels==cv]
-      test.t <- t[labels==cv]
-      
-      cv.devnull <- 0
-      train.tj <- sort(train.t[train.d==1])
-      for (j in 1:length(train.tj)){
-        cv.devnull <- cv.devnull + log(sum(train.t >= train.tj[j]))
+      for (cv in 1:ncv){
+        
+        if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+        
+        # train.x <- x[-labels[[cv]],]
+        # train.d <- d[-labels[[cv]]]
+        # train.t <- t[-labels[[cv]]]
+        # test.x <- x[labels[[cv]],]
+        # test.d <- d[labels[[cv]]]
+        # test.t <- t[labels[[cv]]]
+        
+        train.x <- x[labels!=cv,]
+        train.d <- d[labels!=cv]
+        train.t <- t[labels!=cv]
+        test.x <- x[labels==cv,]
+        test.d <- d[labels==cv]
+        test.t <- t[labels==cv]
+        
+        cv.devnull <- 0
+        train.tj <- sort(train.t[train.d==1])
+        for (j in 1:length(train.tj)){
+          cv.devnull <- cv.devnull + log(sum(train.t >= train.tj[j]))
+        }
+        cv.devnull <- 2*cv.devnull
+        
+        cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress,loop1,loop2,notcv=FALSE)
+        
+        cv.devnull <- 0
+        loglik <- rep(0,length(lidx))
+        linprod <- test.x %*% cvfit$beta
+        
+        if (mcv == "Deviance"){
+          
+          test.tj <- sort(test.t[test.d==1])
+          for (j in 1:length(test.tj)){
+            cv.devnull <- cv.devnull + log(sum(test.t >= test.tj[j]))
+            if (sum(test.t >= test.tj[j]) > 1){
+              cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
+                log(colSums(exp(linprod[test.t >= test.tj[j],])) + 1e-8)
+            }else if (sum(test.t >= test.tj[j]) == 1){
+              cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
+                log(exp(linprod[test.t >= test.tj[j],]) + 1e-8) 
+            }
+            #- log(accu(link(widx))+1e-8)
+          }
+          
+          # cvdevnull[cv] <- 2*cv.devnull
+          cvdev[,cv] <- -2*cvdev[,cv]
+          
+        }else if (mcv == "Cindex"){
+          
+          for (kk in 1:length(lidx)){
+            cvdev[kk,cv] <- 1-concordance.index(x=linprod[,kk],surv.time=test.t,surv.event=test.d)$c.index
+          }
+          
+        }
+        # cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y - exp(x)/(1+exp(x)))^2)/length(test.y))
+        
       }
-      cv.devnull <- 2*cv.devnull
       
-      cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress,loop1,loop2,notcv=FALSE)
+    }else if (ncore > 1){
       
-      cv.devnull <- 0
-      loglik <- rep(0,length(lidx))
-      linprod <- test.x %*% cvfit$beta
+      if (progress) warning(paste0("Using ", ncore ," core for cross-validation computation."))
       
-      if (mcv == "Deviance"){
+      cl <- makeCluster(ncore)
+      registerDoParallel(cl)
+      
+      cvdev <- foreach(cv=1:ncv,.combine=cbind) %dopar% {
+        
+        train.x <- x[labels!=cv,]
+        train.d <- d[labels!=cv]
+        train.t <- t[labels!=cv]
+        test.x <- x[labels==cv,]
+        test.d <- d[labels==cv]
+        test.t <- t[labels==cv]
+        
+        cv.devnull <- 0
+        train.tj <- sort(train.t[train.d==1])
+        for (j in 1:length(train.tj)){
+          cv.devnull <- cv.devnull + log(sum(train.t >= train.tj[j]))
+        }
+        cv.devnull <- 2*cv.devnull
+        
+        cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,FALSE,loop1,loop2,notcv=FALSE)
+        
+        linprod <- test.x %*% cvfit$beta
+        cv.dev <- rep(0,length(lidx))
         
         test.tj <- sort(test.t[test.d==1])
         for (j in 1:length(test.tj)){
-          cv.devnull <- cv.devnull + log(sum(test.t >= test.tj[j]))
           if (sum(test.t >= test.tj[j]) > 1){
-            cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
+            cv.dev <- cv.dev + linprod[test.t == test.tj[j],] - 
               log(colSums(exp(linprod[test.t >= test.tj[j],])) + 1e-8)
           }else if (sum(test.t >= test.tj[j]) == 1){
-            cvdev[,cv] <- cvdev[,cv] + linprod[test.t == test.tj[j],] - 
+            cv.dev <- cv.dev + linprod[test.t == test.tj[j],] - 
               log(exp(linprod[test.t >= test.tj[j],]) + 1e-8) 
           }
-          #- log(accu(link(widx))+1e-8)
         }
         
-        cvdevnull[cv] <- 2*cv.devnull
-        cvdev[,cv] <- -2*cvdev[,cv]
-        
-      }else if (mcv == "Cindex"){
-        
-        for (kk in 1:length(lidx)){
-          cvdev[kk,cv] <- 1-concordance.index(x=linprod[,kk],surv.time=test.t,surv.event=test.d)$c.index
-        }
-        
+        cv.dev <- -2*cv.dev
+        cv.dev
       }
       
-      
-      
-      # cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y - exp(x)/(1+exp(x)))^2)/length(test.y))
+      stopCluster(cl)
       
     }
     

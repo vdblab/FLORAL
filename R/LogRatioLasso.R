@@ -11,7 +11,8 @@ LogRatioLasso <- function(x,
                           foldid=NULL,
                           step2=FALSE,
                           progress=TRUE,
-                          plot=TRUE){
+                          plot=TRUE,
+                          ncore=1){
   
   ptm <- proc.time()
   
@@ -58,21 +59,46 @@ LogRatioLasso <- function(x,
       labels <- foldid
     }
     
-    for (cv in 1:ncv){
+    if (ncore == 1){
       
-      if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+      for (cv in 1:ncv){
+        
+        if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+        
+        train.x <- x[labels!=cv,]
+        train.y <- y[labels!=cv]
+        test.x <- x[labels==cv,]
+        test.y <- y[labels==cv]
+        
+        cvfit <- linear_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress)
+        
+        cvmse[,cv] <- apply(test.x %*% cvfit$beta,2,function(x) sum((test.y-x)^2)/length(test.y))
+        
+      }
       
-      train.x <- x[labels!=cv,]
-      train.y <- y[labels!=cv]
-      test.x <- x[labels==cv,]
-      test.y <- y[labels==cv]
+    }else if(ncore > 1){
       
-      cvfit <- linear_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress)
+      if (progress) warning(paste0("Using ", ncore ," core for cross-validation computation."))
       
-      cvmse[,cv] <- apply(test.x %*% cvfit$beta,2,function(x) sum((test.y-x)^2)/length(test.y))
+      cl <- makeCluster(ncore)
+      registerDoParallel(cl)
+      
+      cvmse <- foreach(cv=1:ncv,.combine=cbind) %dopar% {
+        
+        train.x <- x[labels!=cv,]
+        train.y <- y[labels!=cv]
+        test.x <- x[labels==cv,]
+        test.y <- y[labels==cv]
+        
+        cvfit <- linear_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,FALSE)
+        
+        apply(test.x %*% cvfit$beta,2,function(x) sum((test.y-x)^2)/length(test.y))
+        
+      }
+      
+      stopCluster(cl)
       
     }
-    
     
     mean.cvmse <- rowMeans(cvmse)
     se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
