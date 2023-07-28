@@ -238,6 +238,8 @@ LogRatioFGLasso <- function(x,
             stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           
           df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)
@@ -272,6 +274,8 @@ LogRatioFGLasso <- function(x,
             stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),weights=weight,type.measure = "deviance",family="cox"))
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           
           df_step2 <- data.frame(t0=t0,t1=t1,d=d,x=x.select.min)

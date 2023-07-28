@@ -164,6 +164,8 @@ LogRatioLogisticLasso <- function(x,
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           
           df_step2 <- data.frame(y=y,x=x.select.min)
@@ -192,7 +194,6 @@ LogRatioLogisticLasso <- function(x,
         if (length(which(ret$best.beta$add.1se!=0)) > 1){
           
           idxs <- combn(which(ret$best.beta$add.1se!=0),2)
-          
           x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
           for (k in 1:ncol(idxs)){
             x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
@@ -202,6 +203,8 @@ LogRatioLogisticLasso <- function(x,
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           
           df_step2 <- data.frame(y=y,x=x.select.min)

@@ -164,6 +164,8 @@ LogRatioLasso <- function(x,
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           
           df_step2 <- data.frame(y=y,x=x.select.min)
@@ -201,6 +203,8 @@ LogRatioLasso <- function(x,
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="gaussian")
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           df_step2 <- data.frame(y=y,x=x.select.min)
           step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=gaussian),trace=0))
