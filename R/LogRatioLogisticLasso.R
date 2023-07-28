@@ -170,10 +170,6 @@ LogRatioLogisticLasso <- function(x,
           step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
           vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
           
-          if (ncol(idxs) == 1 & length(vars) == 2){
-            vars = 1
-          }
-          
           if (is.null(ncol(idxs))){
             if (length(vars) == 2){
               selected <- idxs
