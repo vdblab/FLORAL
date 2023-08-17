@@ -216,6 +216,7 @@ FLORAL <- function(x,
         
         if (is.null(failcode)){
           warning("`failcode` is `NULL`. Using the first failure type as default")
+          failcode = 1
           df_FG <- finegray(Surv(tstart, tstop, dd, type="mstate") ~ ., id=id, data=xy, etype=failcode,timefix = FALSE)
         }else{
           df_FG <- finegray(Surv(tstart, tstop, dd, type="mstate") ~ ., id=id, data=xy, etype=failcode,timefix = FALSE)
