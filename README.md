@@ -20,11 +20,15 @@ constraint optimization problem while enabling a two-stage screening
 process for extended false-positive control.
 
 The associated preprint for `FLORAL` is available on
-[bioRxiv](https://www.biorxiv.org/content/10.1101/2023.05.02.538599v1).
+[bioRxiv](https://www.biorxiv.org/content/10.1101/2023.05.02.538599).
 
-## Installation
+## System requirements and installation
 
-You can install `FLORAL` with the following code.
+The current version of `FLORAL` (0.2.0) was built in R version 4.1.1. R
+package dependencies can be found in the `DESCRIPTION` file.
+
+You can install `FLORAL` with the following code. The installation is
+typically complete within minutes.
 
 ``` r
 install.packages("FLORAL")
@@ -45,7 +49,8 @@ cross-validation for a simulated data with 50 samples and 100
 compositional features. Option `progress=TRUE` can be used to show the
 progress bar of the running algorithm.
 
-The data simulation procedure is described in the preprint.
+The data simulation procedure is described in the preprint. The expected
+run time for the following demo is about a minute.
 
 ``` r
 set.seed(23420)
@@ -62,10 +67,10 @@ coefficients, use `fit$pmse` or `fit$pcoef`:
 
 To view selected compositional features, use `fit$selected.feature`,
 where features are sorted by their names. Features under `min` and `1se`
-correspond to penalty parameter *λ*<sub>min</sub> and *λ*<sub>1se</sub>,
-respectively. Features under `min.2stage` and `1se.2stage` are obtained
-after applying 2-stage filtering based on features under `min` and
-`1se`, respectively.
+correspond to penalty parameter $\lambda_{\min}$ and
+$\lambda_{\text{1se}}$, respectively. Features under `min.2stage` and
+`1se.2stage` are obtained after applying 2-stage filtering based on
+features under `min` and `1se`, respectively.
 
 We recommend interpreting the selected compositional features as
 potential predictive markers to the outcome in the regression model in
@@ -110,14 +115,14 @@ fit$step2.ratios
 #>  [6] "taxa5/taxa8"  "taxa6/taxa7"  "taxa6/taxa9"  "taxa7/taxa10" "taxa9/taxa32"
 #> 
 #> $min.idx
-#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13]
-#> [1,]    1    1    1    2    3    3    5    6    7     7     8     9     9
-#> [2,]   13   20   84    5    8   92    8    9   10    79    60    32    92
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
+#> [1,]   NA    1    1    1    2    3    3    5    6     7     7     8     9     9
+#> [2,]   NA   13   20   84    5    8   92    8    9    10    79    60    32    92
 #> 
 #> $`1se.idx`
-#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]
-#> [1,]    1    1    1    2    3    5    6    6    7     9
-#> [2,]   13   20   84    5    8    8    7    9   10    32
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11]
+#> [1,]   NA    1    1    1    2    3    5    6    6     7     9
+#> [2,]   NA   13   20   84    5    8    8    7    9    10    32
 ```
 
 More detailed interpretations can be obtained for the selected
@@ -153,6 +158,12 @@ dat.fg <- simu(n=50,p=100,model="finegray")
 fit.fg <- FLORAL(dat.cox$xcount,survival::Surv(dat.cox$t,dat.cox$d,type="mstate"),family="finegray",ncv=10,progress=FALSE,step2=FALSE)
 ```
 
+## Repository for Reproducibility
+
+Reproducible code for the analyses results reported in the manuscript
+can be found at [this
+repository](https://github.com/vdblab/FLORAL-analysis).
+
 ## Contributing
 
 The `FLORAL` package is jointly managed by [MSKCC Biostatistics
@@ -165,8 +176,8 @@ you to all contributors!
 
 ## Reference
 
-Fei T, Funnell T, Waters NR, Raj SS, Devlin SM, Dai A, Miltiadous O,
+Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O,
 Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink
-MRM, Scalable Log-ratio Lasso Regression Enhances Microbiome Feature
-Selection for Predictive Models, bioRxiv 2023.05.02.538599; doi:
+MRM, Enhanced Feature Selection for Microbiome Data using FLORAL:
+Scalable Log-ratio Lasso Regression, bioRxiv 2023.05.02.538599; doi:
 <https://doi.org/10.1101/2023.05.02.538599>.
