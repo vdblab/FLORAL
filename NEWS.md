@@ -1,3 +1,11 @@
+# FLORAL (development version)
+
+* Improves stability when fitting Fine-Gray model with longitudinal covariates.
+
+* Enables parallel computation for cross-validation.
+
+* Fixes several bugs as reported in Issues. 
+
 # FLORAL 0.2.0
 
 * Including more examples in document compared to CRAN version (0.1.0.9000)
