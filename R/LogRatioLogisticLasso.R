@@ -12,7 +12,8 @@ LogRatioLogisticLasso <- function(x,
                                   progress=TRUE,
                                   plot=TRUE,
                                   loop1=FALSE,
-                                  loop2=FALSE){
+                                  loop2=FALSE,
+                                  ncore=1){
   
   ptm <- proc.time()
   
@@ -54,18 +55,44 @@ LogRatioLogisticLasso <- function(x,
       labels <- foldid
     }
     
-    for (cv in 1:ncv){
+    if (ncore == 1){
       
-      if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+      for (cv in 1:ncv){
+        
+        if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+        
+        train.x <- x[labels!=cv,]
+        train.y <- y[labels!=cv]
+        test.x <- x[labels==cv,]
+        test.y <- y[labels==cv]
+        
+        cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress,loop1,loop2)
+        
+        cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
+        
+      }
       
-      train.x <- x[labels!=cv,]
-      train.y <- y[labels!=cv]
-      test.x <- x[labels==cv,]
-      test.y <- y[labels==cv]
+    }else if (ncore > 1){
       
-      cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress,loop1,loop2)
+      if (progress) warning(paste0("Using ", ncore ," core for cross-validation computation."))
       
-      cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
+      cl <- makeCluster(ncore)
+      registerDoParallel(cl)
+      
+      cvmse <- foreach(cv=1:ncv,.combine=cbind) %dopar% {
+        
+        train.x <- x[labels!=cv,]
+        train.y <- y[labels!=cv]
+        test.x <- x[labels==cv,]
+        test.y <- y[labels==cv]
+        
+        cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,FALSE,loop1,loop2)
+        
+        apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
+        
+      }
+      
+      stopCluster(cl)
       
     }
     
@@ -164,15 +191,13 @@ LogRatioLogisticLasso <- function(x,
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           
           df_step2 <- data.frame(y=y,x=x.select.min)
           step2fit <- suppressWarnings(step(glm(y~.,data=df_step2,family=binomial),trace=0))
           vars <- as.numeric(sapply(names(step2fit$coefficients),function(x) strsplit(x,split = "[.]")[[1]][2]))
-          
-          if (ncol(idxs) == 1 & length(vars) == 2){
-            vars = 1
-          }
           
           if (is.null(ncol(idxs))){
             if (length(vars) == 2){
@@ -196,7 +221,6 @@ LogRatioLogisticLasso <- function(x,
         if (length(which(ret$best.beta$add.1se!=0)) > 1){
           
           idxs <- combn(which(ret$best.beta$add.1se!=0),2)
-          
           x.select.min <- matrix(NA,nrow=n,ncol=ncol(idxs))
           for (k in 1:ncol(idxs)){
             x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
@@ -206,6 +230,8 @@ LogRatioLogisticLasso <- function(x,
             stepglmnet <- cv.glmnet(x=x.select.min,y=y,type.measure = "mse",family="binomial")
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
+          }else{
+            idxs <- as.vector(idxs)
           }
           
           df_step2 <- data.frame(y=y,x=x.select.min)

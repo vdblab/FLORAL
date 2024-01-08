@@ -19,6 +19,7 @@ FLORAL(
   a = 1,
   mu = 1,
   ncv = 5,
+  ncore = 1,
   intercept = FALSE,
   foldid = NULL,
   step2 = TRUE,
@@ -54,6 +55,8 @@ FLORAL(
 \item{mu}{Value of penalty for the augmented Lagrangian}
 
 \item{ncv}{Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.}
+
+\item{ncore}{Number of cores for parallel computing for cross-validation. Default is 1.}
 
 \item{intercept}{\code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.}
 

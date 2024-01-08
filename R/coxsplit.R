@@ -30,3 +30,12 @@ coxsplitss=function(y, id, nfolds){
   
   return(foldid)
 }
+
+fgfoldid=function(id, foldid){
+  idfoldid <- data.frame(id=unique(id),foldid=foldid)
+  yfoldid <- data.frame(id=id)
+  mergedid <- yfoldid %>% left_join(idfoldid,by="id")
+  
+  foldid <- mergedid$foldid
+  return(foldid)
+}
