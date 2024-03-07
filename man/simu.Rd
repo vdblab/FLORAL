@@ -16,7 +16,8 @@ simu(
   rho = 0,
   ncov = 0,
   betacov = 0,
-  intercept = FALSE
+  intercept = FALSE,
+  method = "manual"
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ simu(
 \item{betacov}{Coefficients corresponding to the covariates that are not compositional features.}
 
 \item{intercept}{Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.}
+
+\item{method}{Simulation schemes. Options are "manual" and "sparseDOSSA2", where the "manual" version is described in the preprint.}
 }
 \value{
 A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).

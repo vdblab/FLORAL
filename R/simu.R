@@ -12,6 +12,7 @@
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
 #' @param ncov Number of covariates that are not compositional features.
 #' @param betacov Coefficients corresponding to the covariates that are not compositional features.
+#' @param method Simulation schemes. Options are "manual" and "sparseDOSSA2", where the "manual" version is described in the preprint.
 #' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.
 #' @return A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
 #' @author Teng Fei. Email: feit1@mskcc.org
@@ -21,7 +22,7 @@
 #' set.seed(23420)
 #' dat <- simu(n=50,p=30,model="linear")
 #' 
-#' @import ggplot2 survival glmnet dplyr
+#' @import ggplot2 survival glmnet dplyr SparseDOSSA2
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
@@ -42,7 +43,8 @@ simu <- function(n = 100,
                  rho=0,
                  ncov=0,
                  betacov=0,
-                 intercept=FALSE){
+                 intercept=FALSE,
+                 method="manual"){
   
   true_set <- 1:(weak+strong)
   weak_idx <- 1:weak
@@ -67,31 +69,52 @@ simu <- function(n = 100,
   seqdep <- floor(runif(n,min=5000,max=50000))
   # highidx <- true_set
   
-  sigma <- rho^(as.matrix(dist(1:p)))
-  diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
-  mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
+  ###############################################
   
-  x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
-  
-  if (pct.sparsity > 0){
-    for (i in 1:n){
-      zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
-      x[i,zeroidx] <- -Inf
+  if (method == "manual"){
+    
+    sigma <- rho^(as.matrix(dist(1:p)))
+    diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
+    mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
+    
+    x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+    
+    if (pct.sparsity > 0){
+      for (i in 1:n){
+        zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
+        x[i,zeroidx] <- -Inf
+      }
     }
+    x = apply(x,2,function(y) exp(y)/rowSums(exp(x)))
+    
+    for (k in 1:n){
+      xobs[k,] <- rmultinom(1,size=seqdep[k],prob=x[k,])
+    }
+    xcount = xobs
+    colnames(xcount) <- paste0("taxa",1:p)
+    
+    for (k in 1:n){
+      x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
+    }
+    x = log(x+1)
+    
+  }else if (method == "sparseDOSSA2"){
+    
+    sim <- SparseDOSSA2::SparseDOSSA2(template = "Stool",
+                                      n_sample = n,
+                                      n_feature = p,
+                                      median_read_depth = 25000,
+                                      verbose = FALSE)
+    xcount <- t(sim$simulated_data)
+    colnames(xcount) <- paste0("taxa",1:p)
+    
+    x = t(sim$simulated_matrices$rel)
+    for (k in 1:n){
+      x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
+    }
+    x = log(x+1)
+    
   }
-  x = apply(x,2,function(y) exp(y)/rowSums(exp(x)))
-  
-  for (k in 1:n){
-    xobs[k,] <- rmultinom(1,size=seqdep[k],prob=x[k,])
-  }
-  xobs = log(xobs+1)
-  
-  for (k in 1:n){
-    x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
-  }
-  xcount = x
-  colnames(xcount) <- paste0("taxa",1:p)
-  x = log(x+1)
   
   if (ncov > 0){
     xcov <- mvtnorm::rmvnorm(n=n,mean=rep(0,ncov))
@@ -112,7 +135,7 @@ simu <- function(n = 100,
     }
     y0 = y - mean(y)
     
-    ret <- list(xcount=xcount,x=xobs,y=y,y0=y0,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=x,y=y,y0=y0,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -137,7 +160,7 @@ simu <- function(n = 100,
       y[i] <- rbinom(1,1,prob=prob[i])
     }
     
-    ret <- list(xcount=xcount,x=xobs,y=y,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=x,y=y,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -159,7 +182,7 @@ simu <- function(n = 100,
       d[i] <- as.numeric(I(t0 <= c0))
     }
     
-    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=x,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
@@ -199,7 +222,7 @@ simu <- function(n = 100,
     # outcome
     d <- ifelse(t0 == Inf, 0, 0*I(t == c) + epsilon*I(t < c))
     
-    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=x,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
