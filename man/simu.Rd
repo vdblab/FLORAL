@@ -45,7 +45,7 @@ simu(
 
 \item{intercept}{Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.}
 
-\item{method}{Simulation schemes. Options are "manual" and "sparseDOSSA2", where the "manual" version is described in the preprint.}
+\item{method}{Simulation schemes. Options are "manual" and "SparseDOSSA2", where the "manual" version is described in the preprint and "SparseDOSSA2" uses the default stool template from the package `SparseDOSSA2`. Note that only sample size and effect size are required for SparseDOSSA2 simulation.}
 }
 \value{
 A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).

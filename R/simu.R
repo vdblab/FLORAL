@@ -12,7 +12,7 @@
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
 #' @param ncov Number of covariates that are not compositional features.
 #' @param betacov Coefficients corresponding to the covariates that are not compositional features.
-#' @param method Simulation schemes. Options are "manual" and "sparseDOSSA2", where the "manual" version is described in the preprint.
+#' @param method Simulation schemes. Options are "manual" and "SparseDOSSA2", where the "manual" version is described in the preprint and "SparseDOSSA2" uses the default stool template from the package `SparseDOSSA2`. Note that only sample size and effect size are required for SparseDOSSA2 simulation.
 #' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.
 #' @return A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
 #' @author Teng Fei. Email: feit1@mskcc.org
@@ -98,23 +98,40 @@ simu <- function(n = 100,
     }
     x = log(x+1)
     
-  }else if (method == "sparseDOSSA2"){
+  }else if (method == "SparseDOSSA2"){
     
     sim <- SparseDOSSA2::SparseDOSSA2(template = "Stool",
-                                      n_sample = n,
-                                      n_feature = p,
+                                      n_sample=n,
                                       median_read_depth = 25000,
+                                      new_features=FALSE,
                                       verbose = FALSE)
     xcount <- t(sim$simulated_data)
-    colnames(xcount) <- paste0("taxa",1:p)
+    taxa <- colnames(xcount)
+    
+    true_set <- which(taxa %in% c("k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Blautia|s__Ruminococcus_torques",
+                                  "k__Bacteria|p__Firmicutes|c__Bacilli|o__Lactobacillales|f__Streptococcaceae|g__Streptococcus|s__Streptococcus_mitis_oralis_pneumoniae",
+                                  "k__Bacteria|p__Firmicutes|c__Erysipelotrichia|o__Erysipelotrichales|f__Erysipelotrichaceae|g__Erysipelotrichaceae_noname|s__Erysipelotrichaceae_bacterium_6_1_45",
+                                  "k__Bacteria|p__Verrucomicrobia|c__Verrucomicrobiae|o__Verrucomicrobiales|f__Verrucomicrobiaceae|g__Akkermansia|s__Akkermansia_muciniphila",
+                                  "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__Bacteroides_uniformis",
+                                  "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Porphyromonadaceae|g__Parabacteroides|s__Parabacteroides_merdae",
+                                  "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Prevotellaceae|g__Prevotella|s__Prevotella_copri",
+                                  "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Ruminococcaceae|g__Ruminococcus|s__Ruminococcus_bromii",
+                                  "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Roseburia|s__Roseburia_inulinivorans",
+                                  "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Coriobacteriales|f__Coriobacteriaceae|g__Collinsella|s__Collinsella_aerofaciens"
+    ))
+    
+    colnames(xcount) <- paste0("taxa",1:ncol(xcount))
     
     x = t(sim$simulated_matrices$rel)
-    for (k in 1:n){
+    for (k in 1:nrow(xcount)){
       x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
     }
     x = log(x+1)
     
   }
+  
+  betavec <- rep(0,ncol(xcount))
+  betavec[true_set] <- beta
   
   if (ncov > 0){
     xcov <- mvtnorm::rmvnorm(n=n,mean=rep(0,ncov))
@@ -135,7 +152,7 @@ simu <- function(n = 100,
     }
     y0 = y - mean(y)
     
-    ret <- list(xcount=xcount,x=x,y=y,y0=y0,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=x,y=y,y0=y0,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -160,7 +177,7 @@ simu <- function(n = 100,
       y[i] <- rbinom(1,1,prob=prob[i])
     }
     
-    ret <- list(xcount=xcount,x=x,y=y,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=x,y=y,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -182,7 +199,7 @@ simu <- function(n = 100,
       d[i] <- as.numeric(I(t0 <= c0))
     }
     
-    ret <- list(xcount=xcount,x=x,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=x,t=t,d=d,beta=betavec,idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
@@ -222,7 +239,7 @@ simu <- function(n = 100,
     # outcome
     d <- ifelse(t0 == Inf, 0, 0*I(t == c) + epsilon*I(t < c))
     
-    ret <- list(xcount=xcount,x=x,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=log(xcount+1),t=t,d=d,beta=betavec,idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
