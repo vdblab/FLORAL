@@ -35,7 +35,8 @@ Imports:
   mvtnorm,
   doParallel,
   doRNG,
-  foreach
+  foreach,
+  SparseDOSSA2
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.2.3
 Encoding: UTF-8
