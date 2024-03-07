@@ -121,7 +121,7 @@ simu <- function(n = 100,
     ))
     
     colnames(xcount) <- paste0("taxa",1:ncol(xcount))
-    
+    rownames(xcount) <- NULL
     x = t(sim$simulated_matrices$rel)
     for (k in 1:nrow(xcount)){
       x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
