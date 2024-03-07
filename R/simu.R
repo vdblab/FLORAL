@@ -152,7 +152,7 @@ simu <- function(n = 100,
     }
     y0 = y - mean(y)
     
-    ret <- list(xcount=xcount,x=x,y=y,y0=y0,beta=betavec,idx=true_set)
+    ret <- list(xcount=xcount,x=log(xcount+1),y=y,y0=y0,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -177,7 +177,7 @@ simu <- function(n = 100,
       y[i] <- rbinom(1,1,prob=prob[i])
     }
     
-    ret <- list(xcount=xcount,x=x,y=y,beta=betavec,idx=true_set)
+    ret <- list(xcount=xcount,x=log(xcount+1),y=y,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -199,7 +199,7 @@ simu <- function(n = 100,
       d[i] <- as.numeric(I(t0 <= c0))
     }
     
-    ret <- list(xcount=xcount,x=x,t=t,d=d,beta=betavec,idx=true_set)
+    ret <- list(xcount=xcount,x=log(xcount+1),t=t,d=d,beta=betavec,idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
