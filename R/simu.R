@@ -132,6 +132,8 @@ simu <- function(n = 100,
   
   betavec <- rep(0,ncol(xcount))
   betavec[true_set] <- beta
+  xobs <- log(xcount+1)
+  colnames(xobs) <- NULL
   
   if (ncov > 0){
     xcov <- mvtnorm::rmvnorm(n=n,mean=rep(0,ncov))
@@ -152,7 +154,7 @@ simu <- function(n = 100,
     }
     y0 = y - mean(y)
     
-    ret <- list(xcount=xcount,x=log(xcount+1),y=y,y0=y0,beta=betavec,idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,y=y,y0=y0,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -177,7 +179,7 @@ simu <- function(n = 100,
       y[i] <- rbinom(1,1,prob=prob[i])
     }
     
-    ret <- list(xcount=xcount,x=log(xcount+1),y=y,beta=betavec,idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,y=y,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -199,7 +201,7 @@ simu <- function(n = 100,
       d[i] <- as.numeric(I(t0 <= c0))
     }
     
-    ret <- list(xcount=xcount,x=log(xcount+1),t=t,d=d,beta=betavec,idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=betavec,idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
@@ -239,7 +241,7 @@ simu <- function(n = 100,
     # outcome
     d <- ifelse(t0 == Inf, 0, 0*I(t == c) + epsilon*I(t < c))
     
-    ret <- list(xcount=xcount,x=log(xcount+1),t=t,d=d,beta=betavec,idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=betavec,idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
