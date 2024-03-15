@@ -9,6 +9,7 @@
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
 #' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
+#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
 #' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
@@ -64,6 +65,7 @@ FLORAL <- function(x,
                    id=NULL,
                    tobs=NULL,
                    failcode=NULL,
+                   pseudo=1,
                    length.lambda=100,
                    lambda.min.ratio=NULL,
                    ncov.lambda.weight=0,
@@ -85,7 +87,7 @@ FLORAL <- function(x,
     stop("`a` must be within the range of 0 and 1.")
   }
   
-  x[,(ncov+1):ncol(x)] <- log(x[,(ncov+1):ncol(x)]+1)
+  x[,(ncov+1):ncol(x)] <- log(x[,(ncov+1):ncol(x)]+pseudo)
   
   if (family == "gaussian"){
     
