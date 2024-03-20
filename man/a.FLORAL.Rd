@@ -16,6 +16,7 @@ a.FLORAL(
   id = NULL,
   tobs = NULL,
   failcode = NULL,
+  pseudo = 1,
   length.lambda = 100,
   lambda.min.ratio = NULL,
   ncov.lambda.weight = 0,
@@ -48,6 +49,8 @@ a.FLORAL(
 \item{tobs}{If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.}
 
 \item{failcode}{If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.}
+
+\item{pseudo}{Pseudo count to be added to \code{x} before taking log-transformation}
 
 \item{length.lambda}{Number of penalty parameters used in the path}
 
