@@ -5,11 +5,14 @@
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
 #' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
 #' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
-#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
 #' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
-#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation
+#' @param corstr If a GEE model is specified, then \code{corstr} is the corresponding working correlation structure. Options are \code{independence}, \code{exchangeable}, \code{AR-1} and \code{unstructured}.
+#' @param scalefix \code{TRUE} or \code{FALSE}, indicating whether the scale parameter is estimated or fixed if a GEE model is specified.
+#' @param scalevalue Specify the scale parameter if \code{scalefix=TRUE}.
+#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation. If unspecified, then the log-transformation will not be performed.
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
 #' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
@@ -65,6 +68,9 @@ FLORAL <- function(x,
                    id=NULL,
                    tobs=NULL,
                    failcode=NULL,
+                   corstr="exchangeable",
+                   scalefix=FALSE,
+                   scalevalue=1,
                    pseudo=1,
                    length.lambda=100,
                    lambda.min.ratio=NULL,
@@ -83,16 +89,71 @@ FLORAL <- function(x,
     stop("`ncov` must be a non-negative integer.")
   }
   
-  if (a < 0 | a > 1){
-    stop("`a` must be within the range of 0 and 1.")
+  if (a < 0){
+    stop("`a` must be non-negative.")
+  }else if (a <= 1){
+    if (progress) cat(paste0("Using elastic net with a=",a,"."))
+  }else if (a > 1){
+    if (longitudinal & family %in% c("gaussian","binomial")){
+      if (progress) cat(paste0("Using SCAD with a=",a,"."))
+    }else{
+      stop("`a`>1 is not yet supported for non-GEE models.")
+    }
   }
   
-  x[,(ncov+1):ncol(x)] <- log(x[,(ncov+1):ncol(x)]+pseudo)
+  if (!is.null(pseudo)){
+    
+    x[,(ncov+1):ncol(x)] <- log(x[,(ncov+1):ncol(x)]+pseudo)
+    
+  }
+  
+  if (is.null(colnames(x))){
+    colnames(x) = 1:ncol(x)
+  }
   
   if (family == "gaussian"){
     
     if (longitudinal){
-      stop("Longitudinal data matrix is not supported for `family=gaussian`.")
+      
+      if (is.null(id)){
+        
+        stop("`id` must be specified if `longitudinal` is TRUE and `family` is gaussian.")
+        
+      }else{
+        
+        if (intercept){
+          
+          x0 <- cbind(1,x)
+          ncov <- ncov + 1
+          if (!is.null(colnames(x))){
+            colnames(x0) <- c("Intercept",colnames(x))
+          }
+          x <- x0
+        }
+        
+        res <- LogRatioGEE(x,
+                           y,
+                           id,
+                           ncov,
+                           intercept,
+                           family,
+                           corstr,
+                           scalefix,
+                           scalevalue,
+                           length.lambda,
+                           lambda.min.ratio,
+                           ncov.lambda.weight,
+                           a,
+                           mu,
+                           ncv,
+                           foldid,
+                           step2,
+                           progress,
+                           plot,
+                           ncore)
+        
+      }
+      
     }else{
       res <- LogRatioLasso(x,
                            y,
@@ -114,7 +175,46 @@ FLORAL <- function(x,
   }else if(family == "binomial"){
     
     if (longitudinal){
-      stop("Longitudinal data matrix is not supported for `family=binomial`.")
+      
+      if (is.null(id)){
+        
+        stop("`id` must be specified if `longitudinal` is TRUE and `family` is binomial.")
+        
+      }else{
+        
+        if (intercept){
+          
+          x0 <- cbind(1,x)
+          ncov <- ncov + 1
+          if (!is.null(colnames(x))){
+            colnames(x0) <- c("Intercept",colnames(x))
+          }
+          x <- x0
+        }
+        
+        res <- LogRatioGEE(x,
+                           y,
+                           id,
+                           ncov,
+                           intercept,
+                           family,
+                           corstr,
+                           scalefix,
+                           scalevalue,
+                           length.lambda,
+                           lambda.min.ratio,
+                           ncov.lambda.weight,
+                           a,
+                           mu,
+                           ncv,
+                           foldid,
+                           step2,
+                           progress,
+                           plot,
+                           ncore)
+        
+      }
+      
     }else{
       res <- LogRatioLogisticLasso(x,
                                    y,
@@ -138,7 +238,7 @@ FLORAL <- function(x,
       
       if (is.null(id) | is.null(tobs)){
         
-        stop("`id` and `tobs` must be specified if `longitudinal` is TRUE.")
+        stop("`id` and `tobs` must be specified if `longitudinal` is TRUE and `family` is cox.")
         
       }else{
         
@@ -200,7 +300,7 @@ FLORAL <- function(x,
       
       if (is.null(id) | is.null(tobs)){
         
-        stop("`id` and `tobs` must be specified if `longitudinal` is TRUE.")
+        stop("`id` and `tobs` must be specified if `longitudinal` is TRUE and `family` is finegray.")
         
       }else{
         
@@ -295,47 +395,87 @@ FLORAL <- function(x,
   res$best.beta$add.1se <- NULL
   
   if (step2){
-    res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
-                                 `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
-                                 min.2stage=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.min]))),
-                                 `1se.2stage`=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se])))
-    )
     
-    res$step2.ratios <- list(min=character(0),
-                             `1se`=character(0),
-                             min.idx=character(0),
-                             `1se.idx`=character(0))
-    
-    res$step2.tables <- list(min=character(0),
-                             `1se`=character(0))
-    
-    if (length(res$selected.feature$min.2stage)>0){
-      namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
-      res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-      res$step2.ratios$min.idx <- res$step2.feature.min#[,!is.na(colSums(res$step2.feature.min))]
+    if (longitudinal & family %in% c("gaussian","binomial")){ # For GEE
       
-      res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
-      # res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
+      res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                   `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
+                                   min.2stage=sort(unique(as.vector(res$step2.feature.min))),
+                                   `1se.2stage`=sort(unique(as.vector(res$step2.feature.1se))))
       
-      if ("(Intercept)" %in% rownames(res$step2.tables$min)){
-        rownames(res$step2.tables$`min`)[2:(2+length(res$step2.ratios$min)-1)] <- res$step2.ratios$`min`
-      }else{
-        rownames(res$step2.tables$`min`)[1:length(res$step2.ratios$min)] <- res$step2.ratios$`min`
+      res$step2.ratios <- list(min=character(0),
+                               `1se`=character(0),
+                               min.name=character(0),
+                               `1se.name`=character(0))
+      
+      res$step2.tables <- list(min=character(0),
+                               `1se`=character(0))
+      
+      
+      if (length(res$selected.feature$min.2stage)>0){
+        
+        namemat <- res$step2.feature.min
+        res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+        res$step2.ratios$min.name <- res$step2.feature.min
+        res$step2.tables$min <- res$step2fit.min
+        
       }
       
-    }
-    if (length(res$selected.feature$`1se.2stage`)>0){
-      namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
-      res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-      res$step2.ratios$`1se.idx` <- res$step2.feature.1se#[,!is.na(colSums(res$step2.feature.1se))]
+      if (length(res$selected.feature$`1se.2stage`)>0){
+        
+        namemat <- res$step2.feature.1se
+        res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+        res$step2.ratios$`1se.name` <- res$step2.feature.1se
+        res$step2.tables$`1se` <- res$step2fit.1se
+        
+      }
       
-      res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
-      # res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
-      # rownames(res$step2.tables$`1se`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`1se`
-      if ("(Intercept)" %in% rownames(res$step2.tables$`1se`)){
-        rownames(res$step2.tables$`1se`)[2:(2+length(res$step2.ratios$`1se`)-1)] <- res$step2.ratios$`1se`
-      }else{
-        rownames(res$step2.tables$`1se`)[1:length(res$step2.ratios$`1se`)] <- res$step2.ratios$`1se`
+    }else{ # For other models
+      
+      
+      res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                   `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
+                                   min.2stage=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.min]))),
+                                   `1se.2stage`=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se])))
+      )
+      
+      res$step2.ratios <- list(min=character(0),
+                               `1se`=character(0),
+                               min.idx=character(0),
+                               `1se.idx`=character(0))
+      
+      res$step2.tables <- list(min=character(0),
+                               `1se`=character(0))
+      
+      if (length(res$selected.feature$min.2stage)>0){
+        namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
+        res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+        res$step2.ratios$min.idx <- res$step2.feature.min#[,!is.na(colSums(res$step2.feature.min))]
+        
+        res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
+        
+        if ("(Intercept)" %in% rownames(res$step2.tables$min)){
+          rownames(res$step2.tables$`min`)[2:(2+length(res$step2.ratios$min)-1)] <- res$step2.ratios$`min`
+        }else{
+          rownames(res$step2.tables$`min`)[1:length(res$step2.ratios$min)] <- res$step2.ratios$`min`
+        }
+        
+        # res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
+        
+      }
+      if (length(res$selected.feature$`1se.2stage`)>0){
+        namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
+        res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+        res$step2.ratios$`1se.idx` <- res$step2.feature.1se#[,!is.na(colSums(res$step2.feature.1se))]
+        
+        res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
+        # res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
+        # rownames(res$step2.tables$`1se`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`1se`
+        if ("(Intercept)" %in% rownames(res$step2.tables$`1se`)){
+          rownames(res$step2.tables$`1se`)[2:(2+length(res$step2.ratios$`1se`)-1)] <- res$step2.ratios$`1se`
+        }else{
+          rownames(res$step2.tables$`1se`)[1:length(res$step2.ratios$`1se`)] <- res$step2.ratios$`1se`
+        }
       }
     }
     
@@ -364,10 +504,13 @@ FLORAL <- function(x,
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
 #' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
 #' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
-#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
 #' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
+#' @param corstr If a GEE model is specified, then \code{corstr} is the corresponding working correlation structure. Options are \code{independence}, \code{exchangeable}, \code{AR-1} and \code{unstructured}.
+#' @param scalefix \code{TRUE} or \code{FALSE}, indicating whether the scale parameter is estimated or fixed if a GEE model is specified.
+#' @param scalevalue Specify the scale parameter if \code{scalefix=TRUE}.
 #' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
@@ -411,6 +554,9 @@ mcv.FLORAL <- function(mcv=10,
                        id=NULL,
                        tobs=NULL,
                        failcode=NULL,
+                       corstr="exchangeable",
+                       scalefix=FALSE,
+                       scalevalue=1,
                        pseudo=1,
                        length.lambda=100,
                        lambda.min.ratio=NULL,
@@ -451,6 +597,9 @@ mcv.FLORAL <- function(mcv=10,
                                   id,
                                   tobs,
                                   failcode,
+                                  corstr,
+                                  scalefix,
+                                  scalevalue,
                                   pseudo,
                                   length.lambda,
                                   lambda.min.ratio,
@@ -467,26 +616,47 @@ mcv.FLORAL <- function(mcv=10,
         
       }
       
-      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
-                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
-                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
-                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
-                  min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$min))))/mcv,
-                  `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$`1se`))))/mcv,
-                  mcv=mcv,
-                  seed=seed)
-      
-      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
-      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
-      res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-      res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-      
-      if (family %in% c("cox","finegray")){
-        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-      }else if (family %in% c("gaussian","binomial")){
-        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      if (longitudinal & family %in% c("gaussian","binomial")){
+        
+        res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
+                    `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
+                    min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
+                    `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
+                    min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) names(x$step2.tables$min))))/mcv,
+                    `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) names(x$step2.tables$`1se`))))/mcv,
+                    mcv=mcv,
+                    seed=seed)
+        
+        res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
+        res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
+        res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min)),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`)),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        
+        
+      }else{
+        
+        res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
+                    `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
+                    min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
+                    `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
+                    min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$min))))/mcv,
+                    `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$`1se`))))/mcv,
+                    mcv=mcv,
+                    seed=seed)
+        
+        res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
+        res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
+        res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        
+        if (family %in% c("cox","finegray")){
+          res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+          res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        }else if (family %in% c("gaussian","binomial")){
+          res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+          res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        }
+        
       }
       
     }else if (ncore > 1){
@@ -508,6 +678,9 @@ mcv.FLORAL <- function(mcv=10,
                id,
                tobs,
                failcode,
+               corstr,
+               scalefix,
+               scalevalue,
                pseudo,
                length.lambda,
                lambda.min.ratio,
@@ -526,26 +699,47 @@ mcv.FLORAL <- function(mcv=10,
       
       stopCluster(cl)
       
-      res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
-                  `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
-                  min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
-                  `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
-                  min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$min))))/mcv,
-                  `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$`1se`))))/mcv,
-                  mcv=mcv,
-                  seed=seed)
-      
-      res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
-      res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
-      res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-      res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-      
-      if (family %in% c("cox","finegray")){
-        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-      }else if (family %in% c("gaussian","binomial")){
-        res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
-        res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+      if (longitudinal & family %in% c("gaussian","binomial")){
+        
+        res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
+                    `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
+                    min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
+                    `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
+                    min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) names(x$step2.tables$min))))/mcv,
+                    `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) names(x$step2.tables$`1se`))))/mcv,
+                    mcv=mcv,
+                    seed=seed)
+        
+        res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
+        res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
+        res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min)),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`)),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        
+        
+      }else{
+        
+        res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
+                    `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
+                    min.2stage=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min.2stage)))/mcv,
+                    `1se.2stage`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se.2stage`)))/mcv,
+                    min.2stage.ratios=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$min))))/mcv,
+                    `1se.2stage.ratios`=table(unlist(lapply(FLORAL.res,function(x) rownames(x$step2.tables$`1se`))))/mcv,
+                    mcv=mcv,
+                    seed=seed)
+        
+        res$min.coef = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$min))[names(res$min)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$min), function(x) x != 0))[names(res$min)]
+        res$`1se.coef` = Reduce(`+`,lapply(FLORAL.res,function(x) x$best.beta$`1se`))[names(res$`1se`)]/Reduce(`+`,lapply(lapply(FLORAL.res, function(x) x$best.beta$`1se`), function(x) x != 0))[names(res$`1se`)]
+        res$min.2stage.ratios.coef = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,1])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+        res$`1se.2stage.ratios.coef` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,1])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        
+        if (family %in% c("cox","finegray")){
+          res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+          res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        }else if (family %in% c("gaussian","binomial")){
+          res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
+          res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
+        }
+        
       }
       
     }
@@ -588,45 +782,83 @@ mcv.FLORAL <- function(mcv=10,
                           prob=as.vector(sort(res$min.2stage.ratios)))
     df_plot$Avg.coef <- res$min.2stage.ratios.coef[df_plot$taxa]
     df_plot$coefsign <- sign(df_plot$Avg.coef)
-    df_plot$p <- -log10(res$min.2stage.ratios.p[df_plot$taxa])
     
-    res$p_min_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
-      geom_bar(aes(weight=.data$prob),color="darkgrey") +
-      geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
-      scale_shape_binned() +
-      scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
-      xlab("Probability of being selected") +
-      ylab("2 stage model covariates") +
-      ggtitle(expression(paste(lambda," = ",lambda["min"]))) +
-      xlim(0,1) +
-      scale_fill_gradient2(low="blue",high="red")+
-      theme_bw() + 
-      guides(size=guide_legend(title="Avg.-log10(p)"))
+    if (longitudinal & family %in% c("gaussian","binomial")){
+      
+      res$p_min_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+        geom_bar(aes(weight=.data$prob),color="darkgrey") +
+        # geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
+        scale_shape_binned() +
+        scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+        xlab("Probability of being selected") +
+        ylab("2 stage model covariates") +
+        ggtitle(expression(paste(lambda," = ",lambda["min"]))) +
+        xlim(0,1) +
+        scale_fill_gradient2(low="blue",high="red")+
+        theme_bw()
+      
+    }else{
+      
+      df_plot$p <- -log10(res$min.2stage.ratios.p[df_plot$taxa])
+      
+      res$p_min_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+        geom_bar(aes(weight=.data$prob),color="darkgrey") +
+        geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
+        scale_shape_binned() +
+        scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+        xlab("Probability of being selected") +
+        ylab("2 stage model covariates") +
+        ggtitle(expression(paste(lambda," = ",lambda["min"]))) +
+        xlim(0,1) +
+        scale_fill_gradient2(low="blue",high="red")+
+        theme_bw() + 
+        guides(size=guide_legend(title="Avg.-log10(p)"))
+      
+    }
+    
     
     df_plot <- data.frame(taxa=names(sort(res$`1se.2stage.ratios`)),
                           prob=as.vector(sort(res$`1se.2stage.ratios`)))
     df_plot$Avg.coef <- res$`1se.2stage.ratios.coef`[df_plot$taxa]
     df_plot$coefsign <- sign(df_plot$Avg.coef)
-    df_plot$p <- -log10(res$`1se.2stage.ratios.p`[df_plot$taxa])
     
-    res$p_1se_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
-      geom_bar(aes(weight=.data$prob),color="darkgrey") +
-      geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
-      scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
-      xlab("Probability of being selected") +
-      ylab("2 stage model covariates") +
-      ggtitle(expression(paste(lambda," = ",lambda["1se"]))) +
-      xlim(0,1) +
-      scale_fill_gradient2(low="blue",high="red")+
-      theme_bw() + 
-      guides(size=guide_legend(title="Avg.-log10(p)"))
+    if (longitudinal & family %in% c("gaussian","binomial")){
+      
+      res$p_1se_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+        geom_bar(aes(weight=.data$prob),color="darkgrey") +
+        # geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
+        scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+        xlab("Probability of being selected") +
+        ylab("2 stage model covariates") +
+        ggtitle(expression(paste(lambda," = ",lambda["1se"]))) +
+        xlim(0,1) +
+        scale_fill_gradient2(low="blue",high="red")+
+        theme_bw() 
+      
+    }else{
+      
+      df_plot$p <- -log10(res$`1se.2stage.ratios.p`[df_plot$taxa])
+      
+      res$p_1se_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
+        geom_bar(aes(weight=.data$prob),color="darkgrey") +
+        geom_point(aes(x=.data$prob,y=.data$taxa,size=.data$p),color="black",alpha=0.5) +
+        scale_y_discrete(limits = df_plot$taxa[order(df_plot$prob,decreasing = T)]) +
+        xlab("Probability of being selected") +
+        ylab("2 stage model covariates") +
+        ggtitle(expression(paste(lambda," = ",lambda["1se"]))) +
+        xlim(0,1) +
+        scale_fill_gradient2(low="blue",high="red")+
+        theme_bw() + 
+        guides(size=guide_legend(title="Avg.-log10(p)"))
+      
+    }
+    
     
   }
   
   return(res)
   
 }
-
 
 
 #' Comparing prediction performances under different choices of weights for lasso/ridge penalty
@@ -639,11 +871,13 @@ mcv.FLORAL <- function(mcv=10,
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
 #' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
 #' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
-#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
 #' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
-#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation
+#' @param corstr If a GEE model is specified, then \code{corstr} is the corresponding working correlation structure. Options are \code{independence}, \code{exchangeable}, \code{AR-1} and \code{unstructured}.
+#' @param scalefix \code{TRUE} or \code{FALSE}, indicating whether the scale parameter is estimated or fixed if a GEE model is specified.
+#' @param scalevalue Specify the scale parameter if \code{scalefix=TRUE}.#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
 #' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
@@ -684,6 +918,9 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                      id=NULL,
                      tobs=NULL,
                      failcode=NULL,
+                     corstr="exchangeable",
+                     scalefix=FALSE,
+                     scalevalue=1,
                      pseudo=1,
                      length.lambda=100,
                      lambda.min.ratio=NULL,
@@ -728,6 +965,9 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                       id,
                       tobs,
                       failcode,
+                      corstr,
+                      scalefix,
+                      scalevalue,
                       pseudo,
                       length.lambda,
                       lambda.min.ratio,
@@ -784,6 +1024,9 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                      id,
                      tobs,
                      failcode,
+                     corstr,
+                     scalefix,
+                     scalevalue,
                      pseudo,
                      length.lambda,
                      lambda.min.ratio,
@@ -813,6 +1056,9 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                       id,
                       tobs,
                       failcode,
+                      corstr,
+                      scalefix,
+                      scalevalue,
                       pseudo,
                       length.lambda,
                       lambda.min.ratio,

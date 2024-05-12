@@ -33,3 +33,15 @@ fg_enet_al <- function(x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust
     .Call('_FLORAL_fg_enet_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress)
 }
 
+gee_NR <- function(N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha, ncov, wcov, eps = 1e-6, muu = 1e6) {
+    .Call('_FLORAL_gee_NR', PACKAGE = 'FLORAL', N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha, ncov, wcov, eps, muu)
+}
+
+gee_cor <- function(N, nt, y, X, linkinv, variance, beta_new, corstr, maxclsz, scalefix, scalevalue = 1) {
+    .Call('_FLORAL_gee_cor', PACKAGE = 'FLORAL', N, nt, y, X, linkinv, variance, beta_new, corstr, maxclsz, scalefix, scalevalue)
+}
+
+gee_fit <- function(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol = 1e-3, eps = 1e-6, muu = 1e6, maxiter = 100L, scalefix = FALSE, scalevalue = 1, display_progress = TRUE) {
+    .Call('_FLORAL_gee_fit', PACKAGE = 'FLORAL', y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter, scalefix, scalevalue, display_progress)
+}
+

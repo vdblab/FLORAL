@@ -1,22 +1,31 @@
 LogRatioGEE <- function(x,
                         y,
                         id,
-                        ncov,
+                        ncov, #not yet + intercept option (seems fine now)
+                        intercept,
+                        family,
+                        corstr,
+                        scalefix,
+                        scalevalue,
                         length.lambda=100,
                         lambda.min.ratio=NULL,
-                        wcov,
-                        a=1,
-                        mu=1,
+                        wcov, # not yet (seems fine now)
+                        a=1, # not yet finished development (seems fine now)
+                        mu=1e6,
                         ncv=5,
                         foldid=NULL,
-                        step2=FALSE,
+                        step2=FALSE, # not yet
                         progress=TRUE,
                         plot=TRUE,
-                        mcv="Deviance",
                         ncore=1){
   
-  
   ptm <- proc.time()
+  
+  if (is.character(family)) family <- get(family)
+  if (is.function(family))  family <- family()
+  
+  n <- length(unique(id))
+  p <- ncol(x)
   
   if (a > 0){
     lambda0 <- max(abs(t(y) %*% x))/(a*n)
@@ -27,189 +36,597 @@ LogRatioGEE <- function(x,
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
+  nt <- as.integer(unlist(lapply(split(id, id), "length"))) # Number of obs per subject
+  
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- gee_fit(x,y,id,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress)
+  fullfit <- gee_fit(y,
+                     x,
+                     nt, 
+                     family$linkinv,
+                     family$mu.eta,
+                     family$variance,
+                     corstr,
+                     lambda,
+                     a,
+                     ncov,
+                     wcov,
+                     tol=1e-3,
+                     eps=1e-6,
+                     muu=mu,
+                     maxiter=100,
+                     scalefix=scalefix,
+                     scalevalue=scalevalue,
+                     display_progress=progress)
   
+  if (!is.null(colnames(x))){
+    rownames(fullfit$beta) = colnames(x)
+  }else{
+    colnames(x) = 1:ncol(x)
+    rownames(fullfit$beta) = 1:ncol(x)
+  }
   
+  beta_filtered <- fullfit$beta
+  beta_filtered[abs(beta_filtered) < 1e-3] = 0
   
-  if(!(is.double(x)))  x <- as.double(x)
-  if(!(is.double(y)))  y <- as.double(y)
-  if(!(is.double(id))) id <- as.double(id)
-  
-  N<-length(unique(id))
-  K=ncol(x)-1
-  nx=ncol(x)
-  
-  avec <- as.integer(unlist(lapply(split(id, id), "length")))
-  maxclsz <-max(avec)
-  maxcl <- maxclsz
-  nt<-avec
-  nobs<-sum(nt)
-  
-  xnames <- dimnames(X)[[2]]
-  if(is.null(xnames) && colnames(X)[1]=="(Intercept)") {
-    xnames <- paste("x", 0:K, sep = "")
-    dimnames(X) <- list(NULL, xnames)
-  } else
-    if(is.null(xnames) && colnames(X)[1]!="(Intercept)") {
-      xnames <- paste("x", 1:K, sep = "")
-      dimnames(X) <- list(NULL, xnames)
+  if (!is.null(ncv)){
+    
+    cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
+    
+    if (is.null(foldid)){
+      labels <- caret::createFolds(unique(id),k=ncv,list=FALSE)
+    }else{
+      labels <- foldid
     }
-  
-  if(!(is.double(N)))      N <- as.double(N)
-  if(!(is.double(maxcl)))  maxcl <- as.double(maxcl)
-  if(!(is.double(nobs)))   nobs <- as.double(nobs)
-  
-  if(missing(lambda)) stop("A value is not assiged for lambda!")
-  
-  if(missing(muu)) stop("A value is not assiged for muu!")
-  
-  if(missing(pindex)) pindex=NULL
-  
-  if(missing(family)) family=gaussian(link="identity")
-  
-  if(missing(corstr)) corstr="independence"
-  
-  if(missing(Mv)) Mv<-NULL
-  
-  if(corstr=="stat_M_dep" && is.null(Mv)) stop("corstr is assumed to be 'stat_M_dep' but Mv is not specified!")
-  
-  if(corstr=="non_stat_M_dep" && is.null(Mv)) stop("corstr is assumed to be 'non_stat_M_dep' but Mv is not specified!")
-  
-  if((corstr!="stat_M_dep" && corstr!="non_stat_M_dep") && !is.null(Mv))  stop("Mv is specified while corstr is assumed to be neither 
-'stat_M_dep' nor 'non_stat_M_dep'!")
-  
-  if(corstr=="non_stat_M_dep" && length(unique(nt)) !=1) stop("corstr cannot be assumed to be 'non_stat_M_dep' for unbalanced data!")
-  
-  if(corstr=="unstructured" && length(unique(nt)) !=1) stop("corstr cannot be assumed to be 'unstructured' for unbalanced data!")
-  
-  if(missing(R)) R<-NULL
-  
-  if(corstr=="fixed" && is.null(R))  stop("corstr is assumed to be 'fixed' but R is not specified!")
-  if(corstr!="fixed" && !is.null(R)) stop("R is specified although corstr is not assumed to be 'fixed'!")
-  
-  if(!is.null(R)) {
-    Rr <- nrow(R)
-    if(Rr != ncol(R)) stop("R is not square!")
-    if(Rr < maxclsz)  {stop("R is not big enough to accommodate some clusters!")} else
-      if(Rr > maxclsz)  {stop("R is larger than the maximum cluster!")}
+    
+    if (ncore == 1){
+      
+      for (cv in 1:ncv){
+        
+        if (progress) cat(paste0("Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+        
+        train.x <- x[labels[id]!=cv,]
+        train.y <- y[labels[id]!=cv]
+        test.x <- x[labels[id]==cv,]
+        test.y <- y[labels[id]==cv]
+        train.nt <- nt[labels!=cv]
+        test.nt <- nt[labels==cv]
+        
+        cvfit <- gee_fit(train.y,
+                         train.x,
+                         train.nt, 
+                         family$linkinv,
+                         family$mu.eta,
+                         family$variance,
+                         corstr,
+                         lambda,
+                         a,
+                         ncov,
+                         wcov,
+                         tol=1e-3,
+                         eps=1e-6,
+                         muu=mu,
+                         maxiter=100,
+                         scalefix=scalefix,
+                         scalevalue=scalevalue,
+                         display_progress=progress)
+        
+        mufit=family$linkinv(test.x %*% cvfit$beta)
+        cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
+        
+      }
+      
+    }else if(ncore > 1){
+      
+      if (progress) cat(paste0("Using ", ncore ," core for cross-validation computation.\n"))
+      
+      Sys.sleep(1)
+      
+      cl <- makeCluster(ncore)
+      registerDoParallel(cl)
+      
+      cvmse <- foreach(cv=1:ncv,.combine=cbind) %dopar% {
+        
+        train.x <- x[labels[id]!=cv,]
+        train.y <- y[labels[id]!=cv]
+        test.x <- x[labels[id]==cv,]
+        test.y <- y[labels[id]==cv]
+        train.nt <- nt[labels!=cv]
+        test.nt <- nt[labels==cv]
+        
+        cvfit <- gee_fit(train.y,
+                         train.x,
+                         train.nt, 
+                         family$linkinv,
+                         family$mu.eta,
+                         family$variance,
+                         corstr,
+                         lambda,
+                         a,
+                         ncov,
+                         wcov,
+                         tol=1e-3,
+                         eps=1e-6,
+                         muu=mu,
+                         maxiter=100,
+                         scalefix=scalefix,
+                         scalevalue=scalevalue,
+                         display_progress=progress)
+        
+        mufit=family$linkinv(test.x %*% cvfit$beta)
+        apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
+        
+      }
+      
+      stopCluster(cl)
+      
+    }
+    
+    mean.cvmse <- rowMeans(cvmse)
+    se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
+    
+    idx.min <- which.min(mean.cvmse)
+    se.min <- se.cvmse[idx.min]
+    idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
+    if (idx.1se == -Inf) idx.1se = 1
+    
+    best.beta <- list(min.mse = beta_filtered[,idx.min],
+                      add.1se = beta_filtered[,idx.1se])
+    
+    best.idx <- list(idx.min = idx.min,
+                     idx.1se = idx.1se)
+    
+    ret <- list(beta=beta_filtered,
+                beta_unfiltered = fullfit$beta,
+                lambda=lambda,
+                a=a,
+                cvmse.mean=mean.cvmse,
+                cvmse.se=se.cvmse,
+                best.beta=best.beta,
+                best.idx=best.idx,
+                foldid=labels
+    )
+    
+    if (plot){
+      
+      beta_nzero <- suppressWarnings(data.frame(reshape::melt(ret$beta[rowSums(ret$beta != 0) > 0,])))
+      beta_nzero$lambda <- ret$lambda[beta_nzero$X2]
+      beta_nzero$loglambda <- log(beta_nzero$lambda)
+      
+      lambda_count <- data.frame(loglambda = log(ret$lambda),
+                                 count = colSums(ret$beta != 0))
+      lambda_count <- lambda_count[seq(5,nrow(lambda_count),length.out=10),]
+      
+      top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
+      top10name <- names(top10feat)
+      
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
+        geom_line() + 
+        scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
+        theme_bw() + 
+        theme(legend.position = "none") +
+        xlab(expression(paste("log(",lambda,")"))) +
+        ylab("Coefficient") +
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
+        # annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
+        annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
+        ggtitle(expression(paste("Coefficients versus log(",lambda,")")))
+      
+      mseplot <- data.frame(loglambda=log(ret$lambda),
+                            mse=ret$cvmse.mean,
+                            se=ret$cvmse.se,
+                            mseaddse=ret$cvmse.mean+ret$cvmse.se,
+                            mseminse=ret$cvmse.mean-ret$cvmse.se)
+      
+      pmse <- ggplot(mseplot, aes(x=.data$loglambda, y=.data$mse)) +
+        geom_errorbar(aes(ymin=.data$mseminse,ymax=.data$mseaddse),color="grey")+
+        geom_point(color="red")+
+        theme_bw() +
+        xlab(expression(paste("log(",lambda,")"))) +
+        ylab("Mean-Squared Error")+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.min]),linetype="dashed",color="darkgrey")+
+        geom_vline(xintercept=log(ret$lambda[ret$best.idx$idx.1se]),linetype="dotted",color="darkgrey")+
+        annotate("text",x=lambda_count$loglambda,y=max(mseplot$mseaddse)+0.05,label=as.character(lambda_count$count))+
+        ggtitle(expression(paste("Cross-validated deviance residual versus log(",lambda,")")))
+      
+      ret$pcoef <- pcoef
+      ret$pmse <- pmse
+      
+    }
+    
+    if (step2){
+      
+      if (ncov > 0){
+        idxfeat <- setdiff(1:length(ret$best.beta$min.mse),1:ncov)
+      }else{
+        idxfeat <- 1:length(ret$best.beta$min.mse)
+      }
+      
+      if (length(which(ret$best.beta$min.mse[idxfeat]!=0)) > 1){
+        # idxs <- combn(which(ret$best.beta$min.mse[idxfeat]!=0),2)
+        idxs <-combn(names(which(ret$best.beta$min.mse[idxfeat]!=0)),2)
+        
+        x.select.min <- matrix(NA,nrow=nrow(x),ncol=ncol(idxs))
+        for (k in 1:ncol(idxs)){
+          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+        }
+        
+        if (ncov > 0){
+          x.select.min <- cbind(x[,1:ncov],x.select.min)
+        }
+        
+        if (ncol(x.select.min) > ncov+1){
+          
+          if (a > 0){
+            lambda0 <- max(abs(t(y) %*% x.select.min))/(a*n)
+          }else if (a == 0){
+            lambda0 <- max(abs(t(y) %*% x.select.min))/(1e-3*n)
+          }
+          
+          if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
+          lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
+          
+          fullfit <- gee_fit(y,
+                             x.select.min,
+                             nt, 
+                             family$linkinv,
+                             family$mu.eta,
+                             family$variance,
+                             corstr,
+                             lambda,
+                             a,
+                             ncov,
+                             wcov,
+                             tol=1e-3,
+                             eps=1e-6,
+                             muu=0,
+                             maxiter=100,
+                             scalefix=scalefix,
+                             scalevalue=scalevalue,
+                             display_progress=progress)
+          
+          cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
+          
+          if (ncore == 1){
+            
+            for (cv in 1:ncv){
+              
+              if (progress) cat(paste0("Step2: Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+              
+              train.x <- x.select.min[labels[id]!=cv,]
+              train.y <- y[labels[id]!=cv]
+              test.x <- x.select.min[labels[id]==cv,]
+              test.y <- y[labels[id]==cv]
+              train.nt <- nt[labels!=cv]
+              test.nt <- nt[labels==cv]
+              
+              cvfit <- gee_fit(train.y,
+                               train.x,
+                               train.nt, 
+                               family$linkinv,
+                               family$mu.eta,
+                               family$variance,
+                               corstr,
+                               lambda,
+                               a,
+                               ncov,
+                               wcov,
+                               tol=1e-3,
+                               eps=1e-6,
+                               muu=0,
+                               maxiter=100,
+                               scalefix=scalefix,
+                               scalevalue=scalevalue,
+                               display_progress=progress)
+              
+              mufit=family$linkinv(test.x %*% cvfit$beta)
+              cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
+              
+            }
+            
+          }else if(ncore > 1){
+            
+            if (progress) cat(paste0("Step2: Using ", ncore ," core for cross-validation computation."))
+            
+            Sys.sleep(1)
+            
+            cl <- makeCluster(ncore)
+            registerDoParallel(cl)
+            
+            cvmse <- foreach(cv=1:ncv,.combine=cbind) %dopar% {
+              
+              train.x <- x.select.min[labels[id]!=cv,]
+              train.y <- y[labels[id]!=cv]
+              test.x <- x.select.min[labels[id]==cv,]
+              test.y <- y[labels[id]==cv]
+              train.nt <- nt[labels!=cv]
+              test.nt <- nt[labels==cv]
+              
+              cvfit <- gee_fit(train.y,
+                               train.x,
+                               train.nt, 
+                               family$linkinv,
+                               family$mu.eta,
+                               family$variance,
+                               corstr,
+                               lambda,
+                               a,
+                               ncov,
+                               wcov,
+                               tol=1e-3,
+                               eps=1e-6,
+                               muu=0,
+                               maxiter=100,
+                               scalefix=scalefix,
+                               scalevalue=scalevalue,
+                               display_progress=progress)
+              
+              mufit=family$linkinv(test.x %*% cvfit$beta)
+              apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
+              
+            }
+            
+            stopCluster(cl)
+            
+          }
+          
+          mean.cvmse <- rowMeans(cvmse)
+          se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
+          
+          idx.min <- which.min(mean.cvmse)
+          se.min <- se.cvmse[idx.min]
+          idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
+          if (idx.1se == -Inf) idx.1se = 1
+          
+          betafilt <- fullfit$beta
+          betafilt[abs(betafilt) < 1e-3] = 0
+          
+          # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
+          
+          taxanames <- as.vector(na.omit(apply(idxs,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+          
+          if (ncov > 0){
+            idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.1se]),1:ncov),idx.1se]!=0)]
+          }else{
+            idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
+          }
+          
+          coefs <- betafilt[,idx.1se]
+          if (ncov > 0){
+            names(coefs)[1:ncov] <- colnames(x)[1:ncov]
+          }
+          names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
+          coefs <- coefs[coefs!=0]
+          
+        }else{
+          
+          idxs <- as.vector(idxs)
+          
+          coefs <- NA
+          
+        }
+        
+        ret$step2.feature.min = idxs
+        ret$step2fit.min <- coefs
+        
+      }
+      
+      if (ncov > 0){
+        idxfeat <- setdiff(1:length(ret$best.beta$add.1se),1:ncov)
+      }else{
+        idxfeat <- 1:length(ret$best.beta$add.1se)
+      }
+      
+      if (length(which(ret$best.beta$add.1se[idxfeat]!=0)) > 1){
+        
+        idxs <-combn(names(which(ret$best.beta$add.1se[idxfeat]!=0)),2)
+        
+        x.select.min <- matrix(NA,nrow=nrow(x),ncol=ncol(idxs))
+        for (k in 1:ncol(idxs)){
+          x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
+        }
+        
+        if (ncov > 0){
+          x.select.min <- cbind(x[,1:ncov],x.select.min)
+        }
+        
+        if (ncol(x.select.min) > ncov+1){
+          
+          if (a > 0){
+            lambda0 <- max(abs(t(y) %*% x.select.min))/(a*n)
+          }else if (a == 0){
+            lambda0 <- max(abs(t(y) %*% x.select.min))/(1e-3*n)
+          }
+          
+          if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
+          lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
+          
+          fullfit <- gee_fit(y,
+                             x.select.min,
+                             nt, 
+                             family$linkinv,
+                             family$mu.eta,
+                             family$variance,
+                             corstr,
+                             lambda,
+                             a,
+                             ncov,
+                             wcov,
+                             tol=1e-3,
+                             eps=1e-6,
+                             muu=0,
+                             maxiter=100,
+                             scalefix=scalefix,
+                             scalevalue=scalevalue,
+                             display_progress=progress)
+          
+          cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
+          
+          if (ncore == 1){
+            
+            for (cv in 1:ncv){
+              
+              if (progress) cat(paste0("Step2: Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+              
+              train.x <- x.select.min[labels[id]!=cv,]
+              train.y <- y[labels[id]!=cv]
+              test.x <- x.select.min[labels[id]==cv,]
+              test.y <- y[labels[id]==cv]
+              train.nt <- nt[labels!=cv]
+              test.nt <- nt[labels==cv]
+              
+              cvfit <- gee_fit(train.y,
+                               train.x,
+                               train.nt, 
+                               family$linkinv,
+                               family$mu.eta,
+                               family$variance,
+                               corstr,
+                               lambda,
+                               a,
+                               ncov,
+                               wcov,
+                               tol=1e-3,
+                               eps=1e-6,
+                               muu=0,
+                               maxiter=100,
+                               scalefix=scalefix,
+                               scalevalue=scalevalue,
+                               display_progress=progress)
+              
+              mufit=family$linkinv(test.x %*% cvfit$beta)
+              cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
+              
+            }
+            
+          }else if(ncore > 1){
+            
+            if (progress) cat(paste0("Step2: Using ", ncore ," core for cross-validation computation."))
+            
+            Sys.sleep(1)
+            
+            cl <- makeCluster(ncore)
+            registerDoParallel(cl)
+            
+            cvmse <- foreach(cv=1:ncv,.combine=cbind) %dopar% {
+              
+              train.x <- x.select.min[labels[id]!=cv,]
+              train.y <- y[labels[id]!=cv]
+              test.x <- x.select.min[labels[id]==cv,]
+              test.y <- y[labels[id]==cv]
+              train.nt <- nt[labels!=cv]
+              test.nt <- nt[labels==cv]
+              
+              cvfit <- gee_fit(train.y,
+                               train.x,
+                               train.nt, 
+                               family$linkinv,
+                               family$mu.eta,
+                               family$variance,
+                               corstr,
+                               lambda,
+                               a,
+                               ncov,
+                               wcov,
+                               tol=1e-3,
+                               eps=1e-6,
+                               muu=0,
+                               maxiter=100,
+                               scalefix=scalefix,
+                               scalevalue=scalevalue,
+                               display_progress=progress)
+              
+              mufit=family$linkinv(test.x %*% cvfit$beta)
+              apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
+              
+            }
+            
+            stopCluster(cl)
+            
+          }
+          
+          mean.cvmse <- rowMeans(cvmse)
+          se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
+          
+          idx.min <- which.min(mean.cvmse)
+          se.min <- se.cvmse[idx.min]
+          idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
+          if (idx.1se == -Inf) idx.1se = 1
+          
+          betafilt <- fullfit$beta
+          betafilt[abs(betafilt) < 1e-3] = 0
+          
+          # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
+          # idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
+          
+          taxanames <- as.vector(na.omit(apply(idxs,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+          
+          if (ncov > 0){
+            idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.1se]),1:ncov),idx.1se]!=0)]
+          }else{
+            idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
+          }
+          
+          coefs <- betafilt[,idx.1se]
+          if (ncov > 0){
+            names(coefs)[1:ncov] <- colnames(x)[1:ncov]
+          }
+          names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
+          coefs <- coefs[coefs!=0]
+          
+        }else{
+          idxs <- as.vector(idxs)
+          
+          coefs <- NA
+        }
+        
+        ret$step2.feature.1se = idxs
+        ret$step2fit.1se <- coefs
+        
+      }
+    }
+  }
+  else{
+    
+    ret <- list(beta=beta_filtered,
+                beta_unfiltered = fullfit$beta,
+                lambda=lambda,
+                a=a
+    )
+    
+    if (plot){
+      
+      beta_nzero <- suppressWarnings(data.frame(reshape::melt(ret$beta[rowSums(ret$beta != 0) > 0,])))
+      beta_nzero$lambda <- ret$lambda[beta_nzero$X2]
+      beta_nzero$loglambda <- log(beta_nzero$lambda)
+      
+      lambda_count <- data.frame(loglambda = log(ret$lambda),
+                                 count = colSums(ret$beta != 0))
+      lambda_count <- lambda_count[seq(5,nrow(lambda_count),length.out=10),]
+      
+      top10feat <- sort(ret$beta[,length(ret$lambda)])[c(1:5,(p-4):p)]
+      top10name <- names(top10feat)
+      
+      pcoef <- ggplot(beta_nzero, aes(x=.data$loglambda,y=.data$value,group=.data$X1,color=as.factor(.data$X1))) + 
+        geom_line() + 
+        scale_color_manual(values=rainbow(sum(rowSums(ret$beta != 0) > 0))) + 
+        theme_bw() + 
+        theme(legend.position = "none") +
+        xlab(expression(paste("log(",lambda,")"))) +
+        ylab("Coefficient") +
+        # annotate("text",x=min(beta_nzero$loglambda)-2,y=top10feat,label=top10name,hjust=0)+
+        annotate("text",x=lambda_count$loglambda,y=max(beta_nzero$value)+0.2,label=as.character(lambda_count$count))+
+        ggtitle(expression(paste("Coefficients versus log(",lambda,")")))
+      
+      ret$pcoef <- pcoef
+      
+    }
+    
   }
   
-  if(missing(scale.fix))  scale.fix <- TRUE
-  scale.fix <- as.integer(scale.fix)
+  ret$runtime <- proc.time() - ptm
   
-  if(missing(scale.value)) scale.value=1
-  scale.value<-as.integer(scale.value)
-  
-  if(missing(eps)) eps=10^-6
-  eps<-as.double(eps)
-  
-  if(missing(maxiter)) maxiter<-30
-  maxiter<-as.integer(maxiter)
-  
-  if(missing(tol))  tol=10^-3
-  tol=as.double(tol)
-  
-  if(missing(silent))  silent <-TRUE
-  silent<-as.integer(silent)
-  
-  if (is.character(family)) family <- get(family)
-  if (is.function(family))  family <- family()
-  
-  links <- c("identity","log","logit","inverse","probit","cloglog")
-  fams <- c("gaussian","poisson","binomial","Gamma","quasi")
-  varfuns <- c("constant", "mu", "mu(1-mu)", "mu^2")
-  corstrs <- c("independence", "fixed", "stat_M_dep", "non_stat_M_dep", "exchangeable", 
-               "AR-1", "unstructured")
-  
-  linkv <- as.integer(match(c(family$link), links, -1))
-  if(linkv < 1) stop("unknown link!")
-  
-  famv <- match(family$family, fams, -1)
-  if(famv < 1) stop("unknown family")
-  if(famv <= 4) varfunv <- famv
-  else varfunv <- match(family$varfun, varfuns, -1)
-  if(varfunv < 1) stop("unknown varfun!")
-  
-  corstrv <- as.integer(match(corstr, corstrs, -1))
-  if(corstrv < 1) stop("unknown corstr!")
-  
-  Mv <- as.integer(Mv)
-  
-  if (!is.null(beta_int))
-  {
-    beta <- matrix(beta_int, ncol = 1)
-    if(nrow(beta) != nx) {stop("Dimension of beta != ncol(X)!")}
-    #message("user\'s initial regression estimate")
-    
-  }
-  else {
-    #message("running glm to get initial regression estimate!")
-    ### <tsl>	beta <- as.numeric(glm(m, family = family)$coef)
-    mm <- match.call(expand.dots = FALSE)
-    mm$R <- mm$beta_int <- mm$tol <- mm$maxiter <- mm$link <- 
-      mm$varfun <-mm$corstr <- mm$Mv <- mm$silent <-mm$scale.fix <- 
-      mm$scale.value <- mm$id<-
-      mm$lambda <-mm$pindex<-mm$eps<-NULL
-    mm[[1]]<-as.name("glm")
-    beta <- eval(mm, parent.frame())$coef
-    ### </tsl>
-    print(beta)
-    
-  }
-  
-  # print(beta)
-  
-  beta_int=matrix(beta, ncol = 1)
-  beta_new<-beta_int
-  # muu <- 10
-  alpha <- 0
-  
-  R.fi.hat=gee_cor(N,nt,y,X,family,beta_new,corstr,Mv,maxclsz,R=R,scale.fix=scale.fix,scale.value=scale.fix)
-  Rhat=R.fi.hat$Ehat
-  fihat=R.fi.hat$fi
-  
-  S.H.E.val=gee_NR(N,nt,y,X,nx,family,beta_new,Rhat,fihat,lambda,pindex,eps,muu=muu,alpha=alpha)
-  S<-S.H.E.val$S
-  H<-S.H.E.val$H
-  E<-S.H.E.val$E
-  E2 <- S.H.E.val$E2
-  
-  diff<-1
-  iter<-0
-  
-  # while (iter_outer < maxiterouter){
-  
-  # beta_old_outer <- beta_new
-  
-  while(iter < maxiter) {
-    
-    beta_old<-beta_new
-    
-    beta_new<-matrix(beta_old)+ginv(H+N*E+muu)%*%(S-N*E%*%matrix(beta_old)-E2)
-    
-    R.fi.hat=gee_cor(N,nt,y,X,family,beta_new,corstr,Mv,maxclsz,R,scale.fix,scale.value)
-    Rhat=R.fi.hat$Ehat
-    fihat=R.fi.hat$fi
-    
-    # print(sum(beta_new))
-    # print(alpha)
-    
-    S.H.E.M.val=gee_NR(N,nt,y,X,nx,family,beta_new,Rhat,fihat,lambda,pindex,eps,muu=muu,alpha=alpha)
-    S<-S.H.E.M.val$S
-    H<-S.H.E.M.val$H
-    E<-S.H.E.M.val$E
-    M<-S.H.E.M.val$M
-    E2 <- S.H.E.M.val$E2
-    
-    diff<-sum(abs(beta_old-beta_new)) 
-    
-    iter<-iter+1
-    # alpha <- alpha + sum(beta_new)
-    if (silent==0) cat("iter",iter,"beta_new",beta_new,"diff",diff,"\n")
-    if (diff <= tol) break
-  } #end of while
-  
+  return(ret)
   
 }
