@@ -41,7 +41,7 @@ gee_cor <- function(N, nt, y, X, linkinv, variance, beta_new, corstr, maxclsz, s
     .Call('_FLORAL_gee_cor', PACKAGE = 'FLORAL', N, nt, y, X, linkinv, variance, beta_new, corstr, maxclsz, scalefix, scalevalue)
 }
 
-gee_fit <- function(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol = 1e-3, eps = 1e-6, muu = 1e6, maxiter = 100L, scalefix = FALSE, scalevalue = 1, display_progress = TRUE) {
-    .Call('_FLORAL_gee_fit', PACKAGE = 'FLORAL', y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter, scalefix, scalevalue, display_progress)
+gee_fit <- function(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol = 1e-3, eps = 1e-6, muu = 1e6, maxiter1 = 100L, maxiter2 = 10L, scalefix = FALSE, scalevalue = 1, display_progress = TRUE) {
+    .Call('_FLORAL_gee_fit', PACKAGE = 'FLORAL', y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter1, maxiter2, scalefix, scalevalue, display_progress)
 }
 

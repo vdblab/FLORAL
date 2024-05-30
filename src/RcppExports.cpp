@@ -231,8 +231,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // gee_fit
-Rcpp::List gee_fit(arma::vec y, arma::mat X, arma::vec nt, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, std::string corstr, arma::vec lambda, double a, double ncov, double wcov, double tol, double eps, double muu, int maxiter, bool scalefix, double scalevalue, bool display_progress);
-RcppExport SEXP _FLORAL_gee_fit(SEXP ySEXP, SEXP XSEXP, SEXP ntSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP corstrSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP tolSEXP, SEXP epsSEXP, SEXP muuSEXP, SEXP maxiterSEXP, SEXP scalefixSEXP, SEXP scalevalueSEXP, SEXP display_progressSEXP) {
+Rcpp::List gee_fit(arma::vec y, arma::mat X, arma::vec nt, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, std::string corstr, arma::vec lambda, double a, double ncov, double wcov, double tol, double eps, double muu, int maxiter1, int maxiter2, bool scalefix, double scalevalue, bool display_progress);
+RcppExport SEXP _FLORAL_gee_fit(SEXP ySEXP, SEXP XSEXP, SEXP ntSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP corstrSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP tolSEXP, SEXP epsSEXP, SEXP muuSEXP, SEXP maxiter1SEXP, SEXP maxiter2SEXP, SEXP scalefixSEXP, SEXP scalevalueSEXP, SEXP display_progressSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -250,11 +250,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
     Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
     Rcpp::traits::input_parameter< double >::type muu(muuSEXP);
-    Rcpp::traits::input_parameter< int >::type maxiter(maxiterSEXP);
+    Rcpp::traits::input_parameter< int >::type maxiter1(maxiter1SEXP);
+    Rcpp::traits::input_parameter< int >::type maxiter2(maxiter2SEXP);
     Rcpp::traits::input_parameter< bool >::type scalefix(scalefixSEXP);
     Rcpp::traits::input_parameter< double >::type scalevalue(scalevalueSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
-    rcpp_result_gen = Rcpp::wrap(gee_fit(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter, scalefix, scalevalue, display_progress));
+    rcpp_result_gen = Rcpp::wrap(gee_fit(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter1, maxiter2, scalefix, scalevalue, display_progress));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -270,7 +271,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLORAL_fg_enet_al", (DL_FUNC) &_FLORAL_fg_enet_al, 16},
     {"_FLORAL_gee_NR", (DL_FUNC) &_FLORAL_gee_NR, 18},
     {"_FLORAL_gee_cor", (DL_FUNC) &_FLORAL_gee_cor, 11},
-    {"_FLORAL_gee_fit", (DL_FUNC) &_FLORAL_gee_fit, 18},
+    {"_FLORAL_gee_fit", (DL_FUNC) &_FLORAL_gee_fit, 19},
     {NULL, NULL, 0}
 };
 

@@ -183,7 +183,7 @@ Rcpp::List gee_NR(double N, // Number of subjects
     arma::mat Rmat = Rhat.slice(i);
     arma::mat bigV = pow(bigA,0.5) * Rmat.submat(0,0,size(nt(i),nt(i))) * pow(bigA,0.5);
     arma::mat nugmat = mat(size(bigV));
-    nugmat.diag() += 1e-10;
+    nugmat.diag() += 1e-6;
     
     ////This is S in Wang et al.(2012)
     arma::vec sum200 = bigD.t() * pinv(bigV+nugmat) * ym;      //this is like gradient
@@ -194,17 +194,17 @@ Rcpp::List gee_NR(double N, // Number of subjects
     sum301 = sum301 + sum300;
     
     //Speed up the code////
-    arma::mat nugmat2 = mat(size(bigA));
-    nugmat2.diag() += 1e-10;
-    
-    arma::mat SSA = pow(pinv(bigA+nugmat2),2);
-    
-    Rmat.submat(0,0,size(nt(i),nt(i))).diag() += 1e-10;
-    arma::mat SRhat = pinv(Rmat.submat(0,0,size(nt(i),nt(i))));
-    arma::vec SSAym = SSA * ym;
-    
-    arma::mat sum400 = bigD.t() * SSA * SRhat * (SSAym * SSAym.t()) * SRhat * SSA * bigD;
-    sum401 = sum401 + sum400;
+    // arma::mat nugmat2 = mat(size(bigA));
+    // nugmat2.diag() += 1e-6;
+    // 
+    // arma::mat SSA = pow(pinv(bigA+nugmat2),2);
+    // 
+    // Rmat.submat(0,0,size(nt(i),nt(i))).diag() += 1e-6;
+    // arma::mat SRhat = pinv(Rmat.submat(0,0,size(nt(i),nt(i))));
+    // arma::vec SSAym = SSA * ym;
+    // 
+    // arma::mat sum400 = bigD.t() * SSA * SRhat * (SSAym * SSAym.t()) * SRhat * SSA * bigD;
+    // sum401 = sum401 + sum400;
     
   }
   
@@ -212,7 +212,7 @@ Rcpp::List gee_NR(double N, // Number of subjects
   
   arma::vec S = fihat*sum201;
   arma::mat H = fihat*sum301;
-  arma::mat M = fihat*sum401;
+  // arma::mat M = fihat*sum401;
   
   Rcpp::List ret;
   // ret["eta"] = eta;
@@ -221,7 +221,7 @@ Rcpp::List gee_NR(double N, // Number of subjects
   ret["C"] = E2;
   ret["S"] = S;
   ret["H"] = H;
-  ret["M"] = M;
+  // ret["M"] = M;
   
   return ret;
 }
@@ -394,7 +394,8 @@ Rcpp::List gee_fit(arma::vec y,
                    double tol=1e-3,
                    double eps=1e-6,
                    double muu=1e6,
-                   int maxiter=100,
+                   int maxiter1=100,
+                   int maxiter2=10,
                    bool scalefix=false, // indicator of fixed scale parameter
                    double scalevalue=1, //Value of the scale parameter (if fixed)
                    bool display_progress=true
@@ -437,7 +438,7 @@ Rcpp::List gee_fit(arma::vec y,
     
     double alpha = 0;
     
-    while (abs(diff) > tol and k < maxiter){
+    while (abs(diff) > tol and k < maxiter1){
       
       k = k + 1;
       beta0 = betai;
@@ -446,10 +447,9 @@ Rcpp::List gee_fit(arma::vec y,
       double diff1 = 1;
       arma::vec beta00 = beta0;
       
-      
       if (muu > 0){
         
-        while (abs(diff1) > tol and k1 < maxiter){
+        while (abs(diff1) > tol and k1 < maxiter2){
           
           k1 = k1 + 1;
           beta00 = betai;
@@ -495,13 +495,18 @@ Rcpp::List gee_fit(arma::vec y,
           arma::vec C = NR_obj["C"];
           
           arma::mat Nmat = mat(size(E),fill::value(N));
-          arma::mat muumat = mat(size(E),fill::value(muu));
+          // arma::mat muumat = mat(size(E),fill::value(muu));
+          arma::mat muumat = mat(size(E),fill::zeros); // this should be changed to assign muu only to the constrained part
+          muumat.submat(ncov,ncov,nx-1,nx-1).fill(muu);
           arma::mat nugmat = mat(size(E));
           nugmat.diag() += 1e-10;
           
           betai = betai + pinv(H+Nmat%E+muumat+nugmat) * (S-((Nmat%E)*betai)-C);
           
           // Rcpp::Rcout << "Flag440" << endl;
+          
+          // arma::uvec zidx = find(abs(betai) < 1e-6);
+          // betai(zidx).zeros();
           
           arma::vec diffvec1 = beta00-betai; 
           diff1 = max(abs(diffvec1));
@@ -522,6 +527,9 @@ Rcpp::List gee_fit(arma::vec y,
           // 
           // }
         }
+        
+        // Rcpp::Rcout << "k1:" << k1 << "diffo" << diff1 << endl;
+        // Rcpp::Rcout << "k1:" << k1 << "diff" << max(abs(beta0-betai)) << endl;
         
         alpha = alpha + accu(betai.subvec(ncov,betai.n_elem-1));
         
@@ -568,9 +576,10 @@ Rcpp::List gee_fit(arma::vec y,
         arma::vec C = NR_obj["C"];
         
         arma::mat Nmat = mat(size(E),fill::value(N));
-        arma::mat muumat = mat(size(E),fill::value(muu));
+        arma::mat muumat = mat(size(E),fill::zeros); // this should be changed to assign muu only to the constrained part
+        // muumat.submat(ncov,ncov,nx-1,nx-1).fill(muu);
         arma::mat nugmat = mat(size(E));
-        nugmat.diag() += 1e-10;
+        nugmat.diag() += 1e-6;
         
         betai = betai + pinv(H+Nmat%E+muumat+nugmat) * (S-((Nmat%E)*betai)-C);
         
@@ -578,6 +587,8 @@ Rcpp::List gee_fit(arma::vec y,
       
       arma::vec diffvec = beta0-betai; 
       diff = max(abs(diffvec));
+      
+      // Rcpp::Rcout << "k:" << k << "diff:" << diff << endl;
       
     }
     

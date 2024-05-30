@@ -21,17 +21,31 @@ LogRatioGEE <- function(x,
   
   ptm <- proc.time()
   
-  if (is.character(family)) family <- get(family)
-  if (is.function(family))  family <- family()
-  
   n <- length(unique(id))
   p <- ncol(x)
   
-  if (a > 0){
-    lambda0 <- max(abs(t(y) %*% x))/(a*n)
-  }else if (a == 0){
-    lambda0 <- max(abs(t(y) %*% x))/(1e-3*n)
+  if (family == "gaussian"){
+    
+    if (a > 0){
+      lambda0 <- max(abs(t(y) %*% x))/(min(a,1)*n)
+    }else if (a == 0){
+      lambda0 <- max(abs(t(y) %*% x))/(1e-3*n)
+    }
+    
+  }else if (family == "binomial"){
+
+    sfun = y-0.5
+    
+    if (a > 0){
+      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*n)
+    }else if (a == 0){
+      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*n)
+    }
+    
   }
+  
+  if (is.character(family)) family <- get(family)
+  if (is.function(family))  family <- family()
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
@@ -54,7 +68,8 @@ LogRatioGEE <- function(x,
                      tol=1e-3,
                      eps=1e-6,
                      muu=mu,
-                     maxiter=100,
+                     maxiter1=100,
+                     maxiter2=1,
                      scalefix=scalefix,
                      scalevalue=scalevalue,
                      display_progress=progress)
@@ -106,7 +121,8 @@ LogRatioGEE <- function(x,
                          tol=1e-3,
                          eps=1e-6,
                          muu=mu,
-                         maxiter=100,
+                         maxiter1=100,
+                         maxiter2=1,
                          scalefix=scalefix,
                          scalevalue=scalevalue,
                          display_progress=progress)
@@ -148,7 +164,8 @@ LogRatioGEE <- function(x,
                          tol=1e-3,
                          eps=1e-6,
                          muu=mu,
-                         maxiter=100,
+                         maxiter1=100,
+                         maxiter2=1,
                          scalefix=scalefix,
                          scalevalue=scalevalue,
                          display_progress=progress)
@@ -264,7 +281,8 @@ LogRatioGEE <- function(x,
             lambda0 <- max(abs(t(y) %*% x.select.min))/(1e-3*n)
           }
           
-          if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
+          # if (is.null(lambda.min.ratio)) 
+          lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
           lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
           
           fullfit <- gee_fit(y,
@@ -281,7 +299,8 @@ LogRatioGEE <- function(x,
                              tol=1e-3,
                              eps=1e-6,
                              muu=0,
-                             maxiter=100,
+                             maxiter1=100,
+                             maxiter2=1,
                              scalefix=scalefix,
                              scalevalue=scalevalue,
                              display_progress=progress)
@@ -315,7 +334,8 @@ LogRatioGEE <- function(x,
                                tol=1e-3,
                                eps=1e-6,
                                muu=0,
-                               maxiter=100,
+                               maxiter1=100,
+                               maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
                                display_progress=progress)
@@ -357,7 +377,8 @@ LogRatioGEE <- function(x,
                                tol=1e-3,
                                eps=1e-6,
                                muu=0,
-                               maxiter=100,
+                               maxiter1=100,                         
+                               maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
                                display_progress=progress)
@@ -439,7 +460,8 @@ LogRatioGEE <- function(x,
             lambda0 <- max(abs(t(y) %*% x.select.min))/(1e-3*n)
           }
           
-          if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
+          # if (is.null(lambda.min.ratio)) 
+          lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
           lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
           
           fullfit <- gee_fit(y,
@@ -456,7 +478,8 @@ LogRatioGEE <- function(x,
                              tol=1e-3,
                              eps=1e-6,
                              muu=0,
-                             maxiter=100,
+                             maxiter1=100,                          
+                             maxiter2=1,
                              scalefix=scalefix,
                              scalevalue=scalevalue,
                              display_progress=progress)
@@ -490,7 +513,8 @@ LogRatioGEE <- function(x,
                                tol=1e-3,
                                eps=1e-6,
                                muu=0,
-                               maxiter=100,
+                               maxiter1=100,                          
+                               maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
                                display_progress=progress)
@@ -532,7 +556,8 @@ LogRatioGEE <- function(x,
                                tol=1e-3,
                                eps=1e-6,
                                muu=0,
-                               maxiter=100,
+                               maxiter1=100,                         
+                               maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
                                display_progress=progress)
