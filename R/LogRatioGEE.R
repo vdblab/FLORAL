@@ -27,23 +27,24 @@ LogRatioGEE <- function(x,
   if (family == "gaussian"){
     
     if (a > 0){
-      lambda0 <- max(abs(t(y) %*% x))/(min(a,1)*n)
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(min(a,1)*nrow(x))
     }else if (a == 0){
-      lambda0 <- max(abs(t(y) %*% x))/(1e-3*n)
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(1e-3*nrow(x))
     }
     
   }else if (family == "binomial"){
-
+    
     sfun = y-0.5
     
     if (a > 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*n)
+      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))
     }else if (a == 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*n)
+      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))
     }
     
   }
   
+  family0 <- family
   if (is.character(family)) family <- get(family)
   if (is.function(family))  family <- family()
   
@@ -83,6 +84,7 @@ LogRatioGEE <- function(x,
   
   beta_filtered <- fullfit$beta
   beta_filtered[abs(beta_filtered) < 1e-3] = 0
+  beta_filtered[apply(beta_filtered, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
   
   if (!is.null(ncv)){
     
@@ -185,7 +187,7 @@ LogRatioGEE <- function(x,
     idx.min <- which.min(mean.cvmse)
     se.min <- se.cvmse[idx.min]
     idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
-    if (idx.1se == -Inf) idx.1se = 1
+    if (idx.1se == Inf) idx.1se = idx.min
     
     best.beta <- list(min.mse = beta_filtered[,idx.min],
                       add.1se = beta_filtered[,idx.1se])
@@ -275,10 +277,24 @@ LogRatioGEE <- function(x,
         
         if (ncol(x.select.min) > ncov+1){
           
-          if (a > 0){
-            lambda0 <- max(abs(t(y) %*% x.select.min))/(a*n)
-          }else if (a == 0){
-            lambda0 <- max(abs(t(y) %*% x.select.min))/(1e-3*n)
+          if (family0 == "gaussian"){
+            
+            if (a > 0){
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+            }else if (a == 0){
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))
+            }
+            
+          }else if (family0 == "binomial"){
+            
+            sfun = y-0.5
+            
+            if (a > 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+            }else if (a == 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))
+            }
+            
           }
           
           # if (is.null(lambda.min.ratio)) 
@@ -398,27 +414,42 @@ LogRatioGEE <- function(x,
           idx.min <- which.min(mean.cvmse)
           se.min <- se.cvmse[idx.min]
           idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
-          if (idx.1se == -Inf) idx.1se = 1
           
           betafilt <- fullfit$beta
-          betafilt[abs(betafilt) < 1e-3] = 0
+          betafilt[abs(betafilt) < 5e-3] = 0
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           
           taxanames <- as.vector(na.omit(apply(idxs,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
           
-          if (ncov > 0){
-            idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.1se]),1:ncov),idx.1se]!=0)]
+          if (idx.1se == Inf){
+            if (ncov > 0){
+              idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.min]),1:ncov),idx.min]!=0)]
+            }else{
+              idxs <- idxs[,which(betafilt[,idx.min]!=0)]
+            }
+            
+            coefs <- betafilt[,idx.min]
+            if (ncov > 0){
+              names(coefs)[1:ncov] <- colnames(x)[1:ncov]
+            }
+            names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
+            coefs <- coefs[coefs!=0]
+            
           }else{
-            idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
+            if (ncov > 0){
+              idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.1se]),1:ncov),idx.1se]!=0)]
+            }else{
+              idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
+            }
+            
+            coefs <- betafilt[,idx.1se]
+            if (ncov > 0){
+              names(coefs)[1:ncov] <- colnames(x)[1:ncov]
+            }
+            names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
+            coefs <- coefs[coefs!=0]
           }
-          
-          coefs <- betafilt[,idx.1se]
-          if (ncov > 0){
-            names(coefs)[1:ncov] <- colnames(x)[1:ncov]
-          }
-          names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
-          coefs <- coefs[coefs!=0]
           
         }else{
           
@@ -454,10 +485,24 @@ LogRatioGEE <- function(x,
         
         if (ncol(x.select.min) > ncov+1){
           
-          if (a > 0){
-            lambda0 <- max(abs(t(y) %*% x.select.min))/(a*n)
-          }else if (a == 0){
-            lambda0 <- max(abs(t(y) %*% x.select.min))/(1e-3*n)
+          if (family0 == "gaussian"){
+            
+            if (a > 0){
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+            }else if (a == 0){
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))
+            }
+            
+          }else if (family0 == "binomial"){
+            
+            sfun = y-0.5
+            
+            if (a > 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+            }else if (a == 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))
+            }
+            
           }
           
           # if (is.null(lambda.min.ratio)) 
@@ -577,28 +622,43 @@ LogRatioGEE <- function(x,
           idx.min <- which.min(mean.cvmse)
           se.min <- se.cvmse[idx.min]
           idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
-          if (idx.1se == -Inf) idx.1se = 1
-          
+
           betafilt <- fullfit$beta
-          betafilt[abs(betafilt) < 1e-3] = 0
+          betafilt[abs(betafilt) < 5e-3] = 0
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           # idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
           
           taxanames <- as.vector(na.omit(apply(idxs,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
           
-          if (ncov > 0){
-            idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.1se]),1:ncov),idx.1se]!=0)]
+          if (idx.1se == Inf){
+            if (ncov > 0){
+              idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.min]),1:ncov),idx.min]!=0)]
+            }else{
+              idxs <- idxs[,which(betafilt[,idx.min]!=0)]
+            }
+            
+            coefs <- betafilt[,idx.min]
+            if (ncov > 0){
+              names(coefs)[1:ncov] <- colnames(x)[1:ncov]
+            }
+            names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
+            coefs <- coefs[coefs!=0]
+            
           }else{
-            idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
+            if (ncov > 0){
+              idxs <- idxs[,which(betafilt[setdiff(1:length(betafilt[,idx.1se]),1:ncov),idx.1se]!=0)]
+            }else{
+              idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
+            }
+            
+            coefs <- betafilt[,idx.1se]
+            if (ncov > 0){
+              names(coefs)[1:ncov] <- colnames(x)[1:ncov]
+            }
+            names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
+            coefs <- coefs[coefs!=0]
           }
-          
-          coefs <- betafilt[,idx.1se]
-          if (ncov > 0){
-            names(coefs)[1:ncov] <- colnames(x)[1:ncov]
-          }
-          names(coefs)[(ncov+1):(ncov+length(taxanames))] <- taxanames
-          coefs <- coefs[coefs!=0]
           
         }else{
           idxs <- as.vector(idxs)
