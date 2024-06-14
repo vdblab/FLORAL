@@ -414,7 +414,7 @@ FLORAL <- function(x,
       
       if (length(res$selected.feature$min.2stage)>0){
         
-        namemat <- res$step2.feature.min
+        namemat <- matrix(res$step2.feature.min,nrow=2)
         res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
         res$step2.ratios$min.name <- res$step2.feature.min
         res$step2.tables$min <- res$step2fit.min
@@ -423,7 +423,7 @@ FLORAL <- function(x,
       
       if (length(res$selected.feature$`1se.2stage`)>0){
         
-        namemat <- res$step2.feature.1se
+        namemat <- matrix(res$step2.feature.1se,nrow=2)
         res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
         res$step2.ratios$`1se.name` <- res$step2.feature.1se
         res$step2.tables$`1se` <- res$step2fit.1se

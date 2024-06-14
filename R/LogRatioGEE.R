@@ -671,8 +671,7 @@ LogRatioGEE <- function(x,
         
       }
     }
-  }
-  else{
+  }else{
     
     ret <- list(beta=beta_filtered,
                 beta_unfiltered = fullfit$beta,
