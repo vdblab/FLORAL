@@ -54,7 +54,7 @@ FLORAL(
 
 \item{scalevalue}{Specify the scale parameter if \code{scalefix=TRUE}.}
 
-\item{pseudo}{Pseudo count to be added to \code{x} before taking log-transformation}
+\item{pseudo}{Pseudo count to be added to \code{x} before taking log-transformation. If unspecified, then the log-transformation will not be performed.}
 
 \item{length.lambda}{Number of penalty parameters used in the path}
 

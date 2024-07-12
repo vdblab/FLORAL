@@ -3,7 +3,7 @@
 #' @description Simulate a dataset from log-ratio model.
 #' @param n An integer of sample size
 #' @param p An integer of number of features (taxa).
-#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", or "finegray".
+#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", or "timedep" (survival endpoint with time-dependent features).
 #' @param weak Number of features with \code{weak} effect size.
 #' @param strong Number of features with \code{strong} effect size.
 #' @param weaksize Actual effect size for \code{weak} effect size. Must be positive.
@@ -29,6 +29,7 @@
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
 #' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @importFrom msm dpexp ppexp rpexp
 #' @useDynLib FLORAL
 #' @export
 
@@ -54,8 +55,6 @@ simu <- function(n = 100,
   beta[weak_idx] <- rep(c(weaksize,-weaksize),weak/2)
   beta[strong_idx] <- rep(c(strongsize,-strongsize),strong/2)
   
-  x <- xobs <- matrix(NA,nrow=n,ncol=p)
-  
   if (model %in% c("linear","binomial")){
     y <- rep(NA,length=n)
   }else if (model == "cox"){
@@ -64,7 +63,14 @@ simu <- function(n = 100,
   }else if (model == "finegray"){
     t <- t0 <- rep(NA,length=n)
     d <- rep(NA,length=n)
+  }else if (model == "timedep"){
+    m <- 10
+    id.vect <- rep(1:n, each = m)
+    n0 <- n
+    n <- length(id.vect)
   }
+  
+  x <- xobs <- matrix(NA,nrow=n,ncol=p)
   
   seqdep <- floor(runif(n,min=5000,max=50000))
   # highidx <- true_set
@@ -245,7 +251,131 @@ simu <- function(n = 100,
     
     if (ncov > 0) ret$xcov=xcov
     
+  }else if (model=="timedep"){
+    
+    g.inv <- sqrt
+    g <- function(x) {
+      x^2
+    }
+    
+    t.max <- 9
+    t.min <- 0
+    
+    z.list <- list()
+    for (i in 1:n0) {
+      z <- x[id.vect == i,true_set]
+      z.list[[i]] <- cbind(z, exp(z %*% beta))
+    }
+    
+    k <- function(x, m, M, rates, t){
+      ifelse(x <= m | x >= M, 0, dpexp(x, rates, t))
+    }
+    
+    gen.y <- function(z,time_base,t.max,t.min){
+      
+      exp.etay <- z[,ncol(z)]
+
+      t <- time_base
+      t.diff <- (t[-1] - t[1:(length(t) - 1)])[-(length(t) - 1)]
+      g.inv.t <- g.inv(t)
+      g.inv.t.diff <- (g.inv(t[-1]) - g.inv(t[1:(length(t) - 1)]))[-(length(t) - 1)]
+
+      g.inv.t.max <- g.inv(t.max)
+      g.inv.t.min <- g.inv(t.min)
+      
+      x1 <- exp.etay
+      d <- ppexp(g.inv.t.max, x1, g.inv.t) - ppexp(g.inv.t.min, x1,g.inv.t)
+      M <- 1 / d
+      r <- 60
+      repeat{
+        y <- rpexp(r, x1, g.inv.t)
+        u <- runif(r)
+        t <- M * ((k(y, g.inv.t.min, g.inv.t.max, x1, g.inv.t) / d /
+                     dpexp(y, x1, g.inv.t)))
+        y <- y[u <= t][1]
+        if (!is.na(y)) break
+      }
+      y
+    }
+    
+    y <- sapply(z.list, gen.y, time_base = 0:9, t.max=t.max, t.min=t.min)
+    g.y <- g(y)
+    
+    # print(summary(g.y))
+
+    # ct <- runif(n, min=5,max=6)
+    # d <- ifelse(g.y < ct, 1, 0)
+    # g.y <- ifelse(g.y < ct, g.y, ct)
+
+    prop.cen <- 0.5
+    d <- sample(0:1, n, replace = TRUE, prob = c(prop.cen, 1 - prop.cen))
+    
+    data <- NULL
+    for (i in 1:n0) {
+      id.temp <- rep(i, ceiling(g.y[i]))
+      time.temp <- c(1:ceiling(g.y[i]))
+      time0.temp <- 0:(ceiling(g.y[i]) - 1)
+      d.temp <- c(rep(0, length(time.temp) - 1), d[i])
+      
+      if (ceiling(g.y[i]) > 9){
+        z.temp <- xcount[id.vect==i,]
+        
+        if (length(id.temp) > nrow(z.temp)){
+
+          z.temp <- rbind(z.temp,
+                          # do.call("rbind", replicate(length(id.temp) - nrow(z.temp),
+                          #                            z.temp[nrow(z.temp),],
+                          #                            simplify = FALSE))
+                          z.temp[nrow(z.temp),]
+                          )
+          
+          id.temp <- id.temp[c(1:10,length(id.temp))]
+          time.temp <- time.temp[c(1:10,length(id.temp))]
+          time0.temp <- time0.temp[c(1:11)]
+          d.temp <- d.temp[c(1:10,length(id.temp))]
+          
+        }
+        
+      }else{
+        z.temp <- xcount[id.vect==i,][1:(ceiling(g.y[i])),]
+      }
+      
+      if (is.null(nrow(z.temp))){
+        
+        data.temp <- c(id.temp, time.temp, time0.temp, d.temp, z.temp)
+        
+      }else{
+        
+        data.temp <- cbind(id.temp, time.temp, time0.temp, d.temp, z.temp)
+      }
+      
+      data <- rbind(data, data.temp)
+    }
+    
+    colnames(data) <- c('id', 't', 't0', 'd', paste0("z",1:p))
+    data <- data.frame(data)
+    data_unique <- data |> 
+      group_by(id) |> 
+      filter(row_number() == n()) |> 
+      ungroup()
+    
+    xcount <- data[,-c(1:4)]
+    colnames(xcount) <- rownames(xcount) <- NULL
+    colnames(xcount) <- paste0("taxa",1:p)
+    
+    xcount_baseline <- data_unique[,-c(1:4)]
+    colnames(xcount_baseline) <- rownames(xcount_baseline) <- NULL
+    colnames(xcount_baseline) <- paste0("taxa",1:p)
+    
+    ret <- list(xcount=xcount,
+                xcount_baseline=xcount_baseline,
+                data=data,
+                data_unique=data_unique,
+                beta=betavec,
+                idx=true_set)
+    
   }
   
   return(ret)
+  
 }

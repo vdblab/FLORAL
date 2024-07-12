@@ -25,7 +25,7 @@ simu(
 
 \item{p}{An integer of number of features (taxa).}
 
-\item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "cox", or "finegray".}
+\item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", or "timedep" (survival endpoint with time-dependent features).}
 
 \item{weak}{Number of features with \code{weak} effect size.}
 
