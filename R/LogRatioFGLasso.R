@@ -8,6 +8,7 @@ LogRatioFGLasso <- function(x,
                             wcov,
                             a=1,
                             mu=1,
+                            maxiter=100,
                             ncv=5,
                             foldid=NULL,
                             step2=FALSE,
@@ -59,7 +60,7 @@ LogRatioFGLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- fg_enet_al(x,t0,t1,d,tj,weight,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,devnull,progress)
+  fullfit <- fg_enet_al(x,t0,t1,d,tj,weight,length.lambda,mu,maxiter,lambda,wcov,a,adjust,ncov,devnull,progress)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
@@ -79,7 +80,11 @@ LogRatioFGLasso <- function(x,
     if (is.null(foldid)){
       labels <- coxsplitss(as.matrix(y),id,ncv)
     }else{
-      labels <- fgfoldid(id,foldid)
+      if (length(foldid)==length(unique(id))){
+        labels <- fgfoldid(id,foldid)
+      }else{
+        labels <- foldid
+      }
     }
     
     # labels <- caret::createFolds(factor(d),k=ncv)
@@ -118,7 +123,7 @@ LogRatioFGLasso <- function(x,
         }
         cv.devnull <- 2*cv.devnull
         
-        cvfit <- fg_enet_al(train.x,train.t0,train.t1,train.d,train.tj,train.w,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress)
+        cvfit <- fg_enet_al(train.x,train.t0,train.t1,train.d,train.tj,train.w,length(lidx),mu,maxiter,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress)
         
         cv.devnull <- 0
         loglik <- rep(0,length(lidx))
@@ -178,7 +183,7 @@ LogRatioFGLasso <- function(x,
         }
         cv.devnull <- 2*cv.devnull
         
-        cvfit <- fg_enet_al(train.x,train.t0,train.t1,train.d,train.tj,train.w,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,FALSE)
+        cvfit <- fg_enet_al(train.x,train.t0,train.t1,train.d,train.tj,train.w,length(lidx),mu,maxiter,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,FALSE)
         
         cv.dev <- rep(0,length(lidx))
         linprod <- test.w * (test.x %*% cvfit$beta)
@@ -223,6 +228,7 @@ LogRatioFGLasso <- function(x,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx],
                 tol=fullfit$tol[lidx],
+                iters=fullfit$iters[lidx],
                 cvdev.mean=mean.cvdev,
                 cvdev.se=se.cvdev,
                 best.beta=best.beta,

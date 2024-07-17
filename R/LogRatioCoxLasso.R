@@ -6,6 +6,7 @@ LogRatioCoxLasso <- function(x,
                              wcov,
                              a=1,
                              mu=1,
+                             maxiter=100,
                              ncv=5,
                              foldid=NULL,
                              step2=FALSE,
@@ -52,7 +53,7 @@ LogRatioCoxLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- cox_enet_al(x,t,d,tj,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,devnull,progress,loop1,loop2,notcv=TRUE)
+  fullfit <- cox_enet_al(x,t,d,tj,length.lambda,mu,maxiter,lambda,wcov,a,adjust,ncov,devnull,progress,loop1,loop2,notcv=TRUE)
   lidx <- which(fullfit$loglik != 0 | !is.nan(fullfit$loglik))
   
   dev <- -2*fullfit$loglik[lidx]
@@ -104,7 +105,7 @@ LogRatioCoxLasso <- function(x,
         }
         cv.devnull <- 2*cv.devnull
         
-        cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress,loop1,loop2,notcv=FALSE)
+        cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,maxiter,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,progress,loop1,loop2,notcv=FALSE)
         
         cv.devnull <- 0
         loglik <- rep(0,length(lidx))
@@ -162,7 +163,7 @@ LogRatioCoxLasso <- function(x,
         }
         cv.devnull <- 2*cv.devnull
         
-        cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,100,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,FALSE,loop1,loop2,notcv=FALSE)
+        cvfit <- cox_enet_al(train.x,train.t,train.d,train.tj,length(lidx),mu,maxiter,lambda[lidx],wcov,a,adjust,ncov,cv.devnull,FALSE,loop1,loop2,notcv=FALSE)
         
         linprod <- test.x %*% cvfit$beta
         cv.dev <- rep(0,length(lidx))
@@ -206,6 +207,7 @@ LogRatioCoxLasso <- function(x,
                 loss=fullfit$loss[lidx],
                 mse=fullfit$mse[lidx],
                 tol=fullfit$tol[lidx],
+                iters=fullfit$iters[lidx],
                 cvdev.mean=mean.cvdev,
                 cvdev.se=se.cvdev,
                 best.beta=best.beta,

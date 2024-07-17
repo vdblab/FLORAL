@@ -6,6 +6,7 @@ LogRatioLogisticLasso <- function(x,
                                   wcov,
                                   a=1,
                                   mu=1,
+                                  maxiter=100,
                                   ncv=5,
                                   foldid=NULL,
                                   step2=FALSE,
@@ -36,7 +37,7 @@ LogRatioLogisticLasso <- function(x,
   
   if (progress) cat("Algorithm running for full dataset: \n")
   
-  fullfit <- logistic_enet_al(x,y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress,loop1,loop2)
+  fullfit <- logistic_enet_al(x,y,length.lambda,mu,maxiter,lambda,wcov,a,adjust,ncov,progress,loop1,loop2)
   
   if (!is.null(colnames(x))){
     rownames(fullfit$beta) = colnames(x)
@@ -66,7 +67,7 @@ LogRatioLogisticLasso <- function(x,
         test.x <- x[labels==cv,]
         test.y <- y[labels==cv]
         
-        cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,progress,loop1,loop2)
+        cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,maxiter,lambda,wcov,a,adjust,ncov,progress,loop1,loop2)
         
         cvmse[,cv] <- apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
         
@@ -86,7 +87,7 @@ LogRatioLogisticLasso <- function(x,
         test.x <- x[labels==cv,]
         test.y <- y[labels==cv]
         
-        cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,100,lambda,wcov,a,adjust,ncov,FALSE,loop1,loop2)
+        cvfit <- logistic_enet_al(train.x,train.y,length.lambda,mu,maxiter,lambda,wcov,a,adjust,ncov,FALSE,loop1,loop2)
         
         apply(cbind(1,test.x) %*% rbind(t(cvfit$beta0),cvfit$beta),2,function(x) sum((test.y- exp(x)/(1+exp(x)))^2)/length(test.y))
         
@@ -120,6 +121,7 @@ LogRatioLogisticLasso <- function(x,
                 loss=fullfit$loss,
                 mse=fullfit$mse,
                 tol=fullfit$tol,
+                iters=fullfit$iters,
                 cvmse.mean=mean.cvmse,
                 cvmse.se=se.cvmse,
                 best.beta=best.beta,

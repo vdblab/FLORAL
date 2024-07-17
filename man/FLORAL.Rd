@@ -22,6 +22,7 @@ FLORAL(
   ncov.lambda.weight = 0,
   a = 1,
   mu = 1,
+  maxiter = 100,
   ncv = 5,
   ncore = 1,
   intercept = FALSE,
@@ -65,6 +66,8 @@ FLORAL(
 \item{a}{A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.}
 
 \item{mu}{Value of penalty for the augmented Lagrangian}
+
+\item{maxiter}{Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.}
 
 \item{ncv}{Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.}
 

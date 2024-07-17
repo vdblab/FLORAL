@@ -131,7 +131,8 @@ Rcpp::List linear_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, 
   //arma::vec lambda = vec(len);
   arma::vec loss = vec(len);
   arma::vec mse = vec(len);
-  arma::vec tol = vec(len);
+  arma::vec tol = vec(len);   
+  arma::vec iters = vec(len);
   
   arma::mat xx = x.t()*x;
   arma::vec xy = x.t()*y;
@@ -227,7 +228,7 @@ Rcpp::List linear_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, 
     loss(i) = lossnew;
     mse(i) = accu(difftemp % difftemp)/n;
     beta.col(i) = betatemp;
-    tol(i) = mean(abs(betatemp - betai));
+    tol(i) = mean(abs(betatemp - betai));iters(i) = k;
     
   }
   
@@ -236,7 +237,7 @@ Rcpp::List linear_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, 
   ret["lambda"] = lambda;
   ret["loss"] = loss;
   ret["mse"] = mse;
-  ret["tol"] = tol;
+  ret["tol"] = tol; ret["iters"] = iters;
   
   return ret;
   
@@ -255,7 +256,8 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
   beta.zeros(p,len);
   arma::vec loss = vec(len);
   arma::vec mse = vec(len);
-  arma::vec tol = vec(len);
+  arma::vec tol = vec(len);   
+  arma::vec iters = vec(len);
   
   Progress prog(len, display_progress);
   
@@ -397,6 +399,7 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
     mse(i) = accu(difftemp % difftemp)/n;
     beta.col(i) = betatemp;
     tol(i) = mean(abs(betatemp - betai));
+    iters(i) = k;
     
   }
   
@@ -406,7 +409,8 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
   ret["lambda"] = lambda;
   ret["loss"] = loss;
   ret["mse"] = mse;
-  ret["tol"] = tol;
+  ret["tol"] = tol; 
+  ret["iters"] = iters;
   
   return ret;
   
@@ -424,7 +428,9 @@ Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int 
   beta.zeros(p,len);
   arma::vec loss = vec(len);
   arma::vec mse = vec(len);
-  arma::vec tol = vec(len);
+  arma::vec tol = vec(len);   
+  arma::vec iters = vec(len);
+  
   arma::vec loglik;
   loglik.zeros(len);
   
@@ -669,6 +675,7 @@ Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int 
     mse(i) = accu(difftemp % difftemp)/n;
     beta.col(i) = betatemp;
     tol(i) = mean(abs(betatemp - betai));
+    iters(i) = k;
     
     if (i == len-1){
       
@@ -690,7 +697,8 @@ Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int 
   ret["loss"] = loss;
   ret["mse"] = mse;
   ret["loglik"] = loglik;
-  ret["tol"] = tol;
+  ret["tol"] = tol; 
+  ret["iters"] = iters;
   
   return ret;
   
@@ -708,7 +716,8 @@ Rcpp::List cox_timedep_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::ve
   beta.zeros(p,len);
   arma::vec loss = vec(len);
   arma::vec mse = vec(len);
-  arma::vec tol = vec(len);
+  arma::vec tol = vec(len);   
+  arma::vec iters = vec(len);
   arma::vec loglik;
   loglik.zeros(len);
   
@@ -863,6 +872,7 @@ Rcpp::List cox_timedep_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::ve
     mse(i) = accu(difftemp % difftemp)/n;
     beta.col(i) = betatemp;
     tol(i) = mean(abs(betatemp - betai));
+    iters(i) = k;
     
     if (i == len-1){
       
@@ -884,7 +894,8 @@ Rcpp::List cox_timedep_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::ve
   ret["loss"] = loss;
   ret["mse"] = mse;
   ret["loglik"] = loglik;
-  ret["tol"] = tol;
+  ret["tol"] = tol; 
+  ret["iters"] = iters;
   
   return ret;
   
@@ -902,7 +913,8 @@ Rcpp::List fg_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma
   beta.zeros(p,len);
   arma::vec loss = vec(len);
   arma::vec mse = vec(len);
-  arma::vec tol = vec(len);
+  arma::vec tol = vec(len);   
+  arma::vec iters = vec(len);
   arma::vec loglik;
   loglik.zeros(len);
   
@@ -1056,6 +1068,7 @@ Rcpp::List fg_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma
     mse(i) = accu(difftemp % difftemp)/n;
     beta.col(i) = betatemp;
     tol(i) = mean(abs(betatemp - betai));
+    iters(i) = k;
     
     if (i == len-1){
       
@@ -1077,7 +1090,8 @@ Rcpp::List fg_enet_al(arma::mat x, arma::vec t0, arma::vec t1, arma::vec d, arma
   ret["loss"] = loss;
   ret["mse"] = mse;
   ret["loglik"] = loglik;
-  ret["tol"] = tol;
+  ret["tol"] = tol; 
+  ret["iters"] = iters;
    
   return ret;
   

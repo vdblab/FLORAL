@@ -24,6 +24,7 @@ a.FLORAL(
   lambda.min.ratio = NULL,
   ncov.lambda.weight = 0,
   mu = 1,
+  maxiter = 100,
   ncv = 5,
   intercept = FALSE,
   step2 = FALSE,
@@ -66,6 +67,8 @@ a.FLORAL(
 \item{ncov.lambda.weight}{Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.}
 
 \item{mu}{Value of penalty for the augmented Lagrangian}
+
+\item{maxiter}{Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.}
 
 \item{ncv}{Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.}
 
