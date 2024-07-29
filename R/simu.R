@@ -79,11 +79,38 @@ simu <- function(n = 100,
   
   if (method == "manual"){
     
-    sigma <- rho^(as.matrix(dist(1:p)))
-    diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
-    mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
-    
-    x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+    if (model != "timedep"){
+      
+      sigma <- rho^(as.matrix(dist(1:p)))
+      diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
+      mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
+      
+      x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+      
+    }else if(model == "timedep"){
+      
+      sigma <- rho^(as.matrix(dist(1:(p-(weak+strong)))))
+      diag(sigma) <- 1
+      mu <- rep(0,p-(weak+strong))
+      
+      x0 <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+      x[,setdiff(1:p,true_set)] <- x0
+      
+      for (i in 1:n0){
+        
+        Mu <- rep(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)),m)
+        sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
+        Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*0.8))
+        # Sigma <- Matrix::bdiag(replicate(m,sigma,simplify=FALSE))
+        # sigma_offdiag <- diag(strong+weak)*0.8
+        # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
+        
+        x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=Mu,sigma=Sigma),nrow=m,ncol=weak+strong,byrow=TRUE)
+        x[id.vect==i,true_set] <- x1
+        
+      }
+      
+    }
     
     if (pct.sparsity > 0){
       for (i in 1:n){
