@@ -42,6 +42,7 @@ simu <- function(n = 100,
                  strongsize = 0.25,
                  pct.sparsity = 0.5,
                  rho=0,
+                 timedep_slope=NULL,
                  timedep_cor=NULL,
                  ncov=0,
                  betacov=0,
@@ -71,7 +72,12 @@ simu <- function(n = 100,
     n <- length(id.vect)
     
     if (is.null(timedep_cor)){
-      timedep_cor = 0.4
+      timedep_cor <- 0.4
+    }
+    if (is.null(timedep_slope)){
+      timedep_slope <- 0.5
+    }else{
+      timedep_slope <- timedep_slope
     }
   }
   
@@ -110,7 +116,14 @@ simu <- function(n = 100,
       
       for (i in 1:n0){
         
-        Mu <- rep(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)),m)
+        # Mu <- rep(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)),m)
+        # mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2))
+        # slopes <- outer(0:9,timedep_slope)
+        # Mu <- t(mu + t(slopes))
+        
+        slopes <- rep(0:1,(weak+strong)/2)*timedep_slope
+        Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:9,slopes)))
+        
         sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
         Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*timedep_cor))
         # Sigma <- Matrix::bdiag(replicate(m,sigma,simplify=FALSE))
