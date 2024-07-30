@@ -87,6 +87,13 @@ simu <- function(n = 100,
       
       x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
       
+      if (pct.sparsity > 0){
+        for (i in 1:n){
+          zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
+          x[i,zeroidx] <- -Inf
+        }
+      }
+      
     }else if(model == "timedep"){
       
       sigma <- rho^(as.matrix(dist(1:(p-(weak+strong)))))
@@ -108,16 +115,24 @@ simu <- function(n = 100,
         x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=Mu,sigma=Sigma),nrow=m,ncol=weak+strong,byrow=TRUE)
         x[id.vect==i,true_set] <- x1
         
+        if (pct.sparsity > 0){
+          # for (i in 1:n0){
+          zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
+          x[id.vect==i,zeroidx] <- -Inf
+          # }
+        }
+        
+      }
+      
+      if (pct.sparsity > 0){
+        for (j in 1:n){
+          zeroidx <- sample(setdiff(1:p,true_set),size=floor(p*pct.sparsity))
+          x[j,zeroidx] <- -Inf
+        }
       }
       
     }
     
-    if (pct.sparsity > 0){
-      for (i in 1:n){
-        zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
-        x[i,zeroidx] <- -Inf
-      }
-    }
     x = apply(x,2,function(y) exp(y)/rowSums(exp(x)))
     
     for (k in 1:n){
@@ -301,12 +316,12 @@ simu <- function(n = 100,
     gen.y <- function(z,time_base,t.max,t.min){
       
       exp.etay <- z[,ncol(z)]
-
+      
       t <- time_base
       t.diff <- (t[-1] - t[1:(length(t) - 1)])[-(length(t) - 1)]
       g.inv.t <- g.inv(t)
       g.inv.t.diff <- (g.inv(t[-1]) - g.inv(t[1:(length(t) - 1)]))[-(length(t) - 1)]
-
+      
       g.inv.t.max <- g.inv(t.max)
       g.inv.t.min <- g.inv(t.min)
       
@@ -329,11 +344,11 @@ simu <- function(n = 100,
     g.y <- g(y)
     
     # print(summary(g.y))
-
+    
     # ct <- runif(n, min=5,max=6)
     # d <- ifelse(g.y < ct, 1, 0)
     # g.y <- ifelse(g.y < ct, g.y, ct)
-
+    
     prop.cen <- 0.5
     d <- sample(0:1, n, replace = TRUE, prob = c(prop.cen, 1 - prop.cen))
     
@@ -348,13 +363,13 @@ simu <- function(n = 100,
         z.temp <- xcount[id.vect==i,]
         
         if (length(id.temp) > nrow(z.temp)){
-
+          
           z.temp <- rbind(z.temp,
                           # do.call("rbind", replicate(length(id.temp) - nrow(z.temp),
                           #                            z.temp[nrow(z.temp),],
                           #                            simplify = FALSE))
                           z.temp[nrow(z.temp),]
-                          )
+          )
           
           id.temp <- id.temp[c(1:10,length(id.temp))]
           time.temp <- time.temp[c(1:10,length(id.temp))]
