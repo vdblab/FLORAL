@@ -42,6 +42,7 @@ simu <- function(n = 100,
                  strongsize = 0.25,
                  pct.sparsity = 0.5,
                  rho=0,
+                 timedep_cor=NULL,
                  ncov=0,
                  betacov=0,
                  intercept=FALSE,
@@ -68,6 +69,10 @@ simu <- function(n = 100,
     id.vect <- rep(1:n, each = m)
     n0 <- n
     n <- length(id.vect)
+    
+    if (is.null(timedep_cor)){
+      timedep_cor = 0.4
+    }
   }
   
   x <- xobs <- matrix(NA,nrow=n,ncol=p)
@@ -107,7 +112,7 @@ simu <- function(n = 100,
         
         Mu <- rep(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)),m)
         sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
-        Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*0.8))
+        Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*timedep_cor))
         # Sigma <- Matrix::bdiag(replicate(m,sigma,simplify=FALSE))
         # sigma_offdiag <- diag(strong+weak)*0.8
         # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
