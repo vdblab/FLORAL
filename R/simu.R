@@ -44,6 +44,7 @@ simu <- function(n = 100,
                  rho=0,
                  timedep_slope=NULL,
                  timedep_cor=NULL,
+                 longitudinal_stability=TRUE,
                  ncov=0,
                  betacov=0,
                  intercept=FALSE,
@@ -130,13 +131,26 @@ simu <- function(n = 100,
         # sigma_offdiag <- diag(strong+weak)*0.8
         # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
         
-        x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=Mu,sigma=Sigma),nrow=m,ncol=weak+strong,byrow=TRUE)
+        x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
         x[id.vect==i,true_set] <- x1
         
         if (pct.sparsity > 0){
           # for (i in 1:n0){
-          zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
-          x[id.vect==i,zeroidx] <- -Inf
+          
+          if (longitudinal_stability){
+            zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
+            x[id.vect==i,zeroidx] <- -Inf
+          }else{
+            ids <- which(id.vect==i)
+            for (i in 1:m){
+              zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
+              x[ids[i],zeroidx] <- -Inf
+            }
+          }
+          
+          # zeroidx <- sample(1:(length(true_set)/2),size=floor(length(true_set)/2*pct.sparsity))
+          # x[id.vect==i,c(zeroidx*2,zeroidx*2-1)] <- -Inf
+          
           # }
         }
         
