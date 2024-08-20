@@ -14,10 +14,12 @@ simu(
   strongsize = 0.25,
   pct.sparsity = 0.5,
   rho = 0,
+  timedep_slope = NULL,
+  timedep_cor = NULL,
+  longitudinal_stability = TRUE,
   ncov = 0,
   betacov = 0,
-  intercept = FALSE,
-  method = "manual"
+  intercept = FALSE
 )
 }
 \arguments{
@@ -39,13 +41,17 @@ simu(
 
 \item{rho}{Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.}
 
+\item{timedep_slope}{If \code{model} is "timedep", this parameter specifies the slope for the feature trajectories. Please refer to the Simulation section of the manuscript for more details.}
+
+\item{timedep_cor}{If \code{model} is "timedep", this parameter specifies the sample-wise correlations between longitudinal features. Please refer to the Simulation section of the manuscript for more details.}
+
+\item{longitudinal_stability}{If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).}
+
 \item{ncov}{Number of covariates that are not compositional features.}
 
 \item{betacov}{Coefficients corresponding to the covariates that are not compositional features.}
 
 \item{intercept}{Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.}
-
-\item{method}{Simulation schemes. Options are "manual" and "SparseDOSSA2", where the "manual" version is described in the preprint and "SparseDOSSA2" uses the default stool template from the package `SparseDOSSA2`. Note that only sample size and effect size are required for SparseDOSSA2 simulation.}
 }
 \value{
 A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
@@ -58,6 +64,9 @@ Simulate a dataset from log-ratio model.
 set.seed(23420)
 dat <- simu(n=50,p=30,model="linear")
 
+}
+\references{
+Fei T, Funnell T, Waters N, Raj SS et al. Enhanced Feature Selection for Microbiome Data using FLORAL: Scalable Log-ratio Lasso Regression bioRxiv 2023.05.02.538599.
 }
 \author{
 Teng Fei. Email: feit1@mskcc.org

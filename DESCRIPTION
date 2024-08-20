@@ -39,7 +39,7 @@ Imports:
   foreach,
   msm
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress, ast2ast
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Encoding: UTF-8
 Suggests:
     covr,

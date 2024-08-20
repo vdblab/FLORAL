@@ -28,7 +28,7 @@
 #' @param plot \code{TRUE} or \code{FALSE}, indicating whether returning plots of model fitting.
 #' @return A list with path-specific estimates (beta), path (lambda), and others. Details can be found in \code{README.md}.
 #' @author Teng Fei. Email: feit1@mskcc.org
-#' @references Fei T, Funnell T, Waters N, Raj SS et al. Scalable Log-ratio Lasso Regression Enhances Microbiome Feature Selection for Predictive Models. bioRxiv 2023.05.02.538599.
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Enhanced Feature Selection for Microbiome Data using FLORAL: Scalable Log-ratio Lasso Regression bioRxiv 2023.05.02.538599.
 #' 
 #' @examples 
 #' 
@@ -57,7 +57,7 @@
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
-#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit median
 #' @useDynLib FLORAL
 #' @export
 
@@ -889,7 +889,8 @@ mcv.FLORAL <- function(mcv=10,
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
 #' @param corstr If a GEE model is specified, then \code{corstr} is the corresponding working correlation structure. Options are \code{independence}, \code{exchangeable}, \code{AR-1} and \code{unstructured}.
 #' @param scalefix \code{TRUE} or \code{FALSE}, indicating whether the scale parameter is estimated or fixed if a GEE model is specified.
-#' @param scalevalue Specify the scale parameter if \code{scalefix=TRUE}.#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation
+#' @param scalevalue Specify the scale parameter if \code{scalefix=TRUE}.
+#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation
 #' @param length.lambda Number of penalty parameters used in the path
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
 #' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
@@ -999,8 +1000,8 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
         
         FLORAL.res[[i]] <- data.frame(a=fit$a,
                                       lambda=as.vector(fit$lambda),
-                                      cv.metric=fit[[4]],
-                                      cv.metricse=fit[[5]]
+                                      cv.metric=fit$cvmse.mean,
+                                      cv.metricse=fit$cvmse.se
         )
         
       }
@@ -1059,8 +1060,8 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
       
       FLORAL.res0 <- data.frame(a=fit0$a,
                                 lambda=as.vector(fit0$lambda),
-                                cv.metric=fit0[[4]],
-                                cv.metricse=fit0[[5]])
+                                cv.metric=fit0$cvmse.mean,
+                                cv.metricse=fit0$cvmse.se)
       
       FLORAL.res <- foreach(i=2:length(a)) %dopar% {
         
@@ -1092,8 +1093,8 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
         
         data.frame(a=fit$a,
                    lambda=as.vector(fit$lambda),
-                   cv.metric=fit[[4]],
-                   cv.metricse=fit[[5]]
+                   cv.metric=fit$cvmse.mean,
+                   cv.metricse=fit$cvmse.se
         )
         
       }

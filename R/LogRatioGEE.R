@@ -91,6 +91,9 @@ LogRatioGEE <- function(x,
     cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
     
     if (is.null(foldid)){
+      
+      ### Double check the way to split folds!
+      
       labels <- caret::createFolds(unique(id),k=ncv,list=FALSE)
     }else{
       labels <- foldid
@@ -130,7 +133,10 @@ LogRatioGEE <- function(x,
                          display_progress=progress)
         
         mufit=family$linkinv(test.x %*% cvfit$beta)
-        cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
+        
+        #### !check
+        
+        cvmse[,cv] <- apply(mufit,2,function(xx) sum(family$dev.resids(test.y,xx,wt=1)))
         
       }
       
@@ -183,6 +189,7 @@ LogRatioGEE <- function(x,
     
     mean.cvmse <- rowMeans(cvmse)
     se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
+    median.cvmse <- apply(cvmse,1,median)
     
     idx.min <- which.min(mean.cvmse)
     se.min <- se.cvmse[idx.min]

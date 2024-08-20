@@ -58,7 +58,9 @@ a.FLORAL(
 
 \item{scalefix}{\code{TRUE} or \code{FALSE}, indicating whether the scale parameter is estimated or fixed if a GEE model is specified.}
 
-\item{scalevalue}{Specify the scale parameter if \code{scalefix=TRUE}.#' @param pseudo Pseudo count to be added to \code{x} before taking log-transformation}
+\item{scalevalue}{Specify the scale parameter if \code{scalefix=TRUE}.}
+
+\item{pseudo}{Pseudo count to be added to \code{x} before taking log-transformation}
 
 \item{length.lambda}{Number of penalty parameters used in the path}
 

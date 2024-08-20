@@ -10,12 +10,15 @@
 #' @param strongsize Actual effect size for \code{strong} effect size. Must be positive.
 #' @param pct.sparsity Percentage of zero counts for each sample.
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
+#' @param timedep_slope If \code{model} is "timedep", this parameter specifies the slope for the feature trajectories. Please refer to the Simulation section of the manuscript for more details.
+#' @param timedep_cor If \code{model} is "timedep", this parameter specifies the sample-wise correlations between longitudinal features. Please refer to the Simulation section of the manuscript for more details.
+#' @param longitudinal_stability If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).
 #' @param ncov Number of covariates that are not compositional features.
 #' @param betacov Coefficients corresponding to the covariates that are not compositional features.
-#' @param method Simulation schemes. Options are "manual" and "SparseDOSSA2", where the "manual" version is described in the preprint and "SparseDOSSA2" uses the default stool template from the package `SparseDOSSA2`. Note that only sample size and effect size are required for SparseDOSSA2 simulation.
 #' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.
 #' @return A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
 #' @author Teng Fei. Email: feit1@mskcc.org
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Enhanced Feature Selection for Microbiome Data using FLORAL: Scalable Log-ratio Lasso Regression bioRxiv 2023.05.02.538599.
 #'
 #' @examples 
 #' 
@@ -47,8 +50,7 @@ simu <- function(n = 100,
                  longitudinal_stability=TRUE,
                  ncov=0,
                  betacov=0,
-                 intercept=FALSE,
-                 method="manual"){
+                 intercept=FALSE){
   
   true_set <- 1:(weak+strong)
   weak_idx <- 1:weak
@@ -89,126 +91,126 @@ simu <- function(n = 100,
   
   ###############################################
   
-  if (method == "manual"){
+  # if (method == "manual"){
+  
+  if (model != "timedep"){
     
-    if (model != "timedep"){
+    sigma <- rho^(as.matrix(dist(1:p)))
+    diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
+    mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
+    
+    x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+    
+    if (pct.sparsity > 0){
+      for (i in 1:n){
+        zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
+        x[i,zeroidx] <- -Inf
+      }
+    }
+    
+  }else if(model == "timedep"){
+    
+    sigma <- rho^(as.matrix(dist(1:(p-(weak+strong)))))
+    diag(sigma) <- 1
+    mu <- rep(0,p-(weak+strong))
+    
+    x0 <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+    x[,setdiff(1:p,true_set)] <- x0
+    
+    for (i in 1:n0){
       
-      sigma <- rho^(as.matrix(dist(1:p)))
-      diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
-      mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
+      # Mu <- rep(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)),m)
+      # mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2))
+      # slopes <- outer(0:9,timedep_slope)
+      # Mu <- t(mu + t(slopes))
       
-      x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+      slopes <- rep(0:1,(weak+strong)/2)*timedep_slope
+      Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:9,slopes)))
+      
+      sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
+      Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*timedep_cor))
+      # Sigma <- Matrix::bdiag(replicate(m,sigma,simplify=FALSE))
+      # sigma_offdiag <- diag(strong+weak)*0.8
+      # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
+      
+      x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
+      x[id.vect==i,true_set] <- x1
       
       if (pct.sparsity > 0){
-        for (i in 1:n){
-          zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
-          x[i,zeroidx] <- -Inf
-        }
-      }
-      
-    }else if(model == "timedep"){
-      
-      sigma <- rho^(as.matrix(dist(1:(p-(weak+strong)))))
-      diag(sigma) <- 1
-      mu <- rep(0,p-(weak+strong))
-      
-      x0 <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
-      x[,setdiff(1:p,true_set)] <- x0
-      
-      for (i in 1:n0){
+        # for (i in 1:n0){
         
-        # Mu <- rep(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)),m)
-        # mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2))
-        # slopes <- outer(0:9,timedep_slope)
-        # Mu <- t(mu + t(slopes))
-        
-        slopes <- rep(0:1,(weak+strong)/2)*timedep_slope
-        Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:9,slopes)))
-        
-        sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
-        Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*timedep_cor))
-        # Sigma <- Matrix::bdiag(replicate(m,sigma,simplify=FALSE))
-        # sigma_offdiag <- diag(strong+weak)*0.8
-        # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
-        
-        x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
-        x[id.vect==i,true_set] <- x1
-        
-        if (pct.sparsity > 0){
-          # for (i in 1:n0){
-          
-          if (longitudinal_stability){
+        if (longitudinal_stability){
+          zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
+          x[id.vect==i,zeroidx] <- -Inf
+        }else{
+          ids <- which(id.vect==i)
+          for (i in 1:m){
             zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
-            x[id.vect==i,zeroidx] <- -Inf
-          }else{
-            ids <- which(id.vect==i)
-            for (i in 1:m){
-              zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
-              x[ids[i],zeroidx] <- -Inf
-            }
+            x[ids[i],zeroidx] <- -Inf
           }
-          
-          # zeroidx <- sample(1:(length(true_set)/2),size=floor(length(true_set)/2*pct.sparsity))
-          # x[id.vect==i,c(zeroidx*2,zeroidx*2-1)] <- -Inf
-          
-          # }
         }
         
-      }
-      
-      if (pct.sparsity > 0){
-        for (j in 1:n){
-          zeroidx <- sample(setdiff(1:p,true_set),size=floor(p*pct.sparsity))
-          x[j,zeroidx] <- -Inf
-        }
+        # zeroidx <- sample(1:(length(true_set)/2),size=floor(length(true_set)/2*pct.sparsity))
+        # x[id.vect==i,c(zeroidx*2,zeroidx*2-1)] <- -Inf
+        
+        # }
       }
       
     }
     
-    x = apply(x,2,function(y) exp(y)/rowSums(exp(x)))
-    
-    for (k in 1:n){
-      xobs[k,] <- rmultinom(1,size=seqdep[k],prob=x[k,])
+    if (pct.sparsity > 0){
+      for (j in 1:n){
+        zeroidx <- sample(setdiff(1:p,true_set),size=floor(p*pct.sparsity))
+        x[j,zeroidx] <- -Inf
+      }
     }
-    xcount = xobs
-    colnames(xcount) <- paste0("taxa",1:p)
-    
-    for (k in 1:n){
-      x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
-    }
-    x = log(x+1)
-    
-  }else if (method == "SparseDOSSA2"){
-    
-    # sim <- SparseDOSSA2::SparseDOSSA2(template = "Stool",
-    #                                   n_sample=n,
-    #                                   median_read_depth = 25000,
-    #                                   new_features=FALSE,
-    #                                   verbose = FALSE)
-    # xcount <- t(sim$simulated_data)
-    # taxa <- colnames(xcount)
-    # 
-    # true_set <- which(taxa %in% c("k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Blautia|s__Ruminococcus_torques",
-    #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Clostridiaceae|g__Clostridium|s__Clostridium_leptum",
-    #                               "k__Bacteria|p__Firmicutes|c__Negativicutes|o__Selenomonadales|f__Veillonellaceae|g__Veillonella|s__Veillonella_unclassified",
-    #                               "k__Bacteria|p__Verrucomicrobia|c__Verrucomicrobiae|o__Verrucomicrobiales|f__Verrucomicrobiaceae|g__Akkermansia|s__Akkermansia_muciniphila",
-    #                               "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__Bacteroides_uniformis",
-    #                               "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Porphyromonadaceae|g__Parabacteroides|s__Parabacteroides_merdae",
-    #                               "k__Bacteria|p__Firmicutes|c__Negativicutes|o__Selenomonadales|f__Veillonellaceae|g__Veillonella|s__Veillonella_parvula",
-    #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Ruminococcaceae|g__Ruminococcus|s__Ruminococcus_bromii",
-    #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Roseburia|s__Roseburia_inulinivorans",
-    #                               "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Coriobacteriales|f__Coriobacteriaceae|g__Collinsella|s__Collinsella_aerofaciens"
-    # ))
-    # 
-    # colnames(xcount) <- paste0("taxa",1:ncol(xcount))
-    # rownames(xcount) <- NULL
-    # x = t(sim$simulated_matrices$rel)
-    # for (k in 1:nrow(xcount)){
-    #   x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
-    # }
-    # x = log(x+1)
     
   }
+  
+  x = apply(x,2,function(y) exp(y)/rowSums(exp(x)))
+  
+  for (k in 1:n){
+    xobs[k,] <- rmultinom(1,size=seqdep[k],prob=x[k,])
+  }
+  xcount = xobs
+  colnames(xcount) <- paste0("taxa",1:p)
+  
+  for (k in 1:n){
+    x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
+  }
+  x = log(x+1)
+  
+  # }else if (method == "SparseDOSSA2"){
+  
+  # sim <- SparseDOSSA2::SparseDOSSA2(template = "Stool",
+  #                                   n_sample=n,
+  #                                   median_read_depth = 25000,
+  #                                   new_features=FALSE,
+  #                                   verbose = FALSE)
+  # xcount <- t(sim$simulated_data)
+  # taxa <- colnames(xcount)
+  # 
+  # true_set <- which(taxa %in% c("k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Blautia|s__Ruminococcus_torques",
+  #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Clostridiaceae|g__Clostridium|s__Clostridium_leptum",
+  #                               "k__Bacteria|p__Firmicutes|c__Negativicutes|o__Selenomonadales|f__Veillonellaceae|g__Veillonella|s__Veillonella_unclassified",
+  #                               "k__Bacteria|p__Verrucomicrobia|c__Verrucomicrobiae|o__Verrucomicrobiales|f__Verrucomicrobiaceae|g__Akkermansia|s__Akkermansia_muciniphila",
+  #                               "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__Bacteroides_uniformis",
+  #                               "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Porphyromonadaceae|g__Parabacteroides|s__Parabacteroides_merdae",
+  #                               "k__Bacteria|p__Firmicutes|c__Negativicutes|o__Selenomonadales|f__Veillonellaceae|g__Veillonella|s__Veillonella_parvula",
+  #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Ruminococcaceae|g__Ruminococcus|s__Ruminococcus_bromii",
+  #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Roseburia|s__Roseburia_inulinivorans",
+  #                               "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Coriobacteriales|f__Coriobacteriaceae|g__Collinsella|s__Collinsella_aerofaciens"
+  # ))
+  # 
+  # colnames(xcount) <- paste0("taxa",1:ncol(xcount))
+  # rownames(xcount) <- NULL
+  # x = t(sim$simulated_matrices$rel)
+  # for (k in 1:nrow(xcount)){
+  #   x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
+  # }
+  # x = log(x+1)
+  
+  # }
   
   betavec <- rep(0,ncol(xcount))
   betavec[true_set] <- beta

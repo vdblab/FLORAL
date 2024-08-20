@@ -290,7 +290,7 @@ LogRatioTDCoxLasso <- function(x,
           }
           
           if (ncol(x.select.min) > 1){
-            stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox")
+            stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox"))
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           }else{
@@ -326,7 +326,7 @@ LogRatioTDCoxLasso <- function(x,
           }
           
           if (ncol(x.select.min) > 1){
-            stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox")
+            stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox"))
             x.select.min <- x.select.min[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
             idxs <- idxs[,which(stepglmnet$glmnet.fit$beta[,stepglmnet$index[1]]!=0)]
           }else{
@@ -385,7 +385,7 @@ LogRatioTDCoxLasso <- function(x,
           # if(is.null(x.select.min)) break
           
           if (ncol(x.select.min) > 1){
-            stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox")
+            stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox"))
             
             if (length(taxidx) < 2){
               
@@ -459,7 +459,7 @@ LogRatioTDCoxLasso <- function(x,
           # if(is.null(x.select.min)) break
           
           if (ncol(x.select.min) > 1){
-            stepglmnet <- cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox")
+            stepglmnet <- suppressWarnings(cv.glmnet(x=x.select.min,y=Surv(t0,t1,d),type.measure = "deviance",family="cox"))
             
             if (length(taxidx) < 2){
               
