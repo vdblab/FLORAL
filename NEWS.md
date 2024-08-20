@@ -1,4 +1,4 @@
-# FLORAL (development version)
+# FLORAL 0.3.0
 
 * Improves stability when fitting Fine-Gray model with longitudinal covariates.
 
