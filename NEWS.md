@@ -1,10 +1,18 @@
-# FLORAL (development version)
+# FLORAL 0.3.0
 
 * Improves stability when fitting Fine-Gray model with longitudinal covariates.
 
 * Enables parallel computation for cross-validation.
 
 * Fixes several bugs as reported in Issues. 
+
+* Adding options to use user-specified pseudo counts
+
+* Adding options to use user-specified number of maximum number of iterations
+
+* Adding a simulation scenario for survival regression models with longitudinal features
+
+* (BETA version of) the new GEE method
 
 # FLORAL 0.2.0
 

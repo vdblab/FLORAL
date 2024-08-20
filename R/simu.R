@@ -3,18 +3,22 @@
 #' @description Simulate a dataset from log-ratio model.
 #' @param n An integer of sample size
 #' @param p An integer of number of features (taxa).
-#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", or "finegray".
+#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", or "timedep" (survival endpoint with time-dependent features).
 #' @param weak Number of features with \code{weak} effect size.
 #' @param strong Number of features with \code{strong} effect size.
 #' @param weaksize Actual effect size for \code{weak} effect size. Must be positive.
 #' @param strongsize Actual effect size for \code{strong} effect size. Must be positive.
 #' @param pct.sparsity Percentage of zero counts for each sample.
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
+#' @param timedep_slope If \code{model} is "timedep", this parameter specifies the slope for the feature trajectories. Please refer to the Simulation section of the manuscript for more details.
+#' @param timedep_cor If \code{model} is "timedep", this parameter specifies the sample-wise correlations between longitudinal features. Please refer to the Simulation section of the manuscript for more details.
+#' @param longitudinal_stability If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).
 #' @param ncov Number of covariates that are not compositional features.
 #' @param betacov Coefficients corresponding to the covariates that are not compositional features.
 #' @param intercept Boolean. If TRUE, then a random intercept will be generated in the model. Only works for \code{linear} or \code{binomial} models.
 #' @return A list with simulated count matrix \code{xcount}, log1p-transformed count matrix \code{x}, outcome (continuous \code{y}, continuous centered \code{y0}, binary \code{y}, or survival \code{t}, \code{d}), true coefficient vector \code{beta}, list of non-zero features \code{idx}, value of intercept \code{intercept} (if applicable).
 #' @author Teng Fei. Email: feit1@mskcc.org
+#' @references Fei T, Funnell T, Waters N, Raj SS et al. Enhanced Feature Selection for Microbiome Data using FLORAL: Scalable Log-ratio Lasso Regression bioRxiv 2023.05.02.538599.
 #'
 #' @examples 
 #' 
@@ -28,6 +32,7 @@
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
 #' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @importFrom msm dpexp ppexp rpexp
 #' @useDynLib FLORAL
 #' @export
 
@@ -40,6 +45,9 @@ simu <- function(n = 100,
                  strongsize = 0.25,
                  pct.sparsity = 0.5,
                  rho=0,
+                 timedep_slope=NULL,
+                 timedep_cor=NULL,
+                 longitudinal_stability=TRUE,
                  ncov=0,
                  betacov=0,
                  intercept=FALSE){
@@ -52,8 +60,6 @@ simu <- function(n = 100,
   beta[weak_idx] <- rep(c(weaksize,-weaksize),weak/2)
   beta[strong_idx] <- rep(c(strongsize,-strongsize),strong/2)
   
-  x <- xobs <- matrix(NA,nrow=n,ncol=p)
-  
   if (model %in% c("linear","binomial")){
     y <- rep(NA,length=n)
   }else if (model == "cox"){
@@ -62,36 +68,154 @@ simu <- function(n = 100,
   }else if (model == "finegray"){
     t <- t0 <- rep(NA,length=n)
     d <- rep(NA,length=n)
+  }else if (model == "timedep"){
+    m <- 10
+    id.vect <- rep(1:n, each = m)
+    n0 <- n
+    n <- length(id.vect)
+    
+    if (is.null(timedep_cor)){
+      timedep_cor <- 0.4
+    }
+    if (is.null(timedep_slope)){
+      timedep_slope <- 0.5
+    }else{
+      timedep_slope <- timedep_slope
+    }
   }
+  
+  x <- xobs <- matrix(NA,nrow=n,ncol=p)
   
   seqdep <- floor(runif(n,min=5000,max=50000))
   # highidx <- true_set
   
-  sigma <- rho^(as.matrix(dist(1:p)))
-  diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
-  mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
+  ###############################################
   
-  x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+  # if (method == "manual"){
   
-  if (pct.sparsity > 0){
-    for (i in 1:n){
-      zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
-      x[i,zeroidx] <- -Inf
+  if (model != "timedep"){
+    
+    sigma <- rho^(as.matrix(dist(1:p)))
+    diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
+    mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,p-8))
+    
+    x <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+    
+    if (pct.sparsity > 0){
+      for (i in 1:n){
+        zeroidx <- sample(1:p,size=floor(p*pct.sparsity))
+        x[i,zeroidx] <- -Inf
+      }
     }
+    
+  }else if(model == "timedep"){
+    
+    sigma <- rho^(as.matrix(dist(1:(p-(weak+strong)))))
+    diag(sigma) <- 1
+    mu <- rep(0,p-(weak+strong))
+    
+    x0 <- mvtnorm::rmvnorm(n=n,mean=mu,sigma=sigma)
+    x[,setdiff(1:p,true_set)] <- x0
+    
+    for (i in 1:n0){
+      
+      # Mu <- rep(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)),m)
+      # mu <- c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2))
+      # slopes <- outer(0:9,timedep_slope)
+      # Mu <- t(mu + t(slopes))
+      
+      slopes <- rep(0:1,(weak+strong)/2)*timedep_slope
+      Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:9,slopes)))
+      
+      sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
+      Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*timedep_cor))
+      # Sigma <- Matrix::bdiag(replicate(m,sigma,simplify=FALSE))
+      # sigma_offdiag <- diag(strong+weak)*0.8
+      # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
+      
+      x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
+      x[id.vect==i,true_set] <- x1
+      
+      if (pct.sparsity > 0){
+        # for (i in 1:n0){
+        
+        if (longitudinal_stability){
+          zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
+          x[id.vect==i,zeroidx] <- -Inf
+        }else{
+          ids <- which(id.vect==i)
+          for (i in 1:m){
+            zeroidx <- sample(true_set,size=floor(length(true_set)*pct.sparsity))
+            x[ids[i],zeroidx] <- -Inf
+          }
+        }
+        
+        # zeroidx <- sample(1:(length(true_set)/2),size=floor(length(true_set)/2*pct.sparsity))
+        # x[id.vect==i,c(zeroidx*2,zeroidx*2-1)] <- -Inf
+        
+        # }
+      }
+      
+    }
+    
+    if (pct.sparsity > 0){
+      for (j in 1:n){
+        zeroidx <- sample(setdiff(1:p,true_set),size=floor(p*pct.sparsity))
+        x[j,zeroidx] <- -Inf
+      }
+    }
+    
   }
+  
   x = apply(x,2,function(y) exp(y)/rowSums(exp(x)))
   
   for (k in 1:n){
     xobs[k,] <- rmultinom(1,size=seqdep[k],prob=x[k,])
   }
-  xobs = log(xobs+1)
+  xcount = xobs
+  colnames(xcount) <- paste0("taxa",1:p)
   
   for (k in 1:n){
     x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
   }
-  xcount = x
-  colnames(xcount) <- paste0("taxa",1:p)
   x = log(x+1)
+  
+  # }else if (method == "SparseDOSSA2"){
+  
+  # sim <- SparseDOSSA2::SparseDOSSA2(template = "Stool",
+  #                                   n_sample=n,
+  #                                   median_read_depth = 25000,
+  #                                   new_features=FALSE,
+  #                                   verbose = FALSE)
+  # xcount <- t(sim$simulated_data)
+  # taxa <- colnames(xcount)
+  # 
+  # true_set <- which(taxa %in% c("k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Blautia|s__Ruminococcus_torques",
+  #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Clostridiaceae|g__Clostridium|s__Clostridium_leptum",
+  #                               "k__Bacteria|p__Firmicutes|c__Negativicutes|o__Selenomonadales|f__Veillonellaceae|g__Veillonella|s__Veillonella_unclassified",
+  #                               "k__Bacteria|p__Verrucomicrobia|c__Verrucomicrobiae|o__Verrucomicrobiales|f__Verrucomicrobiaceae|g__Akkermansia|s__Akkermansia_muciniphila",
+  #                               "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Bacteroidaceae|g__Bacteroides|s__Bacteroides_uniformis",
+  #                               "k__Bacteria|p__Bacteroidetes|c__Bacteroidia|o__Bacteroidales|f__Porphyromonadaceae|g__Parabacteroides|s__Parabacteroides_merdae",
+  #                               "k__Bacteria|p__Firmicutes|c__Negativicutes|o__Selenomonadales|f__Veillonellaceae|g__Veillonella|s__Veillonella_parvula",
+  #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Ruminococcaceae|g__Ruminococcus|s__Ruminococcus_bromii",
+  #                               "k__Bacteria|p__Firmicutes|c__Clostridia|o__Clostridiales|f__Lachnospiraceae|g__Roseburia|s__Roseburia_inulinivorans",
+  #                               "k__Bacteria|p__Actinobacteria|c__Actinobacteria|o__Coriobacteriales|f__Coriobacteriaceae|g__Collinsella|s__Collinsella_aerofaciens"
+  # ))
+  # 
+  # colnames(xcount) <- paste0("taxa",1:ncol(xcount))
+  # rownames(xcount) <- NULL
+  # x = t(sim$simulated_matrices$rel)
+  # for (k in 1:nrow(xcount)){
+  #   x[k,] <- rmultinom(1,size=1000000,prob=x[k,])
+  # }
+  # x = log(x+1)
+  
+  # }
+  
+  betavec <- rep(0,ncol(xcount))
+  betavec[true_set] <- beta
+  xobs <- log(xcount+1)
+  colnames(xobs) <- NULL
   
   if (ncov > 0){
     xcov <- mvtnorm::rmvnorm(n=n,mean=rep(0,ncov))
@@ -112,7 +236,7 @@ simu <- function(n = 100,
     }
     y0 = y - mean(y)
     
-    ret <- list(xcount=xcount,x=xobs,y=y,y0=y0,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,y=y,y0=y0,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -137,7 +261,7 @@ simu <- function(n = 100,
       y[i] <- rbinom(1,1,prob=prob[i])
     }
     
-    ret <- list(xcount=xcount,x=xobs,y=y,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,y=y,beta=betavec,idx=true_set)
     
     if (intercept) ret$intercept=intcpt
     
@@ -159,7 +283,7 @@ simu <- function(n = 100,
       d[i] <- as.numeric(I(t0 <= c0))
     }
     
-    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=betavec,idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
     
@@ -199,11 +323,135 @@ simu <- function(n = 100,
     # outcome
     d <- ifelse(t0 == Inf, 0, 0*I(t == c) + epsilon*I(t < c))
     
-    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=c(beta,rep(0,p-weak-strong)),idx=true_set)
+    ret <- list(xcount=xcount,x=xobs,t=t,d=d,beta=betavec,idx=true_set)
     
     if (ncov > 0) ret$xcov=xcov
+    
+  }else if (model=="timedep"){
+    
+    g.inv <- sqrt
+    g <- function(x) {
+      x^2
+    }
+    
+    t.max <- 9
+    t.min <- 0
+    
+    z.list <- list()
+    for (i in 1:n0) {
+      z <- x[id.vect == i,true_set]
+      z.list[[i]] <- cbind(z, exp(z %*% beta))
+    }
+    
+    k <- function(x, m, M, rates, t){
+      ifelse(x <= m | x >= M, 0, dpexp(x, rates, t))
+    }
+    
+    gen.y <- function(z,time_base,t.max,t.min){
+      
+      exp.etay <- z[,ncol(z)]
+      
+      t <- time_base
+      t.diff <- (t[-1] - t[1:(length(t) - 1)])[-(length(t) - 1)]
+      g.inv.t <- g.inv(t)
+      g.inv.t.diff <- (g.inv(t[-1]) - g.inv(t[1:(length(t) - 1)]))[-(length(t) - 1)]
+      
+      g.inv.t.max <- g.inv(t.max)
+      g.inv.t.min <- g.inv(t.min)
+      
+      x1 <- exp.etay
+      d <- ppexp(g.inv.t.max, x1, g.inv.t) - ppexp(g.inv.t.min, x1,g.inv.t)
+      M <- 1 / d
+      r <- 60
+      repeat{
+        y <- rpexp(r, x1, g.inv.t)
+        u <- runif(r)
+        t <- M * ((k(y, g.inv.t.min, g.inv.t.max, x1, g.inv.t) / d /
+                     dpexp(y, x1, g.inv.t)))
+        y <- y[u <= t][1]
+        if (!is.na(y)) break
+      }
+      y
+    }
+    
+    y <- sapply(z.list, gen.y, time_base = 0:9, t.max=t.max, t.min=t.min)
+    g.y <- g(y)
+    
+    # print(summary(g.y))
+    
+    # ct <- runif(n, min=5,max=6)
+    # d <- ifelse(g.y < ct, 1, 0)
+    # g.y <- ifelse(g.y < ct, g.y, ct)
+    
+    prop.cen <- 0.5
+    d <- sample(0:1, n, replace = TRUE, prob = c(prop.cen, 1 - prop.cen))
+    
+    data <- NULL
+    for (i in 1:n0) {
+      id.temp <- rep(i, ceiling(g.y[i]))
+      time.temp <- c(1:ceiling(g.y[i]))
+      time0.temp <- 0:(ceiling(g.y[i]) - 1)
+      d.temp <- c(rep(0, length(time.temp) - 1), d[i])
+      
+      if (ceiling(g.y[i]) > 9){
+        z.temp <- xcount[id.vect==i,]
+        
+        if (length(id.temp) > nrow(z.temp)){
+          
+          z.temp <- rbind(z.temp,
+                          # do.call("rbind", replicate(length(id.temp) - nrow(z.temp),
+                          #                            z.temp[nrow(z.temp),],
+                          #                            simplify = FALSE))
+                          z.temp[nrow(z.temp),]
+          )
+          
+          id.temp <- id.temp[c(1:10,length(id.temp))]
+          time.temp <- time.temp[c(1:10,length(id.temp))]
+          time0.temp <- time0.temp[c(1:11)]
+          d.temp <- d.temp[c(1:10,length(id.temp))]
+          
+        }
+        
+      }else{
+        z.temp <- xcount[id.vect==i,][1:(ceiling(g.y[i])),]
+      }
+      
+      if (is.null(nrow(z.temp))){
+        
+        data.temp <- c(id.temp, time.temp, time0.temp, d.temp, z.temp)
+        
+      }else{
+        
+        data.temp <- cbind(id.temp, time.temp, time0.temp, d.temp, z.temp)
+      }
+      
+      data <- rbind(data, data.temp)
+    }
+    
+    colnames(data) <- c('id', 't', 't0', 'd', paste0("z",1:p))
+    data <- data.frame(data)
+    data_unique <- data |> 
+      group_by(id) |> 
+      filter(row_number() == n()) |> 
+      ungroup()
+    
+    xcount <- data[,-c(1:4)]
+    colnames(xcount) <- rownames(xcount) <- NULL
+    colnames(xcount) <- paste0("taxa",1:p)
+    
+    xcount_baseline <- data_unique[,-c(1:4)]
+    colnames(xcount_baseline) <- rownames(xcount_baseline) <- NULL
+    colnames(xcount_baseline) <- paste0("taxa",1:p)
+    
+    ret <- list(xcount=xcount,
+                xcount_baseline=xcount_baseline,
+                data=data,
+                data_unique=data_unique,
+                beta=betavec,
+                idx=true_set)
     
   }
   
   return(ret)
+  
 }

@@ -16,10 +16,15 @@ a.FLORAL(
   id = NULL,
   tobs = NULL,
   failcode = NULL,
+  corstr = "exchangeable",
+  scalefix = FALSE,
+  scalevalue = 1,
+  pseudo = 1,
   length.lambda = 100,
   lambda.min.ratio = NULL,
   ncov.lambda.weight = 0,
   mu = 1,
+  maxiter = 100,
   ncv = 5,
   intercept = FALSE,
   step2 = FALSE,
@@ -41,13 +46,21 @@ a.FLORAL(
 
 \item{family}{Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.}
 
-\item{longitudinal}{\code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (Still under development. Please use with caution)}
+\item{longitudinal}{\code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)}
 
 \item{id}{If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.}
 
 \item{tobs}{If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.}
 
 \item{failcode}{If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.}
+
+\item{corstr}{If a GEE model is specified, then \code{corstr} is the corresponding working correlation structure. Options are \code{independence}, \code{exchangeable}, \code{AR-1} and \code{unstructured}.}
+
+\item{scalefix}{\code{TRUE} or \code{FALSE}, indicating whether the scale parameter is estimated or fixed if a GEE model is specified.}
+
+\item{scalevalue}{Specify the scale parameter if \code{scalefix=TRUE}.}
+
+\item{pseudo}{Pseudo count to be added to \code{x} before taking log-transformation}
 
 \item{length.lambda}{Number of penalty parameters used in the path}
 
@@ -56,6 +69,8 @@ a.FLORAL(
 \item{ncov.lambda.weight}{Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.}
 
 \item{mu}{Value of penalty for the augmented Lagrangian}
+
+\item{maxiter}{Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.}
 
 \item{ncv}{Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.}
 

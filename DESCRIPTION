@@ -1,8 +1,8 @@
 Package: FLORAL
 Type: Package
 Title: Fit Log-Ratio Lasso Regression for Compositional Data
-Version: 0.2.0.9000
-Date: 2023-07-04
+Version: 0.3.0
+Date: 2024-08-19
 Authors@R: c(
     person("Teng", "Fei", , "feit1@mskcc.org", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0001-7888-1715")),
@@ -19,6 +19,7 @@ URL: https://vdblab.github.io/FLORAL/
 BugReports: https://github.com/vdblab/FLORAL/issues
 Depends: 
   R (>= 3.5.0)
+SystemRequirements: C++17
 biocViews:
 Imports:
   Rcpp (>= 1.0.9),
@@ -35,9 +36,10 @@ Imports:
   mvtnorm,
   doParallel,
   doRNG,
-  foreach
-LinkingTo: Rcpp, RcppArmadillo, RcppProgress
-RoxygenNote: 7.2.3
+  foreach,
+  msm
+LinkingTo: Rcpp, RcppArmadillo, RcppProgress, ast2ast
+RoxygenNote: 7.3.2
 Encoding: UTF-8
 Suggests:
     covr,
