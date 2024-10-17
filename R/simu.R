@@ -3,7 +3,7 @@
 #' @description Simulate a dataset from log-ratio model.
 #' @param n An integer of sample size
 #' @param p An integer of number of features (taxa).
-#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", or "timedep" (survival endpoint with time-dependent features).
+#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", "gee" (scalar outcome with time-dependent features), or "timedep" (survival endpoint with time-dependent features).
 #' @param weak Number of features with \code{weak} effect size.
 #' @param strong Number of features with \code{strong} effect size.
 #' @param weaksize Actual effect size for \code{weak} effect size. Must be positive.
@@ -12,6 +12,11 @@
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
 #' @param timedep_slope If \code{model} is "timedep", this parameter specifies the slope for the feature trajectories. Please refer to the Simulation section of the manuscript for more details.
 #' @param timedep_cor If \code{model} is "timedep", this parameter specifies the sample-wise correlations between longitudinal features. Please refer to the Simulation section of the manuscript for more details.
+#' @param geetype If \code{model} is "gee", \code{geetype} is the type of GEE outcomes. Now support "gaussian" and "binomial".
+#' @param m If \code{model} is "gee", \code{m} is the number of repeated measurements per subject.
+#' @param corstr If \code{model} is "gee", \code{corstr} is the working correlation structure. Now support "independence", "exchangeable", and "AR-1".
+#' @param sdvec If \code{model} is "gee", \code{sdvec} is the vector of standard deviations of each outcome variable.
+#' @param rhogee If \code{model} is "gee", \code{rhogee} is the correlation parameter between longitudinal outcomes under the selected working correlation structure.
 #' @param longitudinal_stability If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).
 #' @param ncov Number of covariates that are not compositional features.
 #' @param betacov Coefficients corresponding to the covariates that are not compositional features.
@@ -47,6 +52,11 @@ simu <- function(n = 100,
                  rho=0,
                  timedep_slope=NULL,
                  timedep_cor=NULL,
+                 geetype="gaussian",
+                 m=4,
+                 corstr="exchangeable",
+                 sdvec=NULL,
+                 rhogee=0.8,
                  longitudinal_stability=TRUE,
                  ncov=0,
                  betacov=0,
@@ -82,6 +92,25 @@ simu <- function(n = 100,
     }else{
       timedep_slope <- timedep_slope
     }
+  }else if (model == "gee"){
+    
+    id.vect <- rep(1:n, each = m)
+    n0 <- n
+    n <- length(id.vect)
+    
+    if (is.null(sdvec)){
+      sdvec <- rep(1,m)
+    }
+    
+    if (is.null(timedep_cor)){
+      timedep_cor <- 0.4
+    }
+    if (is.null(timedep_slope)){
+      timedep_slope <- 0.5
+    }else{
+      timedep_slope <- timedep_slope
+    }
+    
   }
   
   x <- xobs <- matrix(NA,nrow=n,ncol=p)
@@ -108,7 +137,7 @@ simu <- function(n = 100,
       }
     }
     
-  }else if(model == "timedep"){
+  }else if(model %in% c("timedep","gee")){
     
     sigma <- rho^(as.matrix(dist(1:(p-(weak+strong)))))
     diag(sigma) <- 1
@@ -447,6 +476,50 @@ simu <- function(n = 100,
                 xcount_baseline=xcount_baseline,
                 data=data,
                 data_unique=data_unique,
+                beta=betavec,
+                idx=true_set)
+    
+  }else if (model == "gee"){
+    
+    if (corstr == "independence"){
+      
+      SIGMA <- diag(sdvec) %*% diag(m) %*% diag(sdvec)
+      
+    }else if (corstr == "exchangeable"){
+      
+      R <- matrix(rhogee,m,m)+diag(rep(1-rhogee,m)) # Working correlation matrix
+      SIGMA <- diag(sdvec) %*% R %*% diag(sdvec)
+      
+    }else if (corstr == "AR-1"){
+      
+      R <- matrix(NA,nrow=m,ncol=m)
+      for (t1 in 1:m) {
+        for (t2 in 1:m) {
+          R[t1,t2]<-rhogee^abs(t1-t2)   
+        }
+      }
+      SIGMA <- diag(sdvec) %*% R %*% diag(sdvec)
+        
+    }
+    
+    if (geetype == "gaussian"){
+      
+      # covariance matrix of error
+      error <- rmvnorm(n0, mean = rep(0,m),SIGMA)
+      
+      # form continuous longitudinal outcomes
+      y <- x[,true_set] %*% beta + as.vector(t(error))
+      
+    }else if (geetype == "binomial"){
+      
+      
+      
+    }
+    
+    ret <- list(xcount=xcount,
+                x=xobs,
+                y=y,
+                id=id.vect,
                 beta=betavec,
                 idx=true_set)
     
