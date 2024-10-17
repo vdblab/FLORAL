@@ -263,6 +263,8 @@ LogRatioGEE <- function(x,
     
     if (step2){
       
+      if (progress) cat(paste0("Step2 started."))
+      
       if (ncov > 0){
         idxfeat <- setdiff(1:length(ret$best.beta$min.mse),1:ncov)
       }else{
@@ -326,15 +328,13 @@ LogRatioGEE <- function(x,
                              maxiter2=1,
                              scalefix=scalefix,
                              scalevalue=scalevalue,
-                             display_progress=progress)
+                             display_progress=FALSE)
           
           cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
           
           if (ncore == 1){
             
             for (cv in 1:ncv){
-              
-              if (progress) cat(paste0("Step2: Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
               
               train.x <- x.select.min[labels[id]!=cv,]
               train.y <- y[labels[id]!=cv]
@@ -361,7 +361,7 @@ LogRatioGEE <- function(x,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=progress)
+                               display_progress=FALSE)
               
               mufit=family$linkinv(test.x %*% cvfit$beta)
               cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
@@ -404,7 +404,7 @@ LogRatioGEE <- function(x,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=progress)
+                               display_progress=FALSE)
               
               mufit=family$linkinv(test.x %*% cvfit$beta)
               apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
@@ -423,7 +423,8 @@ LogRatioGEE <- function(x,
           idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
           
           betafilt <- fullfit$beta
-          betafilt[abs(betafilt) < 5e-3] = 0
+          betafilt[abs(betafilt) < 1e-3] = 0
+          betafilt[apply(betafilt, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           
@@ -534,7 +535,7 @@ LogRatioGEE <- function(x,
                              maxiter2=1,
                              scalefix=scalefix,
                              scalevalue=scalevalue,
-                             display_progress=progress)
+                             display_progress=FALSE)
           
           cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
           
@@ -542,7 +543,7 @@ LogRatioGEE <- function(x,
             
             for (cv in 1:ncv){
               
-              if (progress) cat(paste0("Step2: Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
+              # if (progress) cat(paste0("Step2: Algorithm running for cv dataset ",cv," out of ",ncv,": \n"))
               
               train.x <- x.select.min[labels[id]!=cv,]
               train.y <- y[labels[id]!=cv]
@@ -569,7 +570,7 @@ LogRatioGEE <- function(x,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=progress)
+                               display_progress=FALSE)
               
               mufit=family$linkinv(test.x %*% cvfit$beta)
               cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
@@ -612,7 +613,7 @@ LogRatioGEE <- function(x,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=progress)
+                               display_progress=FALSE)
               
               mufit=family$linkinv(test.x %*% cvfit$beta)
               apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
@@ -631,7 +632,9 @@ LogRatioGEE <- function(x,
           idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
 
           betafilt <- fullfit$beta
-          betafilt[abs(betafilt) < 5e-3] = 0
+          # betafilt[abs(betafilt) < 5e-3] = 0
+          beta_filtered[abs(beta_filtered) < 1e-3] = 0
+          beta_filtered[apply(beta_filtered, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           # idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
@@ -677,6 +680,8 @@ LogRatioGEE <- function(x,
         ret$step2fit.1se <- coefs
         
       }
+      
+      if (progress) cat("Step2 is completed.")
     }
   }else{
     
