@@ -263,7 +263,7 @@ LogRatioGEE <- function(x,
     
     if (step2){
       
-      if (progress) cat(paste0("Step2 started."))
+      if (progress) cat(paste0("Step2 started\n"))
       
       if (ncov > 0){
         idxfeat <- setdiff(1:length(ret$best.beta$min.mse),1:ncov)
@@ -370,7 +370,7 @@ LogRatioGEE <- function(x,
             
           }else if(ncore > 1){
             
-            if (progress) cat(paste0("Step2: Using ", ncore ," core for cross-validation computation."))
+            # if (progress) cat(paste0("Step2: Using ", ncore ," core for cross-validation computation."))
             
             Sys.sleep(1)
             
@@ -579,7 +579,7 @@ LogRatioGEE <- function(x,
             
           }else if(ncore > 1){
             
-            if (progress) cat(paste0("Step2: Using ", ncore ," core for cross-validation computation."))
+            # if (progress) cat(paste0("Step2: Using ", ncore ," core for cross-validation computation."))
             
             Sys.sleep(1)
             
@@ -681,7 +681,7 @@ LogRatioGEE <- function(x,
         
       }
       
-      if (progress) cat("Step2 is completed.")
+      if (progress) cat("Step2 completed \n")
     }
   }else{
     
