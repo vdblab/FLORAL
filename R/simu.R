@@ -15,7 +15,7 @@
 #' @param geetype If \code{model} is "gee", \code{geetype} is the type of GEE outcomes. Now support "gaussian" and "binomial".
 #' @param m If \code{model} is "gee", \code{m} is the number of repeated measurements per subject.
 #' @param corstr If \code{model} is "gee", \code{corstr} is the working correlation structure. Now support "independence", "exchangeable", and "AR-1".
-#' @param sdvec If \code{model} is "gee", \code{sdvec} is the vector of standard deviations of each outcome variable.
+#' @param sdvec If \code{model} is "gee" and \code{geetype} is "gaussian", \code{sdvec} is the vector of standard deviations of each outcome variable.
 #' @param rhogee If \code{model} is "gee", \code{rhogee} is the correlation parameter between longitudinal outcomes under the selected working correlation structure.
 #' @param longitudinal_stability If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).
 #' @param ncov Number of covariates that are not compositional features.
@@ -38,6 +38,7 @@
 #' @importFrom caret createFolds
 #' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
 #' @importFrom msm dpexp ppexp rpexp
+#' @importFrom mvtnorm rmvnorm
 #' @useDynLib FLORAL
 #' @export
 
@@ -98,7 +99,7 @@ simu <- function(n = 100,
     n0 <- n
     n <- length(id.vect)
     
-    if (is.null(sdvec)){
+    if (is.null(sdvec) & geetype=="gaussian"){
       sdvec <- rep(1,m)
     }
     
@@ -481,28 +482,28 @@ simu <- function(n = 100,
     
   }else if (model == "gee"){
     
-    if (corstr == "independence"){
-      
-      SIGMA <- diag(sdvec) %*% diag(m) %*% diag(sdvec)
-      
-    }else if (corstr == "exchangeable"){
-      
-      R <- matrix(rhogee,m,m)+diag(rep(1-rhogee,m)) # Working correlation matrix
-      SIGMA <- diag(sdvec) %*% R %*% diag(sdvec)
-      
-    }else if (corstr == "AR-1"){
-      
-      R <- matrix(NA,nrow=m,ncol=m)
-      for (t1 in 1:m) {
-        for (t2 in 1:m) {
-          R[t1,t2]<-rhogee^abs(t1-t2)   
-        }
-      }
-      SIGMA <- diag(sdvec) %*% R %*% diag(sdvec)
-        
-    }
-    
     if (geetype == "gaussian"){
+      
+      if (corstr == "independence"){
+        
+        SIGMA <- diag(sdvec) %*% diag(m) %*% diag(sdvec)
+        
+      }else if (corstr == "exchangeable"){
+        
+        R <- matrix(rhogee,m,m)+diag(rep(1-rhogee,m)) # Working correlation matrix
+        SIGMA <- diag(sdvec) %*% R %*% diag(sdvec)
+        
+      }else if (corstr == "AR-1"){
+        
+        R <- matrix(NA,nrow=m,ncol=m)
+        for (t1 in 1:m) {
+          for (t2 in 1:m) {
+            R[t1,t2]<-rhogee^abs(t1-t2)   
+          }
+        }
+        SIGMA <- diag(sdvec) %*% R %*% diag(sdvec)
+        
+      }
       
       # covariance matrix of error
       error <- rmvnorm(n0, mean = rep(0,m),SIGMA)
@@ -510,9 +511,46 @@ simu <- function(n = 100,
       # form continuous longitudinal outcomes
       y <- x[,true_set] %*% beta + as.vector(t(error))
       
+      if(intercept) {
+        intcpt <- rnorm(1,mean=1,sd=1)
+        y <- y + intcpt
+      }
+      
     }else if (geetype == "binomial"){
       
+      eta <- x[,true_set] %*% beta
+      if(intercept) {
+        intcpt <- rnorm(1,mean=1,sd=1)
+        eta <- eta + intcpt
+      }
+      prob <- exp(eta)/(1+exp(eta))
+      y <- rep(NA,n)
       
+      if (corstr == "independence"){
+        
+        for (i in 1:n){
+          y[i] <- rbinom(1,1,prob=prob[i])
+        }
+        
+      }else if (corstr == "exchangeable"){
+        
+        for (i in 1:n0){
+          
+          mu <- prob[id.vect==i]
+          y[id.vect==i] <- binsimuexch(mu,rhogee)
+          
+        }
+        
+      }else if (corstr == "AR-1"){
+        
+        for (i in 1:n0){
+          
+          mu <- prob[id.vect==i]
+          y[id.vect==i] <- binsimuar1(mu,rhogee)
+          
+        }
+        
+      }
       
     }
     
@@ -522,6 +560,8 @@ simu <- function(n = 100,
                 id=id.vect,
                 beta=betavec,
                 idx=true_set)
+    
+    if (intercept) ret$intercept=intcpt
     
   }
   

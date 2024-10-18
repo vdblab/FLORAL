@@ -56,7 +56,7 @@ simu(
 
 \item{corstr}{If \code{model} is "gee", \code{corstr} is the working correlation structure. Now support "independence", "exchangeable", and "AR-1".}
 
-\item{sdvec}{If \code{model} is "gee", \code{sdvec} is the vector of standard deviations of each outcome variable.}
+\item{sdvec}{If \code{model} is "gee" and \code{geetype} is "gaussian", \code{sdvec} is the vector of standard deviations of each outcome variable.}
 
 \item{rhogee}{If \code{model} is "gee", \code{rhogee} is the correlation parameter between longitudinal outcomes under the selected working correlation structure.}
 

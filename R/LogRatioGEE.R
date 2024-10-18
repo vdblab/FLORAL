@@ -27,9 +27,9 @@ LogRatioGEE <- function(x,
   if (family == "gaussian"){
     
     if (a > 0){
-      lambda0 <- max(abs(t(scale(y)) %*% x))/(min(a,1)*nrow(x))
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(min(a,1)*nrow(x))*100
     }else if (a == 0){
-      lambda0 <- max(abs(t(scale(y)) %*% x))/(1e-3*nrow(x))
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(1e-3*nrow(x))*100
     }
     
   }else if (family == "binomial"){
@@ -37,9 +37,9 @@ LogRatioGEE <- function(x,
     sfun = y-0.5
     
     if (a > 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))
+      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))*100
     }else if (a == 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))
+      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))*100
     }
     
   }
@@ -48,7 +48,7 @@ LogRatioGEE <- function(x,
   if (is.character(family)) family <- get(family)
   if (is.function(family))  family <- family()
   
-  if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
+  if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
   
   nt <- as.integer(unlist(lapply(split(id, id), "length"))) # Number of obs per subject
@@ -275,6 +275,8 @@ LogRatioGEE <- function(x,
         # idxs <- combn(which(ret$best.beta$min.mse[idxfeat]!=0),2)
         idxs <-combn(names(which(ret$best.beta$min.mse[idxfeat]!=0)),2)
         
+        if (progress) cat(paste0(ncol(idxs)," ratios selected by the lambda(min) model.\n"))
+        
         x.select.min <- matrix(NA,nrow=nrow(x),ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
           x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
@@ -289,9 +291,9 @@ LogRatioGEE <- function(x,
           if (family0 == "gaussian"){
             
             if (a > 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }else if (family0 == "binomial"){
@@ -299,15 +301,15 @@ LogRatioGEE <- function(x,
             sfun = y-0.5
             
             if (a > 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }
           
           # if (is.null(lambda.min.ratio)) 
-          lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
+          lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
           lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
           
           fullfit <- gee_fit(y,
@@ -482,6 +484,8 @@ LogRatioGEE <- function(x,
         
         idxs <-combn(names(which(ret$best.beta$add.1se[idxfeat]!=0)),2)
         
+        if (progress) cat(paste0(ncol(idxs)," ratios selected by the lambda(1se) model.\n"))
+        
         x.select.min <- matrix(NA,nrow=nrow(x),ncol=ncol(idxs))
         for (k in 1:ncol(idxs)){
           x.select.min[,k] <- x[,idxs[1,k]] - x[,idxs[2,k]]
@@ -496,9 +500,9 @@ LogRatioGEE <- function(x,
           if (family0 == "gaussian"){
             
             if (a > 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }else if (family0 == "binomial"){
@@ -506,15 +510,15 @@ LogRatioGEE <- function(x,
             sfun = y-0.5
             
             if (a > 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }
           
           # if (is.null(lambda.min.ratio)) 
-          lambda.min.ratio = ifelse(n < p, 1e-02, 1e-02)
+          lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
           lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
           
           fullfit <- gee_fit(y,
