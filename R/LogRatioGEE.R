@@ -309,7 +309,7 @@ LogRatioGEE <- function(x,
           }
           
           # if (is.null(lambda.min.ratio)) 
-          lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
+          # lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
           lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
           
           fullfit <- gee_fit(y,
@@ -518,7 +518,7 @@ LogRatioGEE <- function(x,
           }
           
           # if (is.null(lambda.min.ratio)) 
-          lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
+          # lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
           lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
           
           fullfit <- gee_fit(y,
@@ -637,7 +637,7 @@ LogRatioGEE <- function(x,
           
           betafilt <- fullfit$beta
           # betafilt[abs(betafilt) < 5e-3] = 0
-          beta_filtered[abs(beta_filtered) < 1e-3] = 0
+          betafilt[abs(betafilt) < 1e-3] = 0
           # beta_filtered[apply(beta_filtered, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
