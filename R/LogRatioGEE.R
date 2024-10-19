@@ -426,7 +426,7 @@ LogRatioGEE <- function(x,
           
           betafilt <- fullfit$beta
           betafilt[abs(betafilt) < 1e-3] = 0
-          betafilt[apply(betafilt, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
+          # betafilt[apply(betafilt, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           
@@ -638,7 +638,7 @@ LogRatioGEE <- function(x,
           betafilt <- fullfit$beta
           # betafilt[abs(betafilt) < 5e-3] = 0
           beta_filtered[abs(beta_filtered) < 1e-3] = 0
-          beta_filtered[apply(beta_filtered, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
+          # beta_filtered[apply(beta_filtered, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           # idxs <- idxs[,which(betafilt[,idx.1se]!=0)]
