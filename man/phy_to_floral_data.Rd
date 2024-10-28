@@ -19,3 +19,11 @@ list
 \description{
 Create data input list from phyloseq object
 }
+\examples{
+data(GlobalPatterns)
+# add a covariate
+sample_data(GlobalPatterns)$test <- rep(c(1, 0), nsamples(GlobalPatterns)/2)
+GlobalPatterns <- tax_glom(GlobalPatterns, "Family")
+dat <- phy_to_floral_data(GlobalPatterns, y = "test", covariates = c("SampleType"))
+res <- FLORAL(x = dat$xcount, y=dat$y, ncov =dat$ncov, family = "Gaussian")
+}

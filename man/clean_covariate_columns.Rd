@@ -14,7 +14,16 @@ clean_covariate_columns(df, cols, drop_first = TRUE)
 
 \item{drop_first}{default TRUE; drop first level of encoding for 1-hot}
 }
+\value{
+dataframe of recoded covariates
+}
 \description{
 Clean covariate Columns
 .This converts categorical data to 1-hot encoded columns, and retains numeric column
+}
+\examples{
+df = data.frame(x=c("A", "B","C", "A", "B"))
+clean_covariate_columns(df,cols="x")
+clean_covariate_columns(df,cols="x", drop_first=FALSE)
+
 }
