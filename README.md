@@ -19,8 +19,8 @@ proposed method adapts the augmented Lagrangian algorithm for a zero-sum
 constraint optimization problem while enabling a two-stage screening
 process for extended false-positive control.
 
-The associated preprint for `FLORAL` is available on
-[bioRxiv](https://www.biorxiv.org/content/10.1101/2023.05.02.538599).
+The associated article for `FLORAL` is available on
+[Cell Reports Methods](https://www.cell.com/cell-reports-methods/fulltext/S2667-2375(24)00289-3).
 
 ## System requirements and installation
 
@@ -178,6 +178,5 @@ you to all contributors!
 
 Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O,
 Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink
-MRM, Enhanced Feature Selection for Microbiome Data using FLORAL:
-Scalable Log-ratio Lasso Regression, bioRxiv 2023.05.02.538599; doi:
-<https://doi.org/10.1101/2023.05.02.538599>.
+MRM, Scalable log-ratio lasso regression for enhanced microbial feature selection with FLORAL, Cell Reports Methods (2024), 100899; doi:
+<https://doi.org/10.1016/j.crmeth.2024.100899>.
