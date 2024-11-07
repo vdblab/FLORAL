@@ -1,10 +1,10 @@
 pandoc: 3.1.11
-pkgdown: 2.1.0
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles:
   Using-FLORAL-for-Microbiome-Analysis: Using-FLORAL-for-Microbiome-Analysis.html
   Using-FLORAL-for-survival-models-with-longitudinal-microbiome-data: Using-FLORAL-for-survival-models-with-longitudinal-microbiome-data.html
-last_built: 2024-08-20T03:58Z
+last_built: 2024-11-07T18:59Z
 urls:
   reference: https://vdblab.github.io/FLORAL/reference
   article: https://vdblab.github.io/FLORAL/articles
