@@ -12,6 +12,7 @@ LogRatioGEE <- function(x,
                         wcov, # not yet (seems fine now)
                         a=1, # not yet finished development (seems fine now)
                         mu=1e6,
+                        pfilter=0,
                         ncv=5,
                         foldid=NULL,
                         step2=FALSE, # not yet
@@ -27,9 +28,9 @@ LogRatioGEE <- function(x,
   if (family == "gaussian"){
     
     if (a > 0){
-      lambda0 <- max(abs(t(scale(y)) %*% x))/(min(a,1)*nrow(x))*100
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(min(a,1)*nrow(x))*1
     }else if (a == 0){
-      lambda0 <- max(abs(t(scale(y)) %*% x))/(1e-3*nrow(x))*100
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(1e-3*nrow(x))*1
     }
     
   }else if (family == "binomial"){
@@ -37,9 +38,9 @@ LogRatioGEE <- function(x,
     sfun = y-0.5
     
     if (a > 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))*100
+      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))*1
     }else if (a == 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))*100
+      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))*1
     }
     
   }
@@ -84,7 +85,14 @@ LogRatioGEE <- function(x,
   
   beta_filtered <- fullfit$beta
   beta_filtered[abs(beta_filtered) < 1e-3] = 0
-  beta_filtered[apply(beta_filtered, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
+  
+  if (ncov > 0){
+    idxfeat <- setdiff(1:nrow(beta_filtered),1:ncov)
+  }else{
+    idxfeat <- 1:nrow(beta_filtered)
+  }
+  
+  beta_filtered[idxfeat,][apply(beta_filtered[idxfeat,], 2,function(x) abs(x) < max(abs(x))*pfilter)] <- 0
   
   if (!is.null(ncv)){
     
@@ -132,6 +140,7 @@ LogRatioGEE <- function(x,
                          scalevalue=scalevalue,
                          display_progress=progress)
         
+        cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
         mufit=family$linkinv(test.x %*% cvfit$beta)
         
         #### !check
@@ -178,6 +187,7 @@ LogRatioGEE <- function(x,
                          scalevalue=scalevalue,
                          display_progress=progress)
         
+        cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
         mufit=family$linkinv(test.x %*% cvfit$beta)
         apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
         
@@ -291,9 +301,9 @@ LogRatioGEE <- function(x,
           if (family0 == "gaussian"){
             
             if (a > 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
             }else if (a == 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
             }
             
           }else if (family0 == "binomial"){
@@ -301,9 +311,9 @@ LogRatioGEE <- function(x,
             sfun = y-0.5
             
             if (a > 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
             }else if (a == 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
             }
             
           }
@@ -365,6 +375,7 @@ LogRatioGEE <- function(x,
                                scalevalue=scalevalue,
                                display_progress=FALSE)
               
+              cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)
               cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
               
@@ -408,6 +419,7 @@ LogRatioGEE <- function(x,
                                scalevalue=scalevalue,
                                display_progress=FALSE)
               
+              cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)
               apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
               
@@ -424,9 +436,21 @@ LogRatioGEE <- function(x,
           se.min <- se.cvmse[idx.min]
           idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
           
-          betafilt <- fullfit$beta
-          betafilt[abs(betafilt) < 1e-3] = 0
+          # betafilt <- fullfit$beta
+          # betafilt[abs(betafilt) < 1e-3] = 0
           # betafilt[apply(betafilt, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
+          
+          betafilt <- fullfit$beta
+          beta_filtered[abs(beta_filtered) < 1e-3] = 0
+          
+          if (ncov > 0){
+            idxfeat <- setdiff(1:nrow(betafilt),1:ncov)
+          }else{
+            idxfeat <- 1:nrow(betafilt)
+          }
+          
+          betafilt[idxfeat,][apply(betafilt[idxfeat,], 2,function(x) abs(x) < max(abs(x))*pfilter)] <- 0
+          
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           
@@ -500,9 +524,9 @@ LogRatioGEE <- function(x,
           if (family0 == "gaussian"){
             
             if (a > 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
             }else if (a == 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
             }
             
           }else if (family0 == "binomial"){
@@ -510,9 +534,9 @@ LogRatioGEE <- function(x,
             sfun = y-0.5
             
             if (a > 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
             }else if (a == 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
             }
             
           }
@@ -576,6 +600,7 @@ LogRatioGEE <- function(x,
                                scalevalue=scalevalue,
                                display_progress=FALSE)
               
+              cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)
               cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
               
@@ -619,6 +644,7 @@ LogRatioGEE <- function(x,
                                scalevalue=scalevalue,
                                display_progress=FALSE)
               
+              cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)
               apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
               
@@ -635,10 +661,22 @@ LogRatioGEE <- function(x,
           se.min <- se.cvmse[idx.min]
           idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
           
-          betafilt <- fullfit$beta
+          # betafilt <- fullfit$beta
           # betafilt[abs(betafilt) < 5e-3] = 0
-          betafilt[abs(betafilt) < 1e-3] = 0
-          # beta_filtered[apply(beta_filtered, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
+          # betafilt[abs(betafilt) < 1e-3] = 0
+          # betafilt[apply(betafilt, 2,function(x) abs(x) < max(abs(x))*pfilter)] <- 0
+          
+          betafilt <- fullfit$beta
+          beta_filtered[abs(beta_filtered) < 1e-3] = 0
+          
+          if (ncov > 0){
+            idxfeat <- setdiff(1:nrow(betafilt),1:ncov)
+          }else{
+            idxfeat <- 1:nrow(betafilt)
+          }
+          
+          betafilt[idxfeat,][apply(betafilt[idxfeat,], 2,function(x) abs(x) < max(abs(x))*pfilter)] <- 0
+          
           
           # x.select.min <- x.select.min[,which(betafilt[,idx.1se]!=0)]
           # idxs <- idxs[,which(betafilt[,idx.1se]!=0)]

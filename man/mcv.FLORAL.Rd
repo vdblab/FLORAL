@@ -25,6 +25,7 @@ mcv.FLORAL(
   ncov.lambda.weight = 0,
   a = 1,
   mu = 1,
+  pfilter = 0,
   maxiter = 100,
   ncv = 5,
   intercept = FALSE,
@@ -73,6 +74,8 @@ mcv.FLORAL(
 \item{a}{A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.}
 
 \item{mu}{Value of penalty for the augmented Lagrangian}
+
+\item{pfilter}{A pre-specified threshold to force coefficients with absolute values less than pfilter times the maximum value of absolute coefficient as zeros in the GEE model. Default is zero, such that all coefficients will be reported.}
 
 \item{maxiter}{Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.}
 

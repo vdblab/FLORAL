@@ -123,7 +123,7 @@ simu <- function(n = 100,
   
   # if (method == "manual"){
   
-  if (model != "timedep"){
+  if (!(model %in% c("timedep","gee"))){
     
     sigma <- rho^(as.matrix(dist(1:p)))
     diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
@@ -155,7 +155,7 @@ simu <- function(n = 100,
       # Mu <- t(mu + t(slopes))
       
       slopes <- rep(0:1,(weak+strong)/2)*timedep_slope
-      Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:9,slopes)))
+      Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:(m-1),slopes)))
       
       sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
       Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*timedep_cor))
@@ -163,7 +163,7 @@ simu <- function(n = 100,
       # sigma_offdiag <- diag(strong+weak)*0.8
       # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
       
-      x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
+      x1 <- matrix(rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
       x[id.vect==i,true_set] <- x1
       
       if (pct.sparsity > 0){
