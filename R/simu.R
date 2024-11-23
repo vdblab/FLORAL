@@ -482,6 +482,8 @@ simu <- function(n = 100,
     
   }else if (model == "gee"){
     
+    tvec <- rep(0:(m-1),n0)
+    
     if (geetype == "gaussian"){
       
       if (corstr == "independence"){
@@ -509,7 +511,7 @@ simu <- function(n = 100,
       error <- rmvnorm(n0, mean = rep(0,m),SIGMA)
       
       # form continuous longitudinal outcomes
-      y <- x[,true_set] %*% beta + as.vector(t(error))
+      y <- tvec*2.5 + x[,true_set] %*% beta + as.vector(t(error))
       
       if(intercept) {
         intcpt <- rnorm(1,mean=1,sd=1)
@@ -558,6 +560,7 @@ simu <- function(n = 100,
                 x=xobs,
                 y=y,
                 id=id.vect,
+                tvec=tvec,
                 beta=betavec,
                 idx=true_set)
     

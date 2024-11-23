@@ -28,9 +28,9 @@ LogRatioGEE <- function(x,
   if (family == "gaussian"){
     
     if (a > 0){
-      lambda0 <- max(abs(t(scale(y)) %*% x))/(min(a,1)*nrow(x))*1
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(min(a,1)*nrow(x))*100
     }else if (a == 0){
-      lambda0 <- max(abs(t(scale(y)) %*% x))/(1e-3*nrow(x))*1
+      lambda0 <- max(abs(t(scale(y)) %*% x))/(1e-3*nrow(x))*100
     }
     
   }else if (family == "binomial"){
@@ -38,9 +38,9 @@ LogRatioGEE <- function(x,
     sfun = y-0.5
     
     if (a > 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))*1
+      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))*100
     }else if (a == 0){
-      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))*1
+      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))*100
     }
     
   }
@@ -301,9 +301,9 @@ LogRatioGEE <- function(x,
           if (family0 == "gaussian"){
             
             if (a > 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }else if (family0 == "binomial"){
@@ -311,9 +311,9 @@ LogRatioGEE <- function(x,
             sfun = y-0.5
             
             if (a > 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }
@@ -524,9 +524,9 @@ LogRatioGEE <- function(x,
           if (family0 == "gaussian"){
             
             if (a > 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(scale(y)) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }else if (family0 == "binomial"){
@@ -534,9 +534,9 @@ LogRatioGEE <- function(x,
             sfun = y-0.5
             
             if (a > 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
-              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*1
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
             
           }
