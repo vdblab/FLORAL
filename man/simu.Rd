@@ -21,6 +21,7 @@ simu(
   corstr = "exchangeable",
   sdvec = NULL,
   rhogee = 0.8,
+  geeslope = 2.5,
   longitudinal_stability = TRUE,
   ncov = 0,
   betacov = 0,
@@ -59,6 +60,8 @@ simu(
 \item{sdvec}{If \code{model} is "gee" and \code{geetype} is "gaussian", \code{sdvec} is the vector of standard deviations of each outcome variable.}
 
 \item{rhogee}{If \code{model} is "gee", \code{rhogee} is the correlation parameter between longitudinal outcomes under the selected working correlation structure.}
+
+\item{geeslope}{If \code{model} is "gee", \code{geeslope} is the linear time effect.}
 
 \item{longitudinal_stability}{If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).}
 

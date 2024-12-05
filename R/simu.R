@@ -17,6 +17,7 @@
 #' @param corstr If \code{model} is "gee", \code{corstr} is the working correlation structure. Now support "independence", "exchangeable", and "AR-1".
 #' @param sdvec If \code{model} is "gee" and \code{geetype} is "gaussian", \code{sdvec} is the vector of standard deviations of each outcome variable.
 #' @param rhogee If \code{model} is "gee", \code{rhogee} is the correlation parameter between longitudinal outcomes under the selected working correlation structure.
+#' @param geeslope If \code{model} is "gee", \code{geeslope} is the linear time effect.
 #' @param longitudinal_stability If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).
 #' @param ncov Number of covariates that are not compositional features.
 #' @param betacov Coefficients corresponding to the covariates that are not compositional features.
@@ -58,6 +59,7 @@ simu <- function(n = 100,
                  corstr="exchangeable",
                  sdvec=NULL,
                  rhogee=0.8,
+                 geeslope=2.5,
                  longitudinal_stability=TRUE,
                  ncov=0,
                  betacov=0,
@@ -511,7 +513,7 @@ simu <- function(n = 100,
       error <- rmvnorm(n0, mean = rep(0,m),SIGMA)
       
       # form continuous longitudinal outcomes
-      y <- tvec*2.5 + x[,true_set] %*% beta + as.vector(t(error))
+      y <- tvec*geeslope + x[,true_set] %*% beta + as.vector(t(error))
       
       if(intercept) {
         intcpt <- rnorm(1,mean=1,sd=1)
@@ -520,7 +522,7 @@ simu <- function(n = 100,
       
     }else if (geetype == "binomial"){
       
-      eta <- x[,true_set] %*% beta
+      eta <- tvec*geeslope + x[,true_set] %*% beta
       if(intercept) {
         intcpt <- rnorm(1,mean=1,sd=1)
         eta <- eta + intcpt
