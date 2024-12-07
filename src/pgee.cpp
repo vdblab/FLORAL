@@ -412,6 +412,8 @@ Rcpp::List gee_fit(arma::vec y,
   Progress prog(len, display_progress);
   
   double diff; 
+  arma::vec iters = vec(len);
+  arma::vec diffs = vec(len);
   
   for (int i=0; i<len; ++i){
     
@@ -593,6 +595,8 @@ Rcpp::List gee_fit(arma::vec y,
     }
     
     beta_mat.col(i) = betai;
+    iters(i) = k;
+    diffs(i) = diff;
     
   }
   
@@ -600,6 +604,8 @@ Rcpp::List gee_fit(arma::vec y,
   
   ret["beta"] = beta_mat;
   ret["lambda"] = lambda;
+  ret["iters"] = iters;
+  ret["tol"] = diffs;
   
   return ret;
   

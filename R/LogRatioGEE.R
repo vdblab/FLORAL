@@ -214,6 +214,8 @@ LogRatioGEE <- function(x,
     
     ret <- list(beta=beta_filtered,
                 beta_unfiltered = fullfit$beta,
+                tol=fullfit$tol,
+                iters=fullfit$iters,
                 lambda=lambda,
                 a=a,
                 cvmse.mean=mean.cvmse,
@@ -729,6 +731,8 @@ LogRatioGEE <- function(x,
     
     ret <- list(beta=beta_filtered,
                 beta_unfiltered = fullfit$beta,
+                tol=fullfit$tol,
+                iters=fullfit$iters,
                 lambda=lambda,
                 a=a
     )
