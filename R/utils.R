@@ -1,17 +1,16 @@
+# #' Clean covariate Columns
+# #'.This converts categorical data to 1-hot encoded columns, and retains numeric column
+# #' @param df Data.frame of covariates for this dataset
+# #' @param cols columns to clean; columns not mentioned here are dropped
+# #' @param drop_first default TRUE; drop first level of encoding for 1-hot
+# #'
+# #' @return `data.frame` of recoded covariates 
+# #'
+# #' @examples
+# #' df = data.frame(x=c("A", "B","C", "A", "B"))
+# #' clean_covariate_columns(df,cols="x")
+# #' clean_covariate_columns(df,cols="x", drop_first=FALSE)
 
-#' Clean covariate Columns
-#'.This converts categorical data to 1-hot encoded columns, and retains numeric column
-#' @param df Data.frame of covariates for this dataset
-#' @param cols columns to clean; columns not mentioned here are dropped
-#' @param drop_first default TRUE; drop first level of encoding for 1-hot
-#'
-#' @return dataframe of recoded covariates 
-#'
-#' @examples
-#' df = data.frame(x=c("A", "B","C", "A", "B"))
-#' clean_covariate_columns(df,cols="x")
-#' clean_covariate_columns(df,cols="x", drop_first=FALSE)
-#'
 clean_covariate_columns <- function(df, cols, drop_first = TRUE){
   result <- data.frame(placeholder = character(nrow(df)))
   for (col in cols) {
@@ -61,7 +60,7 @@ clean_covariate_columns <- function(df, cols, drop_first = TRUE){
 #' sample_data(GlobalPatterns)$test <- rep(c(1, 0), nsamples(GlobalPatterns)/2)
 #' GlobalPatterns <- tax_glom(GlobalPatterns, "Family")
 #' dat <- phy_to_floral_data(GlobalPatterns, y = "test", covariates = c("SampleType"))
-#' res <- FLORAL(x = dat$xcount, y=dat$y, ncov =dat$ncov, family = "Gaussian")
+#' # res <- FLORAL(x = dat$xcount, y=dat$y, ncov =dat$ncov, family = "binomial")
 
 phy_to_floral_data<- function(phy, y=NULL, covariates=NULL){
   

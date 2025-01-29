@@ -1,6 +1,5 @@
 ---
 title: "Using FLORAL with phyloseq data"
-date: "2024-10-25"
 output:
   rmarkdown::html_vignette:
     md_extensions: [ 
