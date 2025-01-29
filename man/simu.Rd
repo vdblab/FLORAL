@@ -16,6 +16,12 @@ simu(
   rho = 0,
   timedep_slope = NULL,
   timedep_cor = NULL,
+  geetype = "gaussian",
+  m = 4,
+  corstr = "exchangeable",
+  sdvec = NULL,
+  rhogee = 0.8,
+  geeslope = 2.5,
   longitudinal_stability = TRUE,
   ncov = 0,
   betacov = 0,
@@ -27,7 +33,7 @@ simu(
 
 \item{p}{An integer of number of features (taxa).}
 
-\item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", or "timedep" (survival endpoint with time-dependent features).}
+\item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", "gee" (scalar outcome with time-dependent features), or "timedep" (survival endpoint with time-dependent features).}
 
 \item{weak}{Number of features with \code{weak} effect size.}
 
@@ -44,6 +50,18 @@ simu(
 \item{timedep_slope}{If \code{model} is "timedep", this parameter specifies the slope for the feature trajectories. Please refer to the Simulation section of the manuscript for more details.}
 
 \item{timedep_cor}{If \code{model} is "timedep", this parameter specifies the sample-wise correlations between longitudinal features. Please refer to the Simulation section of the manuscript for more details.}
+
+\item{geetype}{If \code{model} is "gee", \code{geetype} is the type of GEE outcomes. Now support "gaussian" and "binomial".}
+
+\item{m}{If \code{model} is "gee", \code{m} is the number of repeated measurements per subject.}
+
+\item{corstr}{If \code{model} is "gee", \code{corstr} is the working correlation structure. Now support "independence", "exchangeable", and "AR-1".}
+
+\item{sdvec}{If \code{model} is "gee" and \code{geetype} is "gaussian", \code{sdvec} is the vector of standard deviations of each outcome variable.}
+
+\item{rhogee}{If \code{model} is "gee", \code{rhogee} is the correlation parameter between longitudinal outcomes under the selected working correlation structure.}
+
+\item{geeslope}{If \code{model} is "gee", \code{geeslope} is the linear time effect.}
 
 \item{longitudinal_stability}{If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).}
 

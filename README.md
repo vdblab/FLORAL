@@ -1,4 +1,3 @@
-
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates <img src="man/figures/logo.png" align="right" height="139" />
