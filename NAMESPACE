@@ -3,6 +3,7 @@
 export(FLORAL)
 export(a.FLORAL)
 export(mcv.FLORAL)
+export(phy_to_floral_data)
 export(simu)
 import(Rcpp)
 import(doParallel)
