@@ -18,6 +18,7 @@
 #' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
 #' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
 #' @param mu Value of penalty for the augmented Lagrangian
+#' @param pfilter A pre-specified threshold to force coefficients with absolute values less than pfilter times the maximum value of absolute coefficient as zeros in the GEE model. Default is zero, such that all coefficients will be reported.
 #' @param maxiter Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.
 #' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
 #' @param ncore Number of cores for parallel computing for cross-validation. Default is 1.
@@ -78,6 +79,7 @@ FLORAL <- function(x,
                    ncov.lambda.weight=0,
                    a=1,
                    mu=1,
+                   pfilter=0,
                    maxiter=100,
                    ncv=5,
                    ncore=1,
@@ -147,6 +149,7 @@ FLORAL <- function(x,
                            ncov.lambda.weight,
                            a,
                            mu,
+                           pfilter,
                            ncv,
                            foldid,
                            step2,
@@ -209,6 +212,7 @@ FLORAL <- function(x,
                            ncov.lambda.weight,
                            a,
                            mu,
+                           pfilter,
                            ncv,
                            foldid,
                            step2,
@@ -525,6 +529,7 @@ FLORAL <- function(x,
 #' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
 #' @param a A scalar between 0 and 1: \code{a} is the weight for lasso penalty while \code{1-a} is the weight for ridge penalty.
 #' @param mu Value of penalty for the augmented Lagrangian
+#' @param pfilter A pre-specified threshold to force coefficients with absolute values less than pfilter times the maximum value of absolute coefficient as zeros in the GEE model. Default is zero, such that all coefficients will be reported.
 #' @param maxiter Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.
 #' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
@@ -572,6 +577,7 @@ mcv.FLORAL <- function(mcv=10,
                        ncov.lambda.weight=0,
                        a=1,
                        mu=1,
+                       pfilter=0,
                        maxiter=100,
                        ncv=5,
                        intercept=FALSE,
@@ -616,6 +622,7 @@ mcv.FLORAL <- function(mcv=10,
                                   ncov.lambda.weight,
                                   a,
                                   mu,
+                                  pfilter,
                                   maxiter,
                                   ncv,
                                   ncore=1,
@@ -698,6 +705,7 @@ mcv.FLORAL <- function(mcv=10,
                ncov.lambda.weight,
                a,
                mu,
+               pfilter,
                maxiter,
                ncv,
                ncore=1,
@@ -895,6 +903,7 @@ mcv.FLORAL <- function(mcv=10,
 #' @param lambda.min.ratio Ratio between the minimum and maximum choice of lambda. Default is \code{NULL}, where the ratio is chosen as 1e-2.
 #' @param ncov.lambda.weight Weight of the penalty lambda applied to the first \code{ncov} covariates. Default is 0 such that the first \code{ncov} covariates are not penalized.
 #' @param mu Value of penalty for the augmented Lagrangian
+#' @param pfilter A pre-specified threshold to force coefficients with absolute values less than pfilter times the maximum value of absolute coefficient as zeros in the GEE model. Default is zero, such that all coefficients will be reported.
 #' @param maxiter Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.
 #' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
@@ -940,6 +949,7 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                      lambda.min.ratio=NULL,
                      ncov.lambda.weight=0,
                      mu=1,
+                     pfilter=0,
                      maxiter=100,
                      ncv=5,
                      intercept=FALSE,
@@ -989,6 +999,7 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                       ncov.lambda.weight,
                       a = a[i],
                       mu,
+                      pfilter,
                       maxiter,
                       ncv,
                       ncore=1,
@@ -1049,6 +1060,7 @@ a.FLORAL <- function(a=c(0.1,0.5,1),
                      ncov.lambda.weight,
                      a = a[1],
                      mu,
+                     pfilter,
                      maxiter,
                      ncv,
                      ncore=1,

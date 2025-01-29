@@ -17,6 +17,7 @@
 #' @param corstr If \code{model} is "gee", \code{corstr} is the working correlation structure. Now support "independence", "exchangeable", and "AR-1".
 #' @param sdvec If \code{model} is "gee" and \code{geetype} is "gaussian", \code{sdvec} is the vector of standard deviations of each outcome variable.
 #' @param rhogee If \code{model} is "gee", \code{rhogee} is the correlation parameter between longitudinal outcomes under the selected working correlation structure.
+#' @param geeslope If \code{model} is "gee", \code{geeslope} is the linear time effect.
 #' @param longitudinal_stability If \code{model} is "timedep", this is a binary indicator which determines whether the trajectories are more stable (\code{TRUE}) or more volatile (\code{FALSE}).
 #' @param ncov Number of covariates that are not compositional features.
 #' @param betacov Coefficients corresponding to the covariates that are not compositional features.
@@ -58,6 +59,7 @@ simu <- function(n = 100,
                  corstr="exchangeable",
                  sdvec=NULL,
                  rhogee=0.8,
+                 geeslope=2.5,
                  longitudinal_stability=TRUE,
                  ncov=0,
                  betacov=0,
@@ -123,7 +125,7 @@ simu <- function(n = 100,
   
   # if (method == "manual"){
   
-  if (model != "timedep"){
+  if (!(model %in% c("timedep","gee"))){
     
     sigma <- rho^(as.matrix(dist(1:p)))
     diag(sigma) <- c(rep(log(p)/2,3),1,rep(log(p)/2,2),1,log(p)/2,rep(1,p-8))
@@ -155,7 +157,7 @@ simu <- function(n = 100,
       # Mu <- t(mu + t(slopes))
       
       slopes <- rep(0:1,(weak+strong)/2)*timedep_slope
-      Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:9,slopes)))
+      Mu <- t(c(rep(log(p),3),0,rep(log(p),2),0,log(p),rep(0,2)) + t(outer(0:(m-1),slopes)))
       
       sigma1 <- rho^(as.matrix(dist(1:(weak+strong))))
       Sigma <- (diag(m) %x% sigma1) + ((matrix(1,nrow=m,ncol=m) - diag(m)) %x% (diag(strong+weak)*timedep_cor))
@@ -163,7 +165,7 @@ simu <- function(n = 100,
       # sigma_offdiag <- diag(strong+weak)*0.8
       # mat_template <- matrix(1,nrow=m,ncol=m) - diag(m)
       
-      x1 <- matrix(mvtnorm::rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
+      x1 <- matrix(rmvnorm(n=1,mean=as.vector(Mu),sigma=Sigma),nrow=m,ncol=weak+strong,byrow=FALSE)
       x[id.vect==i,true_set] <- x1
       
       if (pct.sparsity > 0){
@@ -482,6 +484,8 @@ simu <- function(n = 100,
     
   }else if (model == "gee"){
     
+    tvec <- rep(0:(m-1),n0)
+    
     if (geetype == "gaussian"){
       
       if (corstr == "independence"){
@@ -509,7 +513,7 @@ simu <- function(n = 100,
       error <- rmvnorm(n0, mean = rep(0,m),SIGMA)
       
       # form continuous longitudinal outcomes
-      y <- x[,true_set] %*% beta + as.vector(t(error))
+      y <- tvec*geeslope + x[,true_set] %*% beta + as.vector(t(error))
       
       if(intercept) {
         intcpt <- rnorm(1,mean=1,sd=1)
@@ -518,7 +522,7 @@ simu <- function(n = 100,
       
     }else if (geetype == "binomial"){
       
-      eta <- x[,true_set] %*% beta
+      eta <- tvec*geeslope + x[,true_set] %*% beta
       if(intercept) {
         intcpt <- rnorm(1,mean=1,sd=1)
         eta <- eta + intcpt
@@ -558,6 +562,7 @@ simu <- function(n = 100,
                 x=xobs,
                 y=y,
                 id=id.vect,
+                tvec=tvec,
                 beta=betavec,
                 idx=true_set)
     
