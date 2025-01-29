@@ -42,8 +42,9 @@ Rcpp::List gee_NR(double N, // Number of subjects
   index.subvec(1,N-1) = aindex.subvec(0,N-2);
   
   arma::vec eta = X * beta_new;
-  sexp linkinveta = linkinv(eta);
-  arma::vec mu = linkinveta;
+  // sexp linkinveta = linkinv(eta);
+  // arma::vec mu = linkinveta;
+  arma::vec mu = Rcpp::as<arma::vec>(linkinv(eta));
   
   // Rcpp::Rcout << "mu: " << mu << endl;
   
@@ -146,11 +147,13 @@ Rcpp::List gee_NR(double N, // Number of subjects
   arma::mat sum401; //<-matrix(0,nx,nx)     //naive variance:H
   sum401.zeros(nx,nx);
   
-  sexp variancemu = variance(mu);
-  arma::vec varimu = variancemu;
+  // sexp variancemu = variance(mu);
+  // arma::vec varimu = variancemu;
+  arma::vec varimu = Rcpp::as<arma::vec>(variance(mu));
   
-  sexp muetaeta = mueta(eta);
-  arma::vec mee = muetaeta;
+  // sexp muetaeta = mueta(eta);
+  // arma::vec mee = muetaeta;
+  arma::vec mee = Rcpp::as<arma::vec>(mueta(eta));
   
   // Rcpp::Rcout << "Flag3" << endl;
   
@@ -243,11 +246,14 @@ Rcpp::List gee_cor(double N, // Number of subjects
   // Rcpp::Rcout << "Flag1" << endl;
   
   arma::vec eta = X * beta_new;
-  sexp linkinveta = linkinv(eta);
-  arma::vec mu = linkinveta;
+  // sexp linkinveta = linkinv(eta);
+  // arma::vec mu = linkinveta;
+  arma::vec mu = Rcpp::as<arma::vec>(linkinv(eta));
   
-  sexp variancemu = variance(mu);
-  arma::vec varimu = variancemu;
+  // sexp variancemu = variance(mu);
+  // arma::vec varimu = variancemu;
+  arma::vec varimu = Rcpp::as<arma::vec>(variance(mu));
+  
   arma::vec sd = pow(varimu,0.5);
   arma::vec res = (y-mu)/sd;
   
