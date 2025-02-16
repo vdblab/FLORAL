@@ -135,6 +135,8 @@ FLORAL <- function(x,
           x <- x0
         }
         
+        id <- as.numeric(as.factor(id))
+        
         res <- LogRatioGEE(x,
                            y,
                            id,
@@ -197,6 +199,8 @@ FLORAL <- function(x,
           }
           x <- x0
         }
+        
+        id <- as.numeric(as.factor(id))
         
         res <- LogRatioGEE(x,
                            y,

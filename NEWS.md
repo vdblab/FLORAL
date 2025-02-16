@@ -2,7 +2,9 @@
 
 * Adding a function `phy_to_floral_data` which helps convert a `phyloseq` object to be compatible with `FLORAL`.
 
-* Adding a corresponding vignette for `phy_to_floral_data`
+* Adding a corresponding vignette for `phy_to_floral_data`.
+
+* Introducing the new GEE model for longitudinal continuous and binary outcomes.
 
 # FLORAL 0.3.0
 
