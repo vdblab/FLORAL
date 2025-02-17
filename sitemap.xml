@@ -4,6 +4,7 @@
 <url><loc>https://vdblab.github.io/FLORAL/LICENSE-text.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/articles/Using-FLORAL-for-Microbiome-Analysis.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/articles/Using-FLORAL-for-survival-models-with-longitudinal-microbiome-data.html</loc></url>
+<url><loc>https://vdblab.github.io/FLORAL/articles/Using-FLORAL-with-phyloseq.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/articles/index.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/authors.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/index.html</loc></url>
@@ -12,6 +13,7 @@
 <url><loc>https://vdblab.github.io/FLORAL/reference/a.FLORAL.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/reference/index.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/reference/mcv.FLORAL.html</loc></url>
+<url><loc>https://vdblab.github.io/FLORAL/reference/phy_to_floral_data.html</loc></url>
 <url><loc>https://vdblab.github.io/FLORAL/reference/simu.html</loc></url>
 </urlset>
 

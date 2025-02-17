@@ -4,7 +4,8 @@ pkgdown_sha: ~
 articles:
   Using-FLORAL-for-Microbiome-Analysis: Using-FLORAL-for-Microbiome-Analysis.html
   Using-FLORAL-for-survival-models-with-longitudinal-microbiome-data: Using-FLORAL-for-survival-models-with-longitudinal-microbiome-data.html
-last_built: 2024-11-07T18:59Z
+  Using-FLORAL-with-phyloseq: Using-FLORAL-with-phyloseq.html
+last_built: 2025-02-17T02:45Z
 urls:
   reference: https://vdblab.github.io/FLORAL/reference
   article: https://vdblab.github.io/FLORAL/articles
