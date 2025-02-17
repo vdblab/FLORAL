@@ -55,25 +55,28 @@ clean_covariate_columns <- function(df, cols, drop_first = TRUE){
 #' @export
 #'
 #' @examples
+#' library(phyloseq)
 #' data(GlobalPatterns)
 #' # add a covariate
 #' sample_data(GlobalPatterns)$test <- rep(c(1, 0), nsamples(GlobalPatterns)/2)
-#' GlobalPatterns <- tax_glom(GlobalPatterns, "Family")
+#' # GlobalPatterns <- tax_glom(GlobalPatterns, "Phylum")
 #' dat <- phy_to_floral_data(GlobalPatterns, y = "test", covariates = c("SampleType"))
-#' # res <- FLORAL(x = dat$xcount, y=dat$y, ncov =dat$ncov, family = "binomial")
+#' # res <- FLORAL(x = dat$xcount, y=dat$y, ncov=dat$ncov, family = "binomial", ncv=NULL)
+#' 
+#' @import phyloseq
 
 phy_to_floral_data<- function(phy, y=NULL, covariates=NULL){
   
-  xcount = phyloseq::otu_table(phy) 
-  if (nrow(xcount) != phyloseq::nsamples(phy)){
+  xcount = otu_table(phy) 
+  if (nrow(xcount) != nsamples(phy)){
     # support both phyloseq objects with taxa as rows or columns
     xcount = t(xcount)
   }
-  if(any(rownames(xcount) != phyloseq::sample_names(phy))){
+  if(any(rownames(xcount) != sample_names(phy))){
     stop("malformed phyloseq object; columns of otu_table do not match sample IDs")
   }
   ncov = 0
-  sampdat = phyloseq::sample_data(phy) %>% data.frame() 
+  sampdat = sample_data(phy) %>% data.frame() 
   yres = sampdat %>% pull(all_of(y))
   if (!missing(covariates)){
     cov_df <- sampdat %>% select(all_of(covariates))

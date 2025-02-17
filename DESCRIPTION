@@ -37,7 +37,8 @@ Imports:
   doParallel,
   doRNG,
   foreach,
-  msm
+  msm,
+  phyloseq
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress, ast2ast
 RoxygenNote: 7.3.2
 Encoding: UTF-8
@@ -47,7 +48,8 @@ Suggests:
     rmarkdown,
     spelling,
     testthat (>= 3.0.0),
-    patchwork
+    patchwork,
+    tidyverse
 Language: en-US
 Config/testthat/edition: 3
 VignetteBuilder: knitr

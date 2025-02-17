@@ -21,16 +21,16 @@ library(phyloseq)
 
 [Phyloseq](http://joey711.github.io/phyloseq/) is a popular package for working with microbiome data.  Here we show how to use the `phy_to_floral_data` helper function to convert phyloseq data into a format accepted by FLORAL.
 
-
 The following code downloads data described in [this paper](https://www.nature.com/articles/s41597-021-00860-8) and turns it into a phyloseq object.  The tax_glom step here takes some time, and can be replaced with [`speedyseq::tax_glom`](https://github.com/mikemc/speedyseq) for better performace.
 ```{r}
 #this file has duplicate rows, and has multiple rows per pool
 samples <- read.csv("https://figshare.com/ndownloader/files/33076496") %>% distinct() %>% 
   select(-Pool, -Run, -ShotgunBatchID) %>% distinct()
+samples <- samples[1:100,] # Using the first 100 samples only.
 counts <- read.csv("https://figshare.com/ndownloader/files/26393788") 
+counts <- counts |> 
+  filter(SampleID %in% samples$SampleID)
 taxonomy <- read.csv("https://figshare.com/ndownloader/files/26770997")
-
-
 
 phy <- phyloseq(
   sample_data(samples %>% column_to_rownames("SampleID")),
@@ -39,7 +39,6 @@ phy <- phyloseq(
 ) %>%  subset_samples(DayRelativeToNearestHCT > -30 & DayRelativeToNearestHCT < 0) %>% 
   tax_glom("Genus")
 ```
-
 
 Next, we convert that phyloseq object into a list of results to be used by FLORAL; we have to specify the main outcome of interest as `y`, and any metadata columns (from `sample_data(phy)`) to use as covariates.  Note that the analysis described here is just an example for using the function; this
 
@@ -51,6 +50,5 @@ dat <- FLORAL::phy_to_floral_data(phy, covariates=c("Consistency"), y = "DayRela
 The resulting list has named entities for the main arguments to FLORAL:
 
 ```{r}
-res <- FLORAL::FLORAL(y = dat$y, x = dat$xcount, ncov = dat$ncov, family = "gaussian")
-
+res <- FLORAL::FLORAL(y = dat$y, x = dat$xcount, ncov = dat$ncov, family = "gaussian", ncv=NULL)
 ```

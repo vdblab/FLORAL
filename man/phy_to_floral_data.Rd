@@ -20,10 +20,12 @@ list
 Create data input list from phyloseq object
 }
 \examples{
+library(phyloseq)
 data(GlobalPatterns)
 # add a covariate
 sample_data(GlobalPatterns)$test <- rep(c(1, 0), nsamples(GlobalPatterns)/2)
-GlobalPatterns <- tax_glom(GlobalPatterns, "Family")
+# GlobalPatterns <- tax_glom(GlobalPatterns, "Phylum")
 dat <- phy_to_floral_data(GlobalPatterns, y = "test", covariates = c("SampleType"))
-# res <- FLORAL(x = dat$xcount, y=dat$y, ncov =dat$ncov, family = "binomial")
+# res <- FLORAL(x = dat$xcount, y=dat$y, ncov=dat$ncov, family = "binomial", ncv=NULL)
+
 }
