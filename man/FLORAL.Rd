@@ -113,6 +113,12 @@ fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=2,progress=FALSE,step2=TRUE
 # fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d,type="mstate"),failcode=1,
 #               family="finegray",progress=FALSE,step2=FALSE)
 
+# Longitudinal continuous outcome
+#  dat <- simu(n=50,p=30,model="gee",geetype="gaussian",m=3,corstr="exchangeable",sdvec=rep(1,3))
+#  fit <- FLORAL(x=cbind(dat$tvec, dat$xcount),y=dat$y,id=dat$id,family="gaussian",
+#                ncov=1,longitudinal = TRUE,corstr = "exchangeable",lambda.min.ratio=1e-3,
+#                progress=FALSE,step2=FALSE)
+
 }
 \references{
 Fei T, Funnell T, Waters N, Raj SS et al. Enhanced Feature Selection for Microbiome Data using FLORAL: Scalable Log-ratio Lasso Regression bioRxiv 2023.05.02.538599.
