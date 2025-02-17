@@ -19,7 +19,7 @@ constraint optimization problem while enabling a two-stage screening
 process for extended false-positive control.
 
 The associated article for `FLORAL` is available on
-[Cell Reports Methods](https://www.cell.com/cell-reports-methods/fulltext/S2667-2375(24)00289-3).
+[Cell Reports Methods](https://doi.org/10.1016/j.crmeth.2024.100899).
 
 ## System requirements and installation
 
@@ -167,7 +167,7 @@ repository](https://github.com/vdblab/FLORAL-analysis).
 
 The `FLORAL` package is jointly managed by [MSKCC Biostatistics
 service](https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics)
-and [the Marcel van den Brink Lab](https://vandenbrinklab.org/). Please
+and [the Marcel van den Brink Lab](https://www.cityofhope.org/research/hematologic-malignancies-research-institute/marcel-van-den-brink-lab). Please
 note that the `FLORAL` project is released with a [Contributor Code of
 Conduct](https://github.com/vdblab/FLORAL/blob/master/.github/CODE_OF_CONDUCT.md).
 By contributing to this project, you agree to abide by its terms. Thank
