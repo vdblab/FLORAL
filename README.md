@@ -23,7 +23,7 @@ The associated article for `FLORAL` is available on
 
 ## System requirements and installation
 
-The current version of `FLORAL` (0.3.0) was built in R version 4.3.3. R
+The current version of `FLORAL` (0.4.0) was built in R version 4.4.2. R
 package dependencies can be found in the `DESCRIPTION` file.
 
 You can install `FLORAL` with the following code. The installation is
