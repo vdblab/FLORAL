@@ -50,5 +50,5 @@ dat <- FLORAL::phy_to_floral_data(phy, covariates=c("Consistency"), y = "DayRela
 The resulting list has named entities for the main arguments to FLORAL:
 
 ```{r}
-res <- FLORAL::FLORAL(y = dat$y, x = dat$xcount, ncov = dat$ncov, family = "gaussian", ncv=NULL)
+res <- FLORAL::FLORAL(y = dat$y, x = dat$xcount, ncov = dat$ncov, family = "gaussian", ncv=NULL, progress=FALSE)
 ```

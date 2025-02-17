@@ -167,7 +167,7 @@ repository](https://github.com/vdblab/FLORAL-analysis).
 
 The `FLORAL` package is jointly managed by [MSKCC Biostatistics
 service](https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics)
-and [the Marcel van den Brink Lab](https://www.cityofhope.org/research/hematologic-malignancies-research-institute/marcel-van-den-brink-lab). Please
+and the Marcel van den Brink Lab. Please
 note that the `FLORAL` project is released with a [Contributor Code of
 Conduct](https://github.com/vdblab/FLORAL/blob/master/.github/CODE_OF_CONDUCT.md).
 By contributing to this project, you agree to abide by its terms. Thank
