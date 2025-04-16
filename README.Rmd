@@ -24,16 +24,22 @@ knitr::opts_chunk$set(
 
 The `FLORAL` package is an open-source computational tool to perform log-ratio lasso regression modeling and compositional feature selection for continuous, binary, time-to-event, and competing risk outcomes. The proposed method adapts the augmented Lagrangian algorithm for a zero-sum constraint optimization problem while enabling a two-stage screening process for extended false-positive control.
 
-The associated preprint for `FLORAL` is available on [bioRxiv](https://www.biorxiv.org/content/10.1101/2023.05.02.538599).
+The associated article for `FLORAL` is available on [Cell Reports Methods](https://www.cell.com/cell-reports-methods/fulltext/S2667-2375(24)00289-3).
 
 ## System requirements and installation
 
-The current version of `FLORAL` (0.2.0) was built in R version 4.1.1. R package dependencies can be found in the `DESCRIPTION` file.
+The current version of `FLORAL` (0.4.0) was built in R version 4.3.3. R package dependencies can be found in the `DESCRIPTION` file.
 
 You can install `FLORAL` with the following code. The installation is typically complete within minutes.
 
 ``` r
 install.packages("FLORAL")
+```
+
+You can also install `FLORAL` using conda:
+
+``` bash
+conda install -c bioconda r-floral
 ```
 
 You can install the development version of `FLORAL` from [GitHub](https://github.com/) with:
@@ -111,4 +117,4 @@ The `FLORAL` package is jointly managed by [MSKCC Biostatistics service](https:/
 
 ## Reference
 
-Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O, Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, G&ouml;nen M, van den Brink MRM, Enhanced Feature Selection for Microbiome Data using FLORAL: Scalable Log-ratio Lasso Regression, bioRxiv 2023.05.02.538599; doi: https://doi.org/10.1101/2023.05.02.538599.
+Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O, Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, G&ouml;nen M, van den Brink MRM, Scalable log-ratio lasso regression for enhanced microbial feature selection with FLORAL, Cell Reports Methods (2024), 100899; doi: <https://doi.org/10.1016/j.crmeth.2024.100899>.
