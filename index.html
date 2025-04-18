@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,12 +73,14 @@
 <div class="section level2">
 <h2 id="system-requirements-and-installation">System requirements and installation<a class="anchor" aria-label="anchor" href="#system-requirements-and-installation"></a>
 </h2>
-<p>The current version of <code>FLORAL</code> (0.3.0) was built in R version 4.3.3. R package dependencies can be found in the <code>DESCRIPTION</code> file.</p>
+<p>The current version of <code>FLORAL</code> (0.4.0) was built in R version 4.3.3. R package dependencies can be found in the <code>DESCRIPTION</code> file.</p>
 <p>You can install <code>FLORAL</code> with the following code. The installation is typically complete within minutes.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"FLORAL"</span><span class="op">)</span></span></code></pre></div>
+<p>You can also install <code>FLORAL</code> using conda:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">conda</span> install <span class="at">-c</span> bioconda r-floral</span></code></pre></div>
 <p>You can install the development version of <code>FLORAL</code> from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"vdblab/FLORAL"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -87,7 +89,7 @@
 </h2>
 <p>Here is a toy example for linear regression with 10-fold cross-validation for a simulated data with 50 samples and 100 compositional features. Option <code>progress=TRUE</code> can be used to show the progress bar of the running algorithm.</p>
 <p>The data simulation procedure is described in the preprint. The expected run time for the following demo is about a minute.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">23420</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://vdblab.github.io/FLORAL/">FLORAL</a></span><span class="op">)</span></span>
 <span></span>
@@ -97,52 +99,50 @@
 <p><img src="reference/figures/README-plot-1.png" width="50%"><img src="reference/figures/README-plot-2.png" width="50%"></p>
 <p>To view selected compositional features, use <code>fit$selected.feature</code>, where features are sorted by their names. Features under <code>min</code> and <code>1se</code> correspond to penalty parameter <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mo>min</mo></msub><annotation encoding="application/x-tex">\lambda_{\min}</annotation></semantics></math> and <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mtext mathvariant="normal">1se</mtext></msub><annotation encoding="application/x-tex">\lambda_{\text{1se}}</annotation></semantics></math>, respectively. Features under <code>min.2stage</code> and <code>1se.2stage</code> are obtained after applying 2-stage filtering based on features under <code>min</code> and <code>1se</code>, respectively.</p>
 <p>We recommend interpreting the selected compositional features as potential predictive markers to the outcome in the regression model in the sense that the cross-validated prediction error is improved by considering these selected features.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">selected.feature</span></span>
 <span><span class="co">#&gt; $min</span></span>
-<span><span class="co">#&gt;  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa39"</span></span>
-<span><span class="co">#&gt;  [9] "taxa5"  "taxa6"  "taxa60" "taxa7"  "taxa75" "taxa76" "taxa79" "taxa8" </span></span>
-<span><span class="co">#&gt; [17] "taxa84" "taxa9"  "taxa92"</span></span>
+<span><span class="co">#&gt;  [1] "taxa1"  "taxa10" "taxa15" "taxa2"  "taxa29" "taxa3"  "taxa39" "taxa43"</span></span>
+<span><span class="co">#&gt;  [9] "taxa5"  "taxa6"  "taxa7"  "taxa8"  "taxa9"  "taxa92"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $`1se`</span></span>
-<span><span class="co">#&gt;  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa39"</span></span>
-<span><span class="co">#&gt;  [9] "taxa5"  "taxa6"  "taxa7"  "taxa75" "taxa8"  "taxa84" "taxa9" </span></span>
+<span><span class="co">#&gt;  [1] "taxa1"  "taxa10" "taxa2"  "taxa3"  "taxa39" "taxa5"  "taxa6"  "taxa7" </span></span>
+<span><span class="co">#&gt;  [9] "taxa8"  "taxa9" </span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $min.2stage</span></span>
-<span><span class="co">#&gt;  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa5" </span></span>
-<span><span class="co">#&gt;  [9] "taxa6"  "taxa60" "taxa7"  "taxa79" "taxa8"  "taxa84" "taxa9"  "taxa92"</span></span>
+<span><span class="co">#&gt;  [1] "taxa1"  "taxa10" "taxa2"  "taxa3"  "taxa43" "taxa5"  "taxa6"  "taxa7" </span></span>
+<span><span class="co">#&gt;  [9] "taxa8"  "taxa9"  "taxa92"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $`1se.2stage`</span></span>
-<span><span class="co">#&gt;  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa5" </span></span>
-<span><span class="co">#&gt;  [9] "taxa6"  "taxa7"  "taxa8"  "taxa84" "taxa9"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "taxa1"  "taxa10" "taxa2"  "taxa3"  "taxa5"  "taxa6"  "taxa7"  "taxa8" </span></span>
+<span><span class="co">#&gt; [9] "taxa9"</span></span></code></pre></div>
 <p>To get specific log-ratios selected by the 2-stage procedure, use <code>fit$step2.log-ratios</code>, where <code>min</code> and <code>1se</code> display the log-ratios between features. For each identified ratio, <code>min.idx</code> and <code>1se.idx</code> return the column indices in the original input matrix for the two corresponding features forming the ratio.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">step2.ratios</span></span>
 <span><span class="co">#&gt; $min</span></span>
-<span><span class="co">#&gt;  [1] "taxa1/taxa13" "taxa1/taxa20" "taxa1/taxa84" "taxa2/taxa5"  "taxa3/taxa8" </span></span>
-<span><span class="co">#&gt;  [6] "taxa3/taxa92" "taxa5/taxa8"  "taxa6/taxa9"  "taxa7/taxa10" "taxa7/taxa79"</span></span>
-<span><span class="co">#&gt; [11] "taxa8/taxa60" "taxa9/taxa32" "taxa9/taxa92"</span></span>
+<span><span class="co">#&gt; [1] "taxa1/taxa10"  "taxa2/taxa5"   "taxa3/taxa8"   "taxa5/taxa8"  </span></span>
+<span><span class="co">#&gt; [5] "taxa6/taxa9"   "taxa7/taxa92"  "taxa10/taxa43"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $`1se`</span></span>
-<span><span class="co">#&gt;  [1] "taxa1/taxa13" "taxa1/taxa20" "taxa1/taxa84" "taxa2/taxa5"  "taxa3/taxa8" </span></span>
-<span><span class="co">#&gt;  [6] "taxa5/taxa8"  "taxa6/taxa7"  "taxa6/taxa9"  "taxa7/taxa10" "taxa9/taxa32"</span></span>
+<span><span class="co">#&gt; [1] "taxa1/taxa10" "taxa2/taxa5"  "taxa3/taxa8"  "taxa5/taxa8"  "taxa6/taxa9" </span></span>
+<span><span class="co">#&gt; [6] "taxa7/taxa10"</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $min.idx</span></span>
-<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]</span></span>
-<span><span class="co">#&gt; [1,]   NA    1    1    1    2    3    3    5    6     7     7     8     9     9</span></span>
-<span><span class="co">#&gt; [2,]   NA   13   20   84    5    8   92    8    9    10    79    60    32    92</span></span>
+<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]</span></span>
+<span><span class="co">#&gt; [1,]   NA    1    2    3    5    6    7   10</span></span>
+<span><span class="co">#&gt; [2,]   NA   10    5    8    8    9   92   43</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; $`1se.idx`</span></span>
-<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11]</span></span>
-<span><span class="co">#&gt; [1,]   NA    1    1    1    2    3    5    6    6     7     9</span></span>
-<span><span class="co">#&gt; [2,]   NA   13   20   84    5    8    8    7    9    10    32</span></span></code></pre></div>
+<span><span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7]</span></span>
+<span><span class="co">#&gt; [1,]   NA    1    2    3    5    6    7</span></span>
+<span><span class="co">#&gt; [2,]   NA   10    5    8    8    9   10</span></span></code></pre></div>
 <p>More detailed interpretations can be obtained for the selected log-ratios. First, the selected log-ratios also improve the cross-validated prediction errors because these log-ratios are derived from the constrained lasso estimate. Moreover, as guided by the association table between log-ratios and the outcome, it is possible to interpret the directions of the covariate effects associated with certain log-ratios on the outcome. To view detailed associations between selected log-ratios and the outcome, use <code>fit$step2.tables</code> to print summary tables for the multivariable stepwise regression models obtained by the 2-stage procedure.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">step2.tables</span><span class="op">$</span><span class="va">min</span></span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">step2.tables</span><span class="op">$</span><span class="va">min</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">step2.tables</span><span class="op">$</span><span class="va">`1se`</span></span></code></pre></div>
 <p>For binary and survival outcomes, please specify <code>family="binomial"</code>, <code>family="cox"</code>, or <code>family="finegray"</code> accordingly.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat.bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/simu.html">simu</a></span><span class="op">(</span>n<span class="op">=</span><span class="fl">50</span>,p<span class="op">=</span><span class="fl">100</span>,model<span class="op">=</span><span class="st">"binomial"</span><span class="op">)</span></span>
 <span><span class="va">fit.bin</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/FLORAL.html">FLORAL</a></span><span class="op">(</span><span class="va">dat.bin</span><span class="op">$</span><span class="va">xcount</span>,<span class="va">dat.bin</span><span class="op">$</span><span class="va">y</span>,family<span class="op">=</span><span class="st">"binomial"</span>,ncv<span class="op">=</span><span class="fl">10</span>,progress<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -160,12 +160,12 @@
 <div class="section level2">
 <h2 id="contributing">Contributing<a class="anchor" aria-label="anchor" href="#contributing"></a>
 </h2>
-<p>The <code>FLORAL</code> package is jointly managed by <a href="https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics" class="external-link">MSKCC Biostatistics service</a> and <a href="https://vandenbrinklab.org/" class="external-link">the Marcel van den Brink Lab</a>. Please note that the <code>FLORAL</code> project is released with a <a href="https://github.com/vdblab/FLORAL/blob/master/.github/CODE_OF_CONDUCT.md" class="external-link">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms. Thank you to all contributors!</p>
+<p>The <code>FLORAL</code> package is jointly managed by <a href="https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics" class="external-link">MSKCC Biostatistics service</a> and the Marcel van den Brink Lab. Please note that the <code>FLORAL</code> project is released with a <a href="https://github.com/vdblab/FLORAL/blob/master/.github/CODE_OF_CONDUCT.md" class="external-link">Contributor Code of Conduct</a>. By contributing to this project, you agree to abide by its terms. Thank you to all contributors!</p>
 </div>
 <div class="section level2">
 <h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
 </h2>
-<p>Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O, Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink MRM, Scalable log-ratio lasso regression for enhanced microbial feature selection with FLORAL, Cell Reports Methods (2024), 100899; doi: <a href="https://doi.org/10.1016/j.crmeth.2024.100899" class="external-link uri">https://doi.org/10.1016/j.crmeth.2024.100899</a>.</p>
+<p>Fei T, Funnell T, Waters NR, Raj SS, Baichoo M, Sadeghi K, Dai A, Miltiadous O, Shouval R, Lv M, Peled JU, Ponce DM, Perales MA, Gönen M, van den Brink MRM. Scalable log-ratio lasso regression for enhanced microbial feature selection with FLORAL, Cell Reports Methods (2024), 100899; doi: <a href="https://doi.org/10.1016/j.crmeth.2024.100899" class="external-link uri">https://doi.org/10.1016/j.crmeth.2024.100899</a>. Epub 2024 Nov 7. PMID: 39515336; PMCID: PMC11705925.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

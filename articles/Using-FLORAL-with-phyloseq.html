@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">FLORAL</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@ for better performace.</p>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">Pool</span>, <span class="op">-</span><span class="va">Run</span>, <span class="op">-</span><span class="va">ShotgunBatchID</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/distinct.html" class="external-link">distinct</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">samples</span> <span class="op">&lt;-</span> <span class="va">samples</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">100</span>,<span class="op">]</span> <span class="co"># Using the first 100 samples only.</span></span>
 <span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"https://figshare.com/ndownloader/files/26393788"</span><span class="op">)</span> </span>
-<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="va">counts</span> <span class="op">|&gt;</span> </span>
+<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="va">counts</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">SampleID</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">samples</span><span class="op">$</span><span class="va">SampleID</span><span class="op">)</span></span>
 <span><span class="va">taxonomy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/utils/read.table.html" class="external-link">read.csv</a></span><span class="op">(</span><span class="st">"https://figshare.com/ndownloader/files/26770997"</span><span class="op">)</span></span>
 <span></span>
@@ -107,8 +107,7 @@ this</p>
 <p>The resulting list has named entities for the main arguments to
 FLORAL:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="fu">::</span><span class="fu"><a href="../reference/FLORAL.html">FLORAL</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">y</span>, x <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>, ncov <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">ncov</span>, family <span class="op">=</span> <span class="st">"gaussian"</span>, ncv<span class="op">=</span><span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Using elastic net with a=1.Algorithm running for full dataset:</span></span></code></pre>
+<code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu">FLORAL</span><span class="fu">::</span><span class="fu"><a href="../reference/FLORAL.html">FLORAL</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">y</span>, x <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">xcount</span>, ncov <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">ncov</span>, family <span class="op">=</span> <span class="st">"gaussian"</span>, ncv<span class="op">=</span><span class="cn">NULL</span>, progress<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
   </main>
 </div>
 
