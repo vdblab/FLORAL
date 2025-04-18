@@ -172,7 +172,7 @@ repository](https://github.com/vdblab/FLORAL-analysis).
 
 The `FLORAL` package is jointly managed by [MSKCC Biostatistics
 service](https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics)
-and [the Marcel van den Brink Lab](https://vandenbrinklab.org/). Please
+and the Marcel van den Brink Lab. Please
 note that the `FLORAL` project is released with a [Contributor Code of
 Conduct](https://github.com/vdblab/FLORAL/blob/master/.github/CODE_OF_CONDUCT.md).
 By contributing to this project, you agree to abide by its terms. Thank
@@ -180,8 +180,10 @@ you to all contributors!
 
 ## Reference
 
-Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O,
-Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink
-MRM, Scalable log-ratio lasso regression for enhanced microbial feature
+Fei T, Funnell T, Waters NR, Raj SS, Baichoo M, 
+Sadeghi K, Dai A, Miltiadous O, Shouval R, Lv M, 
+Peled JU, Ponce DM, Perales MA, Gönen M, van den Brink MRM. 
+Scalable log-ratio lasso regression for enhanced microbial feature
 selection with FLORAL, Cell Reports Methods (2024), 100899; doi:
-<https://doi.org/10.1016/j.crmeth.2024.100899>.
+<https://doi.org/10.1016/j.crmeth.2024.100899>. Epub 2024 Nov 7. 
+PMID: 39515336; PMCID: PMC11705925.
