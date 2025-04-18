@@ -1,3 +1,4 @@
+
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
 # FLORAL: Fit LOg-RAtio Lasso regression for compositional covariates <img src="man/figures/logo.png" align="right" height="139" />
@@ -18,12 +19,12 @@ proposed method adapts the augmented Lagrangian algorithm for a zero-sum
 constraint optimization problem while enabling a two-stage screening
 process for extended false-positive control.
 
-The associated article for `FLORAL` is available on
-[Cell Reports Methods](https://www.cell.com/cell-reports-methods/fulltext/S2667-2375(24)00289-3).
+The associated article for `FLORAL` is available on [Cell Reports
+Methods](https://www.cell.com/cell-reports-methods/fulltext/S2667-2375(24)00289-3).
 
 ## System requirements and installation
 
-The current version of `FLORAL` (0.3.0) was built in R version 4.3.3. R
+The current version of `FLORAL` (0.4.0) was built in R version 4.3.3. R
 package dependencies can be found in the `DESCRIPTION` file.
 
 You can install `FLORAL` with the following code. The installation is
@@ -31,6 +32,12 @@ typically complete within minutes.
 
 ``` r
 install.packages("FLORAL")
+```
+
+You can also install `FLORAL` using conda:
+
+``` bash
+conda install -c bioconda r-floral
 ```
 
 You can install the development version of `FLORAL` from
@@ -79,21 +86,20 @@ considering these selected features.
 ``` r
 fit$selected.feature
 #> $min
-#>  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa39"
-#>  [9] "taxa5"  "taxa6"  "taxa60" "taxa7"  "taxa75" "taxa76" "taxa79" "taxa8" 
-#> [17] "taxa84" "taxa9"  "taxa92"
+#>  [1] "taxa1"  "taxa10" "taxa15" "taxa2"  "taxa29" "taxa3"  "taxa39" "taxa43"
+#>  [9] "taxa5"  "taxa6"  "taxa7"  "taxa8"  "taxa9"  "taxa92"
 #> 
 #> $`1se`
-#>  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa39"
-#>  [9] "taxa5"  "taxa6"  "taxa7"  "taxa75" "taxa8"  "taxa84" "taxa9" 
+#>  [1] "taxa1"  "taxa10" "taxa2"  "taxa3"  "taxa39" "taxa5"  "taxa6"  "taxa7" 
+#>  [9] "taxa8"  "taxa9" 
 #> 
 #> $min.2stage
-#>  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa5" 
-#>  [9] "taxa6"  "taxa60" "taxa7"  "taxa79" "taxa8"  "taxa84" "taxa9"  "taxa92"
+#>  [1] "taxa1"  "taxa10" "taxa2"  "taxa3"  "taxa43" "taxa5"  "taxa6"  "taxa7" 
+#>  [9] "taxa8"  "taxa9"  "taxa92"
 #> 
 #> $`1se.2stage`
-#>  [1] "taxa1"  "taxa10" "taxa13" "taxa2"  "taxa20" "taxa3"  "taxa32" "taxa5" 
-#>  [9] "taxa6"  "taxa7"  "taxa8"  "taxa84" "taxa9"
+#> [1] "taxa1"  "taxa10" "taxa2"  "taxa3"  "taxa5"  "taxa6"  "taxa7"  "taxa8" 
+#> [9] "taxa9"
 ```
 
 To get specific log-ratios selected by the 2-stage procedure, use
@@ -105,23 +111,22 @@ corresponding features forming the ratio.
 ``` r
 fit$step2.ratios
 #> $min
-#>  [1] "taxa1/taxa13" "taxa1/taxa20" "taxa1/taxa84" "taxa2/taxa5"  "taxa3/taxa8" 
-#>  [6] "taxa3/taxa92" "taxa5/taxa8"  "taxa6/taxa9"  "taxa7/taxa10" "taxa7/taxa79"
-#> [11] "taxa8/taxa60" "taxa9/taxa32" "taxa9/taxa92"
+#> [1] "taxa1/taxa10"  "taxa2/taxa5"   "taxa3/taxa8"   "taxa5/taxa8"  
+#> [5] "taxa6/taxa9"   "taxa7/taxa92"  "taxa10/taxa43"
 #> 
 #> $`1se`
-#>  [1] "taxa1/taxa13" "taxa1/taxa20" "taxa1/taxa84" "taxa2/taxa5"  "taxa3/taxa8" 
-#>  [6] "taxa5/taxa8"  "taxa6/taxa7"  "taxa6/taxa9"  "taxa7/taxa10" "taxa9/taxa32"
+#> [1] "taxa1/taxa10" "taxa2/taxa5"  "taxa3/taxa8"  "taxa5/taxa8"  "taxa6/taxa9" 
+#> [6] "taxa7/taxa10"
 #> 
 #> $min.idx
-#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13] [,14]
-#> [1,]   NA    1    1    1    2    3    3    5    6     7     7     8     9     9
-#> [2,]   NA   13   20   84    5    8   92    8    9    10    79    60    32    92
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8]
+#> [1,]   NA    1    2    3    5    6    7   10
+#> [2,]   NA   10    5    8    8    9   92   43
 #> 
 #> $`1se.idx`
-#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11]
-#> [1,]   NA    1    1    1    2    3    5    6    6     7     9
-#> [2,]   NA   13   20   84    5    8    8    7    9    10    32
+#>      [,1] [,2] [,3] [,4] [,5] [,6] [,7]
+#> [1,]   NA    1    2    3    5    6    7
+#> [2,]   NA   10    5    8    8    9   10
 ```
 
 More detailed interpretations can be obtained for the selected
@@ -167,7 +172,7 @@ repository](https://github.com/vdblab/FLORAL-analysis).
 
 The `FLORAL` package is jointly managed by [MSKCC Biostatistics
 service](https://www.mskcc.org/departments/epidemiology-biostatistics/biostatistics)
-and [the Marcel van den Brink Lab](https://vandenbrinklab.org/). Please
+and the Marcel van den Brink Lab. Please
 note that the `FLORAL` project is released with a [Contributor Code of
 Conduct](https://github.com/vdblab/FLORAL/blob/master/.github/CODE_OF_CONDUCT.md).
 By contributing to this project, you agree to abide by its terms. Thank
@@ -175,7 +180,10 @@ you to all contributors!
 
 ## Reference
 
-Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O,
-Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink
-MRM, Scalable log-ratio lasso regression for enhanced microbial feature selection with FLORAL, Cell Reports Methods (2024), 100899; doi:
-<https://doi.org/10.1016/j.crmeth.2024.100899>.
+Fei T, Funnell T, Waters NR, Raj SS, Baichoo M, 
+Sadeghi K, Dai A, Miltiadous O, Shouval R, Lv M, 
+Peled JU, Ponce DM, Perales MA, Gönen M, van den Brink MRM. 
+Scalable log-ratio lasso regression for enhanced microbial feature
+selection with FLORAL, Cell Reports Methods (2024), 100899; doi:
+<https://doi.org/10.1016/j.crmeth.2024.100899>. Epub 2024 Nov 7. 
+PMID: 39515336; PMCID: PMC11705925.

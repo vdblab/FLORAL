@@ -28,7 +28,7 @@ samples <- read.csv("https://figshare.com/ndownloader/files/33076496") %>% disti
   select(-Pool, -Run, -ShotgunBatchID) %>% distinct()
 samples <- samples[1:100,] # Using the first 100 samples only.
 counts <- read.csv("https://figshare.com/ndownloader/files/26393788") 
-counts <- counts |> 
+counts <- counts %>%
   filter(SampleID %in% samples$SampleID)
 taxonomy <- read.csv("https://figshare.com/ndownloader/files/26770997")
 
@@ -50,5 +50,5 @@ dat <- FLORAL::phy_to_floral_data(phy, covariates=c("Consistency"), y = "DayRela
 The resulting list has named entities for the main arguments to FLORAL:
 
 ```{r}
-res <- FLORAL::FLORAL(y = dat$y, x = dat$xcount, ncov = dat$ncov, family = "gaussian", ncv=NULL)
+res <- FLORAL::FLORAL(y = dat$y, x = dat$xcount, ncov = dat$ncov, family = "gaussian", ncv=NULL, progress=FALSE)
 ```

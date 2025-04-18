@@ -1,3 +1,7 @@
+# FLORAL (development version)
+
+* Adding instructions to install the package via `bioconda`.
+
 # FLORAL 0.4.0
 
 * Adding a function `phy_to_floral_data` which helps convert a `phyloseq` object to be compatible with `FLORAL`.
