@@ -175,7 +175,8 @@ you to all contributors!
 
 ## Reference
 
-Fei T, Funnell T, Waters NR, Raj SS, Sadeghi K, Dai A, Miltiadous O,
-Shouval R, Lv M, Peled JU, Ponce DM, Perales M-A, Gönen M, van den Brink
-MRM, Scalable log-ratio lasso regression for enhanced microbial feature selection with FLORAL, Cell Reports Methods (2024), 100899; doi:
-<https://doi.org/10.1016/j.crmeth.2024.100899>.
+Fei T, Funnell T, Waters NR, Raj SS, Baichoo M, Sadeghi K, Dai A, 
+Miltiadous O, Shouval R, Lv M, Peled JU, Ponce DM, Perales MA, 
+Gönen M, van den Brink MRM. Scalable log-ratio lasso regression for 
+enhanced microbial feature selection with FLORAL. Cell Rep Methods. 2024 Nov 18;4(11):100899. 
+doi: <https://doi.org/10.1016/j.crmeth.2024.100899>. Epub 2024 Nov 7. PMID: 39515336; PMCID: PMC11705925.
