@@ -23,14 +23,9 @@ library(phyloseq)
 
 The following code downloads data described in [this paper](https://www.nature.com/articles/s41597-021-00860-8) and turns it into a phyloseq object.  The tax_glom step here takes some time, and can be replaced with [`speedyseq::tax_glom`](https://github.com/mikemc/speedyseq) for better performace.
 ```{r}
-#this file has duplicate rows, and has multiple rows per pool
-samples <- read.csv("https://figshare.com/ndownloader/files/33076496") %>% distinct() %>% 
-  select(-Pool, -Run, -ShotgunBatchID) %>% distinct()
-samples <- samples[1:100,] # Using the first 100 samples only.
-counts <- read.csv("https://figshare.com/ndownloader/files/26393788") 
-counts <- counts %>%
-  filter(SampleID %in% samples$SampleID)
-taxonomy <- read.csv("https://figshare.com/ndownloader/files/26770997")
+samples <- get0("samples", envir = asNamespace("FLORAL"))
+counts <- get0("counts", envir = asNamespace("FLORAL"))
+taxonomy <- get0("taxonomy", envir = asNamespace("FLORAL"))
 
 phy <- phyloseq(
   sample_data(samples %>% column_to_rownames("SampleID")),
