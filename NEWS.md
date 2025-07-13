@@ -1,4 +1,4 @@
-# FLORAL (development version)
+# FLORAL 0.5.0
 
 * Adding instructions to install the package via `bioconda`.
 
