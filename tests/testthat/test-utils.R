@@ -100,8 +100,8 @@ test_that("FLORAL() works from phy", {
   dat <- phy_to_floral_data(
     testphy, covariates=c("Consistency"), y = "DayRelativeToNearestHCT")
 
-  expect_no_error(
-    fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE, ncv = NULL)
-  )
+  fit <- FLORAL(dat$xcount,dat$y,family="gaussian",progress=FALSE,step2=TRUE, ncv = NULL)
+  expect_true(!is.null(fit))
+    
 
 })

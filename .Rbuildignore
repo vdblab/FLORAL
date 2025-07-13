@@ -1,3 +1,5 @@
+^renv$
+^renv\.lock$
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^LICENSE$
@@ -10,3 +12,4 @@
 ^doc$
 ^Meta$
 ^cran-comments\.md$
+^data-raw$
