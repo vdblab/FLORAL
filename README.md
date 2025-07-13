@@ -20,11 +20,11 @@ constraint optimization problem while enabling a two-stage screening
 process for extended false-positive control.
 
 The associated article for `FLORAL` is available on [Cell Reports
-Methods](https://www.cell.com/cell-reports-methods/fulltext/S2667-2375(24)00289-3).
+Methods](https://doi.org/10.1016/j.crmeth.2024.100899).
 
 ## System requirements and installation
 
-The current version of `FLORAL` (0.4.0) was built in R version 4.3.3. R
+The current version of `FLORAL` (0.5.0) was built in R version 4.4.2. R
 package dependencies can be found in the `DESCRIPTION` file.
 
 You can install `FLORAL` with the following code. The installation is

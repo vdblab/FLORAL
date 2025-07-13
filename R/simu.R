@@ -462,9 +462,9 @@ simu <- function(n = 100,
     
     colnames(data) <- c('id', 't', 't0', 'd', paste0("z",1:p))
     data <- data.frame(data)
-    data_unique <- data |> 
-      group_by(id) |> 
-      filter(row_number() == n()) |> 
+    data_unique <- data %>% 
+      group_by(id) %>% 
+      filter(row_number() == n()) %>% 
       ungroup()
     
     xcount <- data[,-c(1:4)]

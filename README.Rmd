@@ -24,11 +24,11 @@ knitr::opts_chunk$set(
 
 The `FLORAL` package is an open-source computational tool to perform log-ratio lasso regression modeling and compositional feature selection for continuous, binary, time-to-event, and competing risk outcomes. The proposed method adapts the augmented Lagrangian algorithm for a zero-sum constraint optimization problem while enabling a two-stage screening process for extended false-positive control.
 
-The associated article for `FLORAL` is available on [Cell Reports Methods](https://www.cell.com/cell-reports-methods/fulltext/S2667-2375(24)00289-3).
+The associated article for `FLORAL` is available on [Cell Reports Methods](https://doi.org/10.1016/j.crmeth.2024.100899).
 
 ## System requirements and installation
 
-The current version of `FLORAL` (0.4.0) was built in R version 4.3.3. R package dependencies can be found in the `DESCRIPTION` file.
+The current version of `FLORAL` (0.5.0) was built in R version 4.4.2. R package dependencies can be found in the `DESCRIPTION` file.
 
 You can install `FLORAL` with the following code. The installation is typically complete within minutes.
 
