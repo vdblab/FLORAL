@@ -33,6 +33,30 @@ fg_enet_al <- function(x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust
     .Call('_FLORAL_fg_enet_al', PACKAGE = 'FLORAL', x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress)
 }
 
+gd_cov_al_kn <- function(xx, xy, n, l, a, beta, mu, alpha1, alpha2, adjust = FALSE, ncov = 0L, wcov = 0) {
+    .Call('_FLORAL_gd_cov_al_kn', PACKAGE = 'FLORAL', xx, xy, n, l, a, beta, mu, alpha1, alpha2, adjust, ncov, wcov)
+}
+
+linear_enet_al_kn <- function(x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress = TRUE) {
+    .Call('_FLORAL_linear_enet_al_kn', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress)
+}
+
+logistic_enet_al_kn <- function(x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE) {
+    .Call('_FLORAL_logistic_enet_al_kn', PACKAGE = 'FLORAL', x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress, loop1, loop2)
+}
+
+cox_enet_al_kn <- function(x, t, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress = TRUE, loop1 = FALSE, loop2 = FALSE, notcv = TRUE) {
+    .Call('_FLORAL_cox_enet_al_kn', PACKAGE = 'FLORAL', x, t, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress, loop1, loop2, notcv)
+}
+
+cox_timedep_enet_al_kn <- function(x, t0, t1, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress = TRUE) {
+    .Call('_FLORAL_cox_timedep_enet_al_kn', PACKAGE = 'FLORAL', x, t0, t1, d, tj, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress)
+}
+
+fg_enet_al_kn <- function(x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress = TRUE) {
+    .Call('_FLORAL_fg_enet_al_kn', PACKAGE = 'FLORAL', x, t0, t1, d, tj, w, len, mu, ub, lambda, wcov, a, adjust, ncov, devnull, display_progress)
+}
+
 gee_NR <- function(N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha, ncov, wcov, eps = 1e-6, muu = 1e6) {
     .Call('_FLORAL_gee_NR', PACKAGE = 'FLORAL', N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha, ncov, wcov, eps, muu)
 }

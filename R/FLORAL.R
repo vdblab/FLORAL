@@ -20,8 +20,9 @@
 #' @param mu Value of penalty for the augmented Lagrangian
 #' @param pfilter A pre-specified threshold to force coefficients with absolute values less than pfilter times the maximum value of absolute coefficient as zeros in the GEE model. Default is zero, such that all coefficients will be reported.
 #' @param maxiter Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.
-#' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.
+#' @param ncv Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted. Use \code{knockoff} to perform knockoff statistics.
 #' @param ncore Number of cores for parallel computing for cross-validation. Default is 1.
+#' @param fdr If \code{ncv} is "knockoff", then this specifies the targeted false discovery rate level.
 #' @param intercept \code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.
 #' @param foldid A vector of fold indicator. Default is \code{NULL}.
 #' @param step2 \code{TRUE} or \code{FALSE}, indicating whether a second-stage feature selection for specific ratios should be performed for the features selected by the main lasso algorithm. Will only be performed if cross validation is enabled.
@@ -58,13 +59,14 @@
 #' #                ncov=1,longitudinal = TRUE,corstr = "exchangeable",lambda.min.ratio=1e-3,
 #' #                progress=FALSE,step2=FALSE)
 #' 
-#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
+#' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel knockoff
 #' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
 #' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit median
+#' @importFrom ComplexHeatmap Heatmap
 #' @useDynLib FLORAL
 #' @export
 
@@ -89,6 +91,22 @@ FLORAL <- function(x,
                    maxiter=100,
                    ncv=5,
                    ncore=1,
+                   fdr=0.05,
+                   kn_method=list(model = "VAE",
+                                  latent_dim      = 32,
+                                  lambda_kl       = 0,
+                                  lambda_abun = 0,
+                                  lambda_pres     = 0,
+                                  gamma_full       = 1,
+                                  gamma_swap       = 1,
+                                  lambda_moments  = 0,
+                                  delta_corr      = 0,
+                                  sigma_list      = c(1,2,4,8,16,32,64,128),
+                                  epochs          = 100,
+                                  batch_size      = 50,
+                                  lr              = 1e-3,
+                                  weight_decay    = 1e-2,
+                                  seed            = 123),
                    intercept=FALSE,
                    foldid=NULL,
                    step2=TRUE,
@@ -168,22 +186,59 @@ FLORAL <- function(x,
       }
       
     }else{
-      res <- LogRatioLasso(x,
-                           y,
-                           ncov,
-                           length.lambda,
-                           lambda.min.ratio,
-                           ncov.lambda.weight,
-                           a,
-                           mu,
-                           maxiter,
-                           ncv,
-                           intercept,
-                           foldid,
-                           step2,
-                           progress,
-                           plot,
-                           ncore=ncore)
+      
+      if (!is.null(ncv) & ncv == "knockoff"){
+        
+        if (is.null(kn_method)) {
+          kn_method = list(model = "VAE",
+                           latent_dim      = 32,
+                           lambda_kl       = 0,
+                           lambda_pres     = 0,
+                           gamma_mmd       = 1,
+                           lambda_moments  = 0,
+                           delta_corr      = 0,
+                           sigma_list      = c(1,2,4,8,16,32,64,128),
+                           epochs          = 100,
+                           batch_size      = 50,
+                           lr              = 1e-3,
+                           weight_decay    = 1e-2,
+                           seed            = 123)
+        }
+        
+        res <- LogRatioLassoKN(x,
+                               y,
+                               ncov,
+                               length.lambda,
+                               lambda.min.ratio,
+                               ncov.lambda.weight,
+                               a,
+                               mu,
+                               fdr,
+                               kn_method,
+                               offset=0,
+                               maxiter,
+                               intercept,
+                               progress,
+                               plot)
+      }else {
+        res <- LogRatioLasso(x,
+                             y,
+                             ncov,
+                             length.lambda,
+                             lambda.min.ratio,
+                             ncov.lambda.weight,
+                             a,
+                             mu,
+                             maxiter,
+                             ncv,
+                             intercept,
+                             foldid,
+                             step2,
+                             progress,
+                             plot,
+                             ncore=ncore)
+      }
+      
     }
     
   }else if(family == "binomial"){
@@ -233,21 +288,58 @@ FLORAL <- function(x,
       }
       
     }else{
-      res <- LogRatioLogisticLasso(x,
-                                   y,
-                                   ncov,
-                                   length.lambda,
-                                   lambda.min.ratio,
-                                   ncov.lambda.weight,
-                                   a,
-                                   mu,
-                                   maxiter,
-                                   ncv,
-                                   foldid,
-                                   step2,
-                                   progress,
-                                   plot,
-                                   ncore=ncore)
+      
+      if (!is.null(ncv) & ncv == "knockoff"){
+        
+        if (is.null(kn_method)) {
+          kn_method = list(model = "VAE",
+                           latent_dim      = 32,
+                           lambda_kl       = 0,
+                           lambda_pres     = 0,
+                           gamma_mmd       = 1,
+                           lambda_moments  = 0,
+                           delta_corr      = 0,
+                           sigma_list      = c(1,2,4,8,16,32,64,128),
+                           epochs          = 100,
+                           batch_size      = 50,
+                           lr              = 1e-3,
+                           weight_decay    = 1e-2,
+                           seed            = 123)
+        }
+        
+        res <- LogRatioLogisticLassoKN(x,
+                                       y,
+                                       ncov,
+                                       length.lambda,
+                                       lambda.min.ratio,
+                                       ncov.lambda.weight,
+                                       a,
+                                       mu,
+                                       fdr,
+                                       kn_method,
+                                       offset=0,
+                                       maxiter,
+                                       intercept,
+                                       progress,
+                                       plot)
+      }else {
+        
+        res <- LogRatioLogisticLasso(x,
+                                     y,
+                                     ncov,
+                                     length.lambda,
+                                     lambda.min.ratio,
+                                     ncov.lambda.weight,
+                                     a,
+                                     mu,
+                                     maxiter,
+                                     ncv,
+                                     foldid,
+                                     step2,
+                                     progress,
+                                     plot,
+                                     ncore=ncore)
+      }
     }
     
   }else if(family == "cox"){
@@ -276,43 +368,113 @@ FLORAL <- function(x,
         newy <- Surv(xy$tstart,xy$tstop,xy$dd)
         newid <- xy$id
         
-        res <- LogRatioTDCoxLasso(newx,
-                                  newy,
-                                  newid,
+        if (!is.null(ncv) & ncv == "knockoff"){
+          
+          if (is.null(kn_method)) {
+            kn_method = list(model = "VAE",
+                             latent_dim      = 32,
+                             lambda_kl       = 0,
+                             lambda_pres     = 0,
+                             gamma_mmd       = 1,
+                             lambda_moments  = 0,
+                             delta_corr      = 0,
+                             sigma_list      = c(1,2,4,8,16,32,64,128),
+                             epochs          = 100,
+                             batch_size      = 50,
+                             lr              = 1e-3,
+                             weight_decay    = 1e-2,
+                             seed            = 123)
+          }
+          
+          res <- LogRatioTDCoxLassoKN(newx,
+                                      newy,
+                                      ncov,
+                                      length.lambda,
+                                      lambda.min.ratio,
+                                      ncov.lambda.weight,
+                                      a,
+                                      mu,
+                                      fdr,
+                                      kn_method,
+                                      offset=0,
+                                      maxiter,
+                                      intercept,
+                                      progress,
+                                      plot)
+        }else {
+          
+          res <- LogRatioTDCoxLasso(newx,
+                                    newy,
+                                    newid,
+                                    ncov,
+                                    length.lambda,
+                                    lambda.min.ratio,
+                                    ncov.lambda.weight,
+                                    a,
+                                    mu,
+                                    maxiter,
+                                    ncv,
+                                    foldid,
+                                    step2,
+                                    progress,
+                                    plot,
+                                    ncore=ncore)
+        }
+      }
+      
+    }else{
+      
+      if (!is.null(ncv) & ncv == "knockoff"){
+        
+        if (is.null(kn_method)) {
+          kn_method = list(model = "VAE",
+                           latent_dim      = 32,
+                           lambda_kl       = 0,
+                           lambda_pres     = 0,
+                           gamma_mmd       = 1,
+                           lambda_moments  = 0,
+                           delta_corr      = 0,
+                           sigma_list      = c(1,2,4,8,16,32,64,128),
+                           epochs          = 100,
+                           batch_size      = 50,
+                           lr              = 1e-3,
+                           weight_decay    = 1e-2,
+                           seed            = 123)
+        }
+        
+        res <- LogRatioCoxLassoKN(x,
+                                  y,
                                   ncov,
                                   length.lambda,
                                   lambda.min.ratio,
                                   ncov.lambda.weight,
                                   a,
                                   mu,
+                                  fdr,
+                                  kn_method,
+                                  offset=0,
                                   maxiter,
-                                  ncv,
-                                  foldid,
-                                  step2,
+                                  intercept,
                                   progress,
-                                  plot,
-                                  ncore=ncore)
+                                  plot)
+      }else {
         
+        res <- LogRatioCoxLasso(x,
+                                y,
+                                ncov,
+                                length.lambda,
+                                lambda.min.ratio,
+                                ncov.lambda.weight,
+                                a,
+                                mu,
+                                maxiter,
+                                ncv,
+                                foldid,
+                                step2,
+                                progress,
+                                plot,
+                                ncore=ncore)
       }
-      
-    }else{
-      
-      res <- LogRatioCoxLasso(x,
-                              y,
-                              ncov,
-                              length.lambda,
-                              lambda.min.ratio,
-                              ncov.lambda.weight,
-                              a,
-                              mu,
-                              maxiter,
-                              ncv,
-                              foldid,
-                              step2,
-                              progress,
-                              plot,
-                              ncore=ncore)
-      
     }
   }else if (family == "finegray"){
     
@@ -349,24 +511,61 @@ FLORAL <- function(x,
         weight <- df_FG$fgwt
         newid <- df_FG$id
         
-        res <- LogRatioFGLasso(newx,
-                               newy,
-                               newid,
-                               weight,
-                               ncov,
-                               length.lambda,
-                               lambda.min.ratio,
-                               ncov.lambda.weight,
-                               a,
-                               mu,
-                               maxiter,
-                               ncv,
-                               foldid,
-                               step2,
-                               progress,
-                               plot,
-                               ncore=ncore)
-        
+        if (!is.null(ncv) & ncv == "knockoff"){
+          
+          if (is.null(kn_method)) {
+            kn_method = list(model = "VAE",
+                             latent_dim      = 32,
+                             lambda_kl       = 0,
+                             lambda_pres     = 0,
+                             gamma_mmd       = 1,
+                             lambda_moments  = 0,
+                             delta_corr      = 0,
+                             sigma_list      = c(1,2,4,8,16,32,64,128),
+                             epochs          = 100,
+                             batch_size      = 50,
+                             lr              = 1e-3,
+                             weight_decay    = 1e-2,
+                             seed            = 123)
+          }
+          
+          res <- LogRatioFGLassoKN(newx,
+                                   newy,
+                                   weight,
+                                   ncov,
+                                   length.lambda,
+                                   lambda.min.ratio,
+                                   ncov.lambda.weight,
+                                   a,
+                                   mu,
+                                   fdr,
+                                   kn_method,
+                                   offset=0,
+                                   maxiter,
+                                   intercept,
+                                   progress,
+                                   plot)
+          
+        }else {
+          
+          res <- LogRatioFGLasso(newx,
+                                 newy,
+                                 newid,
+                                 weight,
+                                 ncov,
+                                 length.lambda,
+                                 lambda.min.ratio,
+                                 ncov.lambda.weight,
+                                 a,
+                                 mu,
+                                 maxiter,
+                                 ncv,
+                                 foldid,
+                                 step2,
+                                 progress,
+                                 plot,
+                                 ncore=ncore)
+        }
       }
       
     }else{
@@ -387,130 +586,169 @@ FLORAL <- function(x,
       weight <- df_FG$fgwt
       newid <- df_FG$id
       
-      res <- LogRatioFGLasso(newx,
-                             newy,
-                             newid,
-                             weight,
-                             ncov,
-                             length.lambda,
-                             lambda.min.ratio,
-                             ncov.lambda.weight,
-                             a,
-                             mu,
-                             maxiter,
-                             ncv,
-                             foldid,
-                             step2,
-                             progress,
-                             plot,
-                             ncore=ncore)
-      
+      if (!is.null(ncv) & ncv == "knockoff"){
+        
+        if (is.null(kn_method)) {
+          kn_method = list(model = "VAE",
+                           latent_dim      = 32,
+                           lambda_kl       = 0,
+                           lambda_pres     = 0,
+                           gamma_mmd       = 1,
+                           lambda_moments  = 0,
+                           delta_corr      = 0,
+                           sigma_list      = c(1,2,4,8,16,32,64,128),
+                           epochs          = 100,
+                           batch_size      = 50,
+                           lr              = 1e-3,
+                           weight_decay    = 1e-2,
+                           seed            = 123)
+        }
+        
+        res <- LogRatioFGLassoKN(newx,
+                                 newy,
+                                 weight,
+                                 ncov,
+                                 length.lambda,
+                                 lambda.min.ratio,
+                                 ncov.lambda.weight,
+                                 a,
+                                 mu,
+                                 fdr,
+                                 kn_method,
+                                 offset=0,
+                                 maxiter,
+                                 intercept,
+                                 progress,
+                                 plot)
+      }else {
+        
+        res <- LogRatioFGLasso(newx,
+                               newy,
+                               newid,
+                               weight,
+                               ncov,
+                               length.lambda,
+                               lambda.min.ratio,
+                               ncov.lambda.weight,
+                               a,
+                               mu,
+                               maxiter,
+                               ncv,
+                               foldid,
+                               step2,
+                               progress,
+                               plot,
+                               ncore=ncore)
+      }
     }
     
   }
   
-  res$loss <- NULL
-  res$mse <- NULL
-  res$best.beta$min <- res$best.beta$min.mse
-  res$best.beta$`1se` <- res$best.beta$add.1se
-  res$best.beta$min.mse <- NULL
-  res$best.beta$add.1se <- NULL
-  
-  if (step2){
+  if (!is.null(ncv) & ncv != "knockoff"){
     
-    if (longitudinal & family %in% c("gaussian","binomial")){ # For GEE
+    res$loss <- NULL
+    res$mse <- NULL
+    res$best.beta$min <- res$best.beta$min.mse
+    res$best.beta$`1se` <- res$best.beta$add.1se
+    res$best.beta$min.mse <- NULL
+    res$best.beta$add.1se <- NULL
+    
+    if (step2){
       
-      res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
-                                   `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
-                                   min.2stage=sort(unique(as.vector(res$step2.feature.min))),
-                                   `1se.2stage`=sort(unique(as.vector(res$step2.feature.1se))))
-      
-      res$step2.ratios <- list(min=character(0),
-                               `1se`=character(0),
-                               min.name=character(0),
-                               `1se.name`=character(0))
-      
-      res$step2.tables <- list(min=character(0),
-                               `1se`=character(0))
-      
-      
-      if (length(res$selected.feature$min.2stage)>0){
+      if (longitudinal & family %in% c("gaussian","binomial")){ # For GEE
         
-        namemat <- matrix(res$step2.feature.min,nrow=2)
-        res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-        res$step2.ratios$min.name <- res$step2.feature.min
-        res$step2.tables$min <- res$step2fit.min
+        res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                     `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
+                                     min.2stage=sort(unique(as.vector(res$step2.feature.min))),
+                                     `1se.2stage`=sort(unique(as.vector(res$step2.feature.1se))))
         
+        res$step2.ratios <- list(min=character(0),
+                                 `1se`=character(0),
+                                 min.name=character(0),
+                                 `1se.name`=character(0))
+        
+        res$step2.tables <- list(min=character(0),
+                                 `1se`=character(0))
+        
+        
+        if (length(res$selected.feature$min.2stage)>0){
+          
+          namemat <- matrix(res$step2.feature.min,nrow=2)
+          res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+          res$step2.ratios$min.name <- res$step2.feature.min
+          res$step2.tables$min <- res$step2fit.min
+          
+        }
+        
+        if (length(res$selected.feature$`1se.2stage`)>0){
+          
+          namemat <- matrix(res$step2.feature.1se,nrow=2)
+          res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+          res$step2.ratios$`1se.name` <- res$step2.feature.1se
+          res$step2.tables$`1se` <- res$step2fit.1se
+          
+        }
+        
+      }else{ # For other models
+        
+        
+        res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
+                                     `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
+                                     min.2stage=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.min]))),
+                                     `1se.2stage`=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se])))
+        )
+        
+        res$step2.ratios <- list(min=character(0),
+                                 `1se`=character(0),
+                                 min.idx=character(0),
+                                 `1se.idx`=character(0))
+        
+        res$step2.tables <- list(min=character(0),
+                                 `1se`=character(0))
+        
+        if (length(res$selected.feature$min.2stage)>0){
+          namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
+          res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+          res$step2.ratios$min.idx <- res$step2.feature.min#[,!is.na(colSums(res$step2.feature.min))]
+          
+          res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
+          
+          if ("(Intercept)" %in% rownames(res$step2.tables$min)){
+            rownames(res$step2.tables$`min`)[2:(2+length(res$step2.ratios$min)-1)] <- res$step2.ratios$`min`
+          }else{
+            rownames(res$step2.tables$`min`)[1:length(res$step2.ratios$min)] <- res$step2.ratios$`min`
+          }
+          
+          # res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
+          
+        }
+        if (length(res$selected.feature$`1se.2stage`)>0){
+          namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
+          res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
+          res$step2.ratios$`1se.idx` <- res$step2.feature.1se#[,!is.na(colSums(res$step2.feature.1se))]
+          
+          res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
+          # res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
+          # rownames(res$step2.tables$`1se`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`1se`
+          if ("(Intercept)" %in% rownames(res$step2.tables$`1se`)){
+            rownames(res$step2.tables$`1se`)[2:(2+length(res$step2.ratios$`1se`)-1)] <- res$step2.ratios$`1se`
+          }else{
+            rownames(res$step2.tables$`1se`)[1:length(res$step2.ratios$`1se`)] <- res$step2.ratios$`1se`
+          }
+        }
       }
       
-      if (length(res$selected.feature$`1se.2stage`)>0){
-        
-        namemat <- matrix(res$step2.feature.1se,nrow=2)
-        res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-        res$step2.ratios$`1se.name` <- res$step2.feature.1se
-        res$step2.tables$`1se` <- res$step2fit.1se
-        
-      }
-      
-    }else{ # For other models
-      
-      
+    }else{
       res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
-                                   `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
-                                   min.2stage=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.min]))),
-                                   `1se.2stage`=as.vector(na.omit(unique(names(res$best.beta$min)[res$step2.feature.1se])))
+                                   `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)]
       )
-      
-      res$step2.ratios <- list(min=character(0),
-                               `1se`=character(0),
-                               min.idx=character(0),
-                               `1se.idx`=character(0))
-      
-      res$step2.tables <- list(min=character(0),
-                               `1se`=character(0))
-      
-      if (length(res$selected.feature$min.2stage)>0){
-        namemat <- matrix(names(res$best.beta$min)[res$step2.feature.min],nrow=2)
-        res$step2.ratios$min <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-        res$step2.ratios$min.idx <- res$step2.feature.min#[,!is.na(colSums(res$step2.feature.min))]
-        
-        res$step2.tables$`min` <- summary(res$step2fit.min)$coefficients
-        
-        if ("(Intercept)" %in% rownames(res$step2.tables$min)){
-          rownames(res$step2.tables$`min`)[2:(2+length(res$step2.ratios$min)-1)] <- res$step2.ratios$`min`
-        }else{
-          rownames(res$step2.tables$`min`)[1:length(res$step2.ratios$min)] <- res$step2.ratios$`min`
-        }
-        
-        # res$step2.tables$`min` <- res$step2.tables$`min`[rownames(res$step2.tables$`min`) != "(Intercept)", ]
-        
-      }
-      if (length(res$selected.feature$`1se.2stage`)>0){
-        namemat <- matrix(names(res$best.beta$`1se`)[res$step2.feature.1se],nrow=2)
-        res$step2.ratios$`1se` <- as.vector(na.omit(apply(namemat,2,function(x) ifelse(sum(is.na(x))==0,paste(x,collapse ="/"),NA))))
-        res$step2.ratios$`1se.idx` <- res$step2.feature.1se#[,!is.na(colSums(res$step2.feature.1se))]
-        
-        res$step2.tables$`1se` <- summary(res$step2fit.1se)$coefficients
-        # res$step2.tables$`1se` <- res$step2.tables$`1se`[rownames(res$step2.tables$`1se`) != "(Intercept)", ]
-        # rownames(res$step2.tables$`1se`)[colSums(is.na(namemat)) == 0] <- res$step2.ratios$`1se`
-        if ("(Intercept)" %in% rownames(res$step2.tables$`1se`)){
-          rownames(res$step2.tables$`1se`)[2:(2+length(res$step2.ratios$`1se`)-1)] <- res$step2.ratios$`1se`
-        }else{
-          rownames(res$step2.tables$`1se`)[1:length(res$step2.ratios$`1se`)] <- res$step2.ratios$`1se`
-        }
-      }
     }
     
-  }else{
-    res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
-                                 `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)]
-    )
+    res$step2.feature.min <- NULL
+    res$step2.feature.1se <- NULL
+    
+    res$selected.feature <- lapply(res$selected.feature,sort)
   }
-  
-  res$step2.feature.min <- NULL
-  res$step2.feature.1se <- NULL
-  
-  res$selected.feature <- lapply(res$selected.feature,sort)
   
   return(res)
   
