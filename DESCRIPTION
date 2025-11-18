@@ -39,7 +39,7 @@ Imports:
   foreach,
   msm,
   phyloseq
-LinkingTo: Rcpp, RcppArmadillo, RcppProgress, ast2ast
+LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 Suggests:
