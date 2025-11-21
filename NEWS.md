@@ -1,3 +1,7 @@
+# FLORAL 0.6.0
+
+* Removing dependencies with R package `ast2ast`.
+
 # FLORAL 0.5.0
 
 * Adding instructions to install the package via `bioconda`.

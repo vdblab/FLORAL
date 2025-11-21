@@ -1,7 +1,7 @@
 Package: FLORAL
 Type: Package
 Title: Fit Log-Ratio Lasso Regression for Compositional Data
-Version: 0.5.0
+Version: 0.6.0
 Date: 2025-07-13
 Authors@R: c(
     person("Teng", "Fei", , "feit1@mskcc.org", role = c("aut", "cre", "cph"),
@@ -39,7 +39,7 @@ Imports:
   foreach,
   msm,
   phyloseq
-LinkingTo: Rcpp, RcppArmadillo, RcppProgress, ast2ast
+LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 Suggests:

@@ -5,9 +5,6 @@
 #include <RcppArmadillo.h>
 #include <Rcpp.h>
 using namespace arma;
-// [[Rcpp::depends(ast2ast)]]
-#include <etr.hpp>
-using namespace etr;
 using namespace std;
 using namespace Rcpp;
 // [[Rcpp::depends(RcppProgress)]]
