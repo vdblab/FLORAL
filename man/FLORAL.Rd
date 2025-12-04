@@ -26,6 +26,11 @@ FLORAL(
   maxiter = 100,
   ncv = 5,
   ncore = 1,
+  fdr = 0.05,
+  kn_method = list(model = "VAE", latent_dim = 32, lambda_kl = 0, lambda_abun = 0,
+    lambda_pres = 0, gamma_full = 1, gamma_swap = 1, lambda_moments = 0, delta_corr = 0,
+    sigma_list = c(1, 2, 4, 8, 16, 32, 64, 128), epochs = 100, batch_size = 50, lr =
+    0.001, weight_decay = 0.01, seed = 123),
   intercept = FALSE,
   foldid = NULL,
   step2 = TRUE,
@@ -72,9 +77,11 @@ FLORAL(
 
 \item{maxiter}{Number of iterations needed for the outer loop of the augmented Lagrangian algorithm.}
 
-\item{ncv}{Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted.}
+\item{ncv}{Folds of cross-validation. Use \code{NULL} if cross-validation is not wanted. Use \code{knockoff} to perform knockoff statistics.}
 
 \item{ncore}{Number of cores for parallel computing for cross-validation. Default is 1.}
+
+\item{fdr}{If \code{ncv} is "knockoff", then this specifies the targeted false discovery rate level.}
 
 \item{intercept}{\code{TRUE} or \code{FALSE}, indicating whether an intercept should be estimated.}
 

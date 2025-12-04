@@ -19,7 +19,7 @@ URL: https://vdblab.github.io/FLORAL/
 BugReports: https://github.com/vdblab/FLORAL/issues
 Depends: 
   R (>= 3.5.0)
-SystemRequirements: C++17
+SystemRequirements: C++17, Python (>= 3.8)
 biocViews:
 Imports:
   Rcpp (>= 1.0.9),
@@ -38,7 +38,8 @@ Imports:
   doRNG,
   foreach,
   msm,
-  phyloseq
+  phyloseq,
+  reticulate
 LinkingTo: Rcpp, RcppArmadillo, RcppProgress
 RoxygenNote: 7.3.2
 Encoding: UTF-8
