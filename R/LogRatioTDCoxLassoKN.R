@@ -65,7 +65,8 @@ LogRatioTDCoxLassoKN <- function(x,
                       kn_method$batch_size ,
                       kn_method$lr,
                       kn_method$weight_decay,
-                      kn_method$seed)$knockoff_x
+                      kn_method$seed,
+                      progress=progress)$knockoff_x
     }
     
   }else{
@@ -89,7 +90,8 @@ LogRatioTDCoxLassoKN <- function(x,
                       kn_method$batch_size ,
                       kn_method$lr,
                       kn_method$weight_decay,
-                      kn_method$seed)$knockoff_x
+                      kn_method$seed,
+                      progress=progress)$knockoff_x
     }
     
   }

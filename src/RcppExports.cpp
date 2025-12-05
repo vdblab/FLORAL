@@ -403,6 +403,64 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gee_NR_kn
+Rcpp::List gee_NR_kn(double N, arma::vec nt, arma::vec y, arma::mat X, double nx, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, arma::vec beta_new, arma::cube Rhat, double fihat, double lambda, double a, double alpha1, double alpha2, double ncov, double wcov, double eps, double muu);
+RcppExport SEXP _FLORAL_gee_NR_kn(SEXP NSEXP, SEXP ntSEXP, SEXP ySEXP, SEXP XSEXP, SEXP nxSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP beta_newSEXP, SEXP RhatSEXP, SEXP fihatSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP alpha1SEXP, SEXP alpha2SEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP epsSEXP, SEXP muuSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type N(NSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type nt(ntSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type nx(nxSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Function >::type linkinv(linkinvSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Function >::type mueta(muetaSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Function >::type variance(varianceSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type beta_new(beta_newSEXP);
+    Rcpp::traits::input_parameter< arma::cube >::type Rhat(RhatSEXP);
+    Rcpp::traits::input_parameter< double >::type fihat(fihatSEXP);
+    Rcpp::traits::input_parameter< double >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha1(alpha1SEXP);
+    Rcpp::traits::input_parameter< double >::type alpha2(alpha2SEXP);
+    Rcpp::traits::input_parameter< double >::type ncov(ncovSEXP);
+    Rcpp::traits::input_parameter< double >::type wcov(wcovSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type muu(muuSEXP);
+    rcpp_result_gen = Rcpp::wrap(gee_NR_kn(N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha1, alpha2, ncov, wcov, eps, muu));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gee_fit_kn
+Rcpp::List gee_fit_kn(arma::vec y, arma::mat X, arma::vec nt, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, std::string corstr, arma::vec lambda, double a, double ncov, double wcov, double tol, double eps, double muu, int maxiter1, int maxiter2, bool scalefix, double scalevalue, bool display_progress);
+RcppExport SEXP _FLORAL_gee_fit_kn(SEXP ySEXP, SEXP XSEXP, SEXP ntSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP corstrSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP tolSEXP, SEXP epsSEXP, SEXP muuSEXP, SEXP maxiter1SEXP, SEXP maxiter2SEXP, SEXP scalefixSEXP, SEXP scalevalueSEXP, SEXP display_progressSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type nt(ntSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Function >::type linkinv(linkinvSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Function >::type mueta(muetaSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Function >::type variance(varianceSEXP);
+    Rcpp::traits::input_parameter< std::string >::type corstr(corstrSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< double >::type ncov(ncovSEXP);
+    Rcpp::traits::input_parameter< double >::type wcov(wcovSEXP);
+    Rcpp::traits::input_parameter< double >::type tol(tolSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type muu(muuSEXP);
+    Rcpp::traits::input_parameter< int >::type maxiter1(maxiter1SEXP);
+    Rcpp::traits::input_parameter< int >::type maxiter2(maxiter2SEXP);
+    Rcpp::traits::input_parameter< bool >::type scalefix(scalefixSEXP);
+    Rcpp::traits::input_parameter< double >::type scalevalue(scalevalueSEXP);
+    Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
+    rcpp_result_gen = Rcpp::wrap(gee_fit_kn(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter1, maxiter2, scalefix, scalevalue, display_progress));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_FLORAL_softthreshold", (DL_FUNC) &_FLORAL_softthreshold, 2},
@@ -422,6 +480,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLORAL_gee_NR", (DL_FUNC) &_FLORAL_gee_NR, 18},
     {"_FLORAL_gee_cor", (DL_FUNC) &_FLORAL_gee_cor, 11},
     {"_FLORAL_gee_fit", (DL_FUNC) &_FLORAL_gee_fit, 19},
+    {"_FLORAL_gee_NR_kn", (DL_FUNC) &_FLORAL_gee_NR_kn, 19},
+    {"_FLORAL_gee_fit_kn", (DL_FUNC) &_FLORAL_gee_fit_kn, 19},
     {NULL, NULL, 0}
 };
 

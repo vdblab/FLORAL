@@ -283,7 +283,8 @@ def train_vae(
     gamma_full, gamma_swap, lambda_moments, delta_corr,
     sigma_list, SigmaHat, Mask, target_t,
     epochs=100, batch_size=50,
-    lr=1e-3, weight_decay=1e-2
+    lr=1e-3, weight_decay=1e-2,
+    progress=True
 ):
     """
     Training function matching R torch implementation.
@@ -324,7 +325,7 @@ def train_vae(
             optimizer.step()
             total_loss += loss.item()
 
-        if (epoch + 1) % 10 == 0:
+        if progress and (epoch + 1) % 10 == 0:
             avg_loss = total_loss / len(dataloader)
             print(f"Epoch {epoch + 1}/{epochs}: Average Loss = {avg_loss:.6f}")
 
@@ -344,7 +345,8 @@ def VAE_func_DK(x,
                  batch_size=50,
                  lr=1e-3,
                  weight_decay=1e-2,
-                 seed=123):
+                 seed=123,
+                 progress=True):
     """
     Main VAE function matching R torch VAE_func_DK implementation.
     
@@ -423,7 +425,8 @@ def VAE_func_DK(x,
         gamma_full, gamma_swap, lambda_moments, delta_corr,
         sigma_list, SigmaHat_t, Mask_t, target_t,
         epochs=epochs, batch_size=effective_batch_size,
-        lr=lr, weight_decay=weight_decay
+        lr=lr, weight_decay=weight_decay,
+        progress=progress
     )
     
     # Generate knockoffs (matching R code)

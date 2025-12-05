@@ -69,3 +69,11 @@ gee_fit <- function(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov,
     .Call('_FLORAL_gee_fit', PACKAGE = 'FLORAL', y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter1, maxiter2, scalefix, scalevalue, display_progress)
 }
 
+gee_NR_kn <- function(N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha1, alpha2, ncov, wcov, eps = 1e-6, muu = 1e6) {
+    .Call('_FLORAL_gee_NR_kn', PACKAGE = 'FLORAL', N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha1, alpha2, ncov, wcov, eps, muu)
+}
+
+gee_fit_kn <- function(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol = 1e-3, eps = 1e-6, muu = 1e6, maxiter1 = 100L, maxiter2 = 10L, scalefix = FALSE, scalevalue = 1, display_progress = TRUE) {
+    .Call('_FLORAL_gee_fit_kn', PACKAGE = 'FLORAL', y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter1, maxiter2, scalefix, scalevalue, display_progress)
+}
+
