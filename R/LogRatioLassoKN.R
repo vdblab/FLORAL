@@ -8,7 +8,7 @@ LogRatioLassoKN <- function(x,
                             mu=1,
                             fdr=0.05,
                             kn_method=NULL,
-                            offset=0,
+                            offset=c(0,1),
                             maxiter=100,
                             intercept=FALSE,
                             progress=TRUE,
@@ -130,19 +130,62 @@ LogRatioLassoKN <- function(x,
                       ifelse(KN < Original,
                              Original,0)))
   
-  threshold <- knockoff::knockoff.threshold(df_betaseq_long$W,fdr=fdr,offset=offset)
-  thres.idx <- which(lambda == threshold)
-  thres.beta = fullfit$beta[,thres.idx][(ncov+1):(ncov+p0)]
-  selected.features = names(thres.beta[thres.beta != 0])
+  # Ensure fdr and offset are vectors
+  fdr <- as.vector(fdr)
+  offset <- as.vector(offset)
+  
+  # Calculate threshold, thres.idx, thres.beta, and selected.features for each FDR×offset combination
+  threshold_list <- list()
+  thres.idx_list <- list()
+  thres.beta_list <- list()
+  selected.features_list <- list()
+  
+  combo_idx <- 1
+  for (i in seq_along(fdr)) {
+    for (j in seq_along(offset)) {
+      fdr_val <- fdr[i]
+      offset_val <- offset[j]
+      threshold <- knockoff::knockoff.threshold(df_betaseq_long$W, fdr=fdr_val, offset=offset_val)
+      threshold_list[[combo_idx]] <- threshold
+      names(threshold_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
+      
+      # Find the lambda index closest to the threshold (in case of floating point precision issues)
+      thres.idx <- which.min(abs(lambda - threshold))
+      thres.idx_list[[combo_idx]] <- thres.idx
+      names(thres.idx_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
+      
+      thres.beta <- fullfit$beta[,thres.idx][(ncov+1):(ncov+p0)]
+      thres.beta_list[[combo_idx]] <- thres.beta
+      names(thres.beta_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
+      
+      selected.features <- names(thres.beta[thres.beta != 0])
+      selected.features_list[[combo_idx]] <- selected.features
+      names(selected.features_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
+      
+      combo_idx <- combo_idx + 1
+    }
+  }
+  
+  # For backward compatibility, also store the first combination as scalar outputs
+  threshold <- threshold_list[[1]]
+  thres.idx <- thres.idx_list[[1]]
+  thres.beta <- thres.beta_list[[1]]
+  selected.features <- selected.features_list[[1]]
   
   ret <- list(beta=fullfit$beta,
               lambda=fullfit$lambda,
               a=a,
               loss=fullfit$loss,
               mse=fullfit$mse,
-              threshold=threshold,
-              thres.beta = thres.beta,
-              selected.features = selected.features
+              threshold=threshold,  # First combination for backward compatibility
+              thres.beta = thres.beta,  # First combination for backward compatibility
+              selected.features = selected.features,  # First combination for backward compatibility
+              fdr = fdr,  # Store the FDR vector
+              offset = offset,  # Store the offset vector
+              threshold_list = threshold_list,  # All thresholds (all FDR×offset combinations)
+              thres.idx_list = thres.idx_list,  # All threshold indices
+              thres.beta_list = thres.beta_list,  # All threshold betas
+              selected.features_list = selected.features_list  # All selected features
   )
   
   if (plot){
@@ -171,13 +214,46 @@ LogRatioLassoKN <- function(x,
     
     ret$pcoef <- pcoef
     
+    # Create base plot
     pkn <- df_betaseq_long |> 
       ggplot(aes(x=Original,y=KN)) + 
       geom_text(aes(label = feature_original),alpha=1) +
       xlab("Lambda when original features entered") +
       ylab("Lambda when knockoff features entered") +
-      geom_abline(slope=1,intercept = 0,color="red",linetype=2)+ 
-      geom_vline(xintercept=threshold,color="red",linetype=2)
+      geom_abline(slope=1,intercept = 0,color="red",linetype=2)
+    
+    # Add vertical lines for each FDR×offset threshold
+    if (length(threshold_list) > 1) {
+      # Multiple combinations - use different colors
+      colors <- rainbow(length(threshold_list))
+      for (i in seq_along(threshold_list)) {
+        threshold_val <- threshold_list[[i]]
+        combo_name <- names(threshold_list)[i]
+        # Extract fdr and offset from name (format: "fdr_X_offset_Y")
+        parts <- strsplit(combo_name, "_")[[1]]
+        fdr_val <- parts[2]
+        offset_val <- parts[4]
+        pkn <- pkn + 
+          geom_vline(xintercept=threshold_val, 
+                     color=colors[i], 
+                     linetype=2, 
+                     alpha=0.8,
+                     linewidth=1) +
+          annotate("text", 
+                   x=threshold_val, 
+                   y=max(df_betaseq_long$KN, na.rm=TRUE) * (0.95 - (i-1)*0.05), 
+                   label=paste0("FDR=", fdr_val, "\nOff=", offset_val), 
+                   color=colors[i],
+                   angle=90,
+                   vjust=-0.5,
+                   hjust=0.5,
+                   size=2.5)
+      }
+    } else {
+      # Single threshold case - use red
+      pkn <- pkn + 
+        geom_vline(xintercept=threshold, color="red", linetype=2)
+    }
     
     ret$pkn <- pkn
     
