@@ -1,10 +1,13 @@
+# Suppress CMD check notes for NSE variables used with dplyr
+utils::globalVariables("id")
+
 # #' Clean covariate Columns
 # #'.This converts categorical data to 1-hot encoded columns, and retains numeric column
 # #' @param df Data.frame of covariates for this dataset
 # #' @param cols columns to clean; columns not mentioned here are dropped
 # #' @param drop_first default TRUE; drop first level of encoding for 1-hot
 # #'
-# #' @return `data.frame` of recoded covariates 
+# #' @return `data.frame` of recoded covariates
 # #'
 # #' @examples
 # #' df = data.frame(x=c("A", "B","C", "A", "B"))
