@@ -2,6 +2,8 @@
 
 ## FLORAL 0.6.0
 
+CRAN release: 2025-11-22
+
 - Removing dependencies with R package `ast2ast`.
 
 ## FLORAL 0.5.0

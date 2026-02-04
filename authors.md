@@ -16,14 +16,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/vdblab/FLORAL/blob/master/DESCRIPTION)
 
-Fei T, Funnell T, Waters N, Raj S (2025). *FLORAL: Fit Log-Ratio Lasso
+Fei T, Funnell T, Waters N, Raj S (2026). *FLORAL: Fit Log-Ratio Lasso
 Regression for Compositional Data*. R package version 0.6.0,
 <https://vdblab.github.io/FLORAL/>.
 
     @Manual{,
       title = {FLORAL: Fit Log-Ratio Lasso Regression for Compositional Data},
       author = {Teng Fei and Tyler Funnell and Nicholas Waters and Sandeep Raj},
-      year = {2025},
+      year = {2026},
       note = {R package version 0.6.0},
       url = {https://vdblab.github.io/FLORAL/},
     }
