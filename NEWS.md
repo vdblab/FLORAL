@@ -1,3 +1,5 @@
+# FLORAL 0.7.0
+
 # FLORAL 0.6.0
 
 * Removing dependencies with R package `ast2ast`.
