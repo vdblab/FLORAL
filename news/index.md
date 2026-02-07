@@ -1,5 +1,9 @@
 # Changelog
 
+## FLORAL 0.7.0
+
+- Minor changes according to `dplyr` update.
+
 ## FLORAL 0.6.0
 
 CRAN release: 2025-11-22
