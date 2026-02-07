@@ -1,3 +1,7 @@
+# FLORAL 0.7.0
+
+* Minor changes according to `dplyr` update.
+
 # FLORAL 0.6.0
 
 * Removing dependencies with R package `ast2ast`.
