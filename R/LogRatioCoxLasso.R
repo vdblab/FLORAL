@@ -132,7 +132,7 @@ LogRatioCoxLasso <- function(x,
         }else if (mcv == "Cindex"){
           
           for (kk in 1:length(lidx)){
-            cvdev[kk,cv] <- 1-concordance.index(x=linprod[,kk],surv.time=test.t,surv.event=test.d)$c.index
+            cvdev[kk,cv] <- 1-concordance_index(x=linprod[,kk],surv.time=test.t,surv.event=test.d)$c.index
           }
           
         }
