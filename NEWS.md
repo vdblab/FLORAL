@@ -1,6 +1,8 @@
 # FLORAL 0.7.0
 
 * Minor changes according to `dplyr` update.
+* Since the `survcomp` package is no longer supported by CRAN, a replacement was made using the `survival` package's `concordance` function. 
+* If you find any issues with the updated concordance index calculation, please kindly report on GitHub. Thanks!
 
 # FLORAL 0.6.0
 
