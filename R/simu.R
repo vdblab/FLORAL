@@ -32,7 +32,6 @@
 #' dat <- simu(n=50,p=30,model="linear")
 #' 
 #' @import ggplot2 survival glmnet dplyr
-#' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow

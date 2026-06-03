@@ -65,7 +65,7 @@
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
-#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit median
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit median complete.cases
 #' @importFrom ComplexHeatmap Heatmap
 #' @useDynLib FLORAL
 #' @export
@@ -897,7 +897,6 @@ FLORAL <- function(x,
 #' fit <- mcv.FLORAL(mcv=2,ncore=1,x=dat$xcount,y=dat$y,ncv=2,progress=FALSE,step2=TRUE,plot=FALSE)
 #' 
 #' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach parallel
-#' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
@@ -1270,7 +1269,6 @@ mcv.FLORAL <- function(mcv=10,
 #' pmetric <- a.FLORAL(a=c(0.1,1),ncore=1,x=dat$xcount,y=dat$y,family="gaussian",ncv=2,progress=FALSE)
 #' 
 #' @import Rcpp ggplot2 survival glmnet dplyr doParallel foreach doRNG parallel
-#' @importFrom survcomp concordance.index
 #' @importFrom reshape melt
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow

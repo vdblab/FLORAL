@@ -172,32 +172,41 @@ class HybridVAE(nn.Module):
 
 def vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
              gamma_full, gamma_swap, lambda_moments, delta_corr,
-             sigma_list, SigmaHat, Mask, target_t,
+             sigma_list, SigmaHat, Mask, target_t, log_pseudo=0.0,
              return_components=False):
     """
     Loss function matching R torch implementation exactly.
+
+    Parameters
+    ----------
+    log_pseudo : float
+        log(pseudo), where pseudo is the pseudo-count added before log-transformation.
+        A feature is considered absent when its log-transformed value equals log(pseudo).
+        Default is 0.0, which corresponds to pseudo=1 (the original behaviour).
     """
     recon_x = output['recon_x']
     input_x = output['input_x']
     pres_prob = output['pres_prob']
     mu = output['mu']
     logvar = output['logvar']
-    
+
     # Clamp pres_prob to valid range [eps, 1-eps] to avoid NaN and ensure valid probabilities
     # This prevents numerical instability in sigmoid and Bernoulli distribution
     eps = 1e-7
     pres_prob = torch.clamp(pres_prob, min=eps, max=1.0 - eps)
-    
+
     # Check for NaN values and replace with default value if found
     if torch.isnan(pres_prob).any():
         # Replace NaN with 0.5 (neutral probability)
-        pres_prob = torch.where(torch.isnan(pres_prob), 
+        pres_prob = torch.where(torch.isnan(pres_prob),
                                 torch.tensor(0.5, device=pres_prob.device, dtype=pres_prob.dtype),
                                 pres_prob)
         # Re-clamp after NaN replacement
         pres_prob = torch.clamp(pres_prob, min=eps, max=1.0 - eps)
-    
-    mask = (input_x > 0).float()
+
+    # A feature is absent when log(count + pseudo) == log(pseudo), i.e. input_x == log_pseudo.
+    # Using > log_pseudo generalises the original (x > 0) check which assumed pseudo=1.
+    mask = (input_x > log_pseudo).float()
     n_batch = input_x.size(0)
     
     # Presence loss (Bernoulli)
@@ -306,12 +315,18 @@ def train_vae(
     sigma_list, SigmaHat, Mask, target_t,
     epochs=100, batch_size=50,
     lr=1e-3, weight_decay=1e-2,
-    progress=True,
+    progress=True, log_pseudo=0.0,
     return_loss_history=False
 ):
     """
     Training function matching R torch implementation.
     Uses AdamW optimizer and trains for specified epochs.
+
+    Parameters
+    ----------
+    log_pseudo : float
+        log(pseudo) passed through to vae_loss for presence/absence detection.
+        Default 0.0 corresponds to pseudo=1.
     """
     optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
 
@@ -341,11 +356,12 @@ def train_vae(
                 loss, comps = vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
                                        gamma_full, gamma_swap, lambda_moments, delta_corr,
                                        sigma_list, SigmaHat, Mask, target_t,
-                                       return_components=True)
+                                       log_pseudo=log_pseudo, return_components=True)
             else:
                 loss = vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
                                 gamma_full, gamma_swap, lambda_moments, delta_corr,
-                                sigma_list, SigmaHat, Mask, target_t)
+                                sigma_list, SigmaHat, Mask, target_t,
+                                log_pseudo=log_pseudo)
 
             if torch.isnan(loss) or torch.isinf(loss):
                 continue
@@ -390,14 +406,16 @@ def VAE_func_DK(x,
                  weight_decay=1e-2,
                  seed=123,
                  progress=True,
+                 pseudo=1.0,
                  return_loss_history=False):
     """
     Main VAE function matching R torch VAE_func_DK implementation.
-    
+
     Parameters:
     -----------
     x : numpy array or torch tensor
-        Input data matrix (n_samples, n_features)
+        Input data matrix (n_samples, n_features). Expected to be the
+        log-transformed count data, i.e. log(count + pseudo).
     latent_dim : int
         Dimension of latent space
     lambda_kl : float
@@ -426,7 +444,12 @@ def VAE_func_DK(x,
         Weight decay for optimizer
     seed : int
         Random seed
-    
+    pseudo : float
+        Pseudo-count used when constructing the log-transformed input
+        (i.e. x = log(count + pseudo)). A feature is considered absent
+        when x == log(pseudo). Absent entries in the reconstructed knockoff
+        are assigned log(pseudo) rather than 0. Default is 1.0.
+
     Returns:
     --------
     dict with keys:
@@ -436,15 +459,18 @@ def VAE_func_DK(x,
     # Set random seeds
     torch.manual_seed(seed)
     np.random.seed(seed)
-    
+
+    # log(pseudo) is the value that marks an absent feature in the log-transformed input.
+    log_pseudo = float(np.log(pseudo))
+
     # Convert input to torch tensor if needed
     if isinstance(x, np.ndarray):
         x_tensor = torch.tensor(x, dtype=torch.float32)
     else:
         x_tensor = x.float()
-    
+
     p = x_tensor.shape[1]
-    
+
     # Compute covariance matrix and mask (matching R code)
     # R: cov(x) computes covariance of columns (features), giving p×p matrix
     # NumPy: np.cov(x.T) does the same for (n_samples, n_features) input
@@ -452,16 +478,16 @@ def VAE_func_DK(x,
     SigmaHat_t = torch.tensor(np.cov(x_np.T), dtype=torch.float32)
     Mask_t = torch.tensor(np.ones((p, p)) - np.eye(p), dtype=torch.float32)
     target_t = torch.zeros(p, dtype=torch.float32)
-    
+
     # Ensure batch_size doesn't exceed dataset size
     n_samples = x_tensor.shape[0]
     effective_batch_size = min(batch_size, n_samples)
     if effective_batch_size < batch_size:
         print(f"Warning: batch_size ({batch_size}) exceeds dataset size ({n_samples}). Using batch_size={effective_batch_size}")
-    
+
     # Initialize model
     model = HybridVAE(input_dim=p, latent_dim=latent_dim)
-    
+
     # Train model
     train_result = train_vae(
         model, x_tensor,
@@ -470,30 +496,33 @@ def VAE_func_DK(x,
         sigma_list, SigmaHat_t, Mask_t, target_t,
         epochs=epochs, batch_size=effective_batch_size,
         lr=lr, weight_decay=weight_decay,
-        progress=progress,
+        progress=progress, log_pseudo=log_pseudo,
         return_loss_history=return_loss_history
     )
     if return_loss_history:
         model, loss_history = train_result
     else:
         model = train_result
-    
+
+
     # Generate knockoffs (matching R code)
     model.eval()
     with torch.no_grad():
         output = model(x_tensor)
-    
+
     # Convert to numpy arrays (matching R as_array)
     input_x = output['input_x'].numpy()
     recon_x = output['recon_x'].numpy()
     pres_prob = output['pres_prob'].numpy()
-    
+
     # Sample from Bernoulli distribution (matching R torch_bernoulli)
     mask = np.random.binomial(1, pres_prob).astype(float)
-    
-    # Generate knockoffs (matching R: knockoff_x <- recon_x * mask)
-    knockoff_x = recon_x * mask
-    
+
+    # Absent entries (mask == 0) are set to log(pseudo) rather than 0 so that
+    # the knockoff lives on the same scale as the log-transformed input regardless
+    # of the chosen pseudo-count.
+    knockoff_x = recon_x * mask + log_pseudo * (1.0 - mask)
+
     out = {'knockoff_x': knockoff_x, 'recon_x': recon_x}
     if return_loss_history:
         out['loss_history'] = loss_history
