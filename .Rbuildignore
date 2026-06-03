@@ -13,3 +13,5 @@
 ^Meta$
 ^cran-comments\.md$
 ^data-raw$
+^\.positai$
+^\.claude$

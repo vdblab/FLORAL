@@ -13,9 +13,17 @@ from torch.utils.data import DataLoader, TensorDataset
 import pandas as pd
 import numpy as np
 
-# Configure PyTorch to use single thread to avoid conflicts with R
-torch.set_num_threads(1)
-torch.set_num_interop_threads(1)
+# Configure PyTorch to use single thread to avoid conflicts with R.
+# These calls may fail if the thread pool is already running (e.g. when
+# reticulate imports torch before sourcing this file), so we suppress errors.
+try:
+    torch.set_num_threads(1)
+except RuntimeError:
+    pass
+try:
+    torch.set_num_interop_threads(1)
+except RuntimeError:
+    pass
 
 def threshold_zero(tensor, threshold=1e-3):
     """ Thresholds near-zero values to enforce sparsity. """
@@ -164,7 +172,8 @@ class HybridVAE(nn.Module):
 
 def vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
              gamma_full, gamma_swap, lambda_moments, delta_corr,
-             sigma_list, SigmaHat, Mask, target_t, log_pseudo=0.0):
+             sigma_list, SigmaHat, Mask, target_t, log_pseudo=0.0,
+             return_components=False):
     """
     Loss function matching R torch implementation exactly.
 
@@ -283,6 +292,19 @@ def vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
             lambda_moments * loss_mom +
             delta_corr * loss_corr) / n_batch
     
+    if return_components:
+        def _item(t):
+            return t.item() if isinstance(t, torch.Tensor) else float(t)
+        return loss, {
+            'total':        loss.item(),
+            'mmd_full_raw': _item(mmd_full),
+            'mmd_swap_raw': _item(mmd_swap),
+            'moments_raw':  loss_mom.item(),
+            'corr_raw':     loss_corr.item(),
+            'kl_raw':       kl_loss.item(),
+            'abun_raw':     loss_abun.item(),
+            'pres_raw':     loss_pres.item(),
+        }
     return loss
 
 
@@ -293,7 +315,8 @@ def train_vae(
     sigma_list, SigmaHat, Mask, target_t,
     epochs=100, batch_size=50,
     lr=1e-3, weight_decay=1e-2,
-    progress=True, log_pseudo=0.0
+    progress=True, log_pseudo=0.0,
+    return_loss_history=False
 ):
     """
     Training function matching R torch implementation.
@@ -310,9 +333,16 @@ def train_vae(
     dataset = TensorDataset(x)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
+    loss_history = [] if return_loss_history else None
+
     model.train()
     for epoch in range(epochs):
         total_loss = 0
+        epoch_comps = {k: 0.0 for k in [
+            'mmd_full_raw', 'mmd_swap_raw', 'moments_raw',
+            'corr_raw', 'kl_raw', 'abun_raw', 'pres_raw'
+        ]} if return_loss_history else None
+
         for batch in dataloader:
             batch_data = batch[0]
             optimizer.zero_grad()
@@ -320,31 +350,44 @@ def train_vae(
 
             # Check for NaN in output before computing loss
             if torch.isnan(output['pres_prob']).any() or torch.isnan(output['recon_x']).any():
-                # Skip this batch if NaN detected (likely numerical instability)
                 continue
 
-            loss = vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
-                           gamma_full, gamma_swap, lambda_moments, delta_corr,
-                           sigma_list, SigmaHat, Mask, target_t,
-                           log_pseudo=log_pseudo)
-            
-            # Check for NaN or Inf in loss
+            if return_loss_history:
+                loss, comps = vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
+                                       gamma_full, gamma_swap, lambda_moments, delta_corr,
+                                       sigma_list, SigmaHat, Mask, target_t,
+                                       log_pseudo=log_pseudo, return_components=True)
+            else:
+                loss = vae_loss(output, lambda_pres, lambda_kl, lambda_abun,
+                                gamma_full, gamma_swap, lambda_moments, delta_corr,
+                                sigma_list, SigmaHat, Mask, target_t,
+                                log_pseudo=log_pseudo)
+
             if torch.isnan(loss) or torch.isinf(loss):
-                # Skip this batch if loss is invalid
                 continue
 
             loss.backward()
-
-            # Gradient clipping to prevent exploding gradients
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-
             optimizer.step()
             total_loss += loss.item()
+
+            if return_loss_history:
+                for k in epoch_comps:
+                    epoch_comps[k] += comps[k]
 
         if progress and (epoch + 1) % 10 == 0:
             avg_loss = total_loss / len(dataloader)
             print(f"Epoch {epoch + 1}/{epochs}: Average Loss = {avg_loss:.6f}")
 
+        if return_loss_history:
+            n_batches = max(len(dataloader), 1)
+            entry = {'epoch': epoch + 1, 'total': total_loss / n_batches}
+            for k, v in epoch_comps.items():
+                entry[k] = v / n_batches
+            loss_history.append(entry)
+
+    if return_loss_history:
+        return model, loss_history
     return model
 
 def VAE_func_DK(x,
@@ -363,7 +406,8 @@ def VAE_func_DK(x,
                  weight_decay=1e-2,
                  seed=123,
                  progress=True,
-                 pseudo=1.0):
+                 pseudo=1.0,
+                 return_loss_history=False):
     """
     Main VAE function matching R torch VAE_func_DK implementation.
 
@@ -445,15 +489,21 @@ def VAE_func_DK(x,
     model = HybridVAE(input_dim=p, latent_dim=latent_dim)
 
     # Train model
-    model = train_vae(
+    train_result = train_vae(
         model, x_tensor,
         lambda_pres, lambda_kl, lambda_abun,
         gamma_full, gamma_swap, lambda_moments, delta_corr,
         sigma_list, SigmaHat_t, Mask_t, target_t,
         epochs=epochs, batch_size=effective_batch_size,
         lr=lr, weight_decay=weight_decay,
-        progress=progress, log_pseudo=log_pseudo
+        progress=progress, log_pseudo=log_pseudo,
+        return_loss_history=return_loss_history
     )
+    if return_loss_history:
+        model, loss_history = train_result
+    else:
+        model = train_result
+
 
     # Generate knockoffs (matching R code)
     model.eval()
@@ -473,10 +523,10 @@ def VAE_func_DK(x,
     # of the chosen pseudo-count.
     knockoff_x = recon_x * mask + log_pseudo * (1.0 - mask)
 
-    return {
-        'knockoff_x': knockoff_x,
-        'recon_x': recon_x
-    }
+    out = {'knockoff_x': knockoff_x, 'recon_x': recon_x}
+    if return_loss_history:
+        out['loss_history'] = loss_history
+    return out
 
 def generate_samples(model, num_samples, taxa_names, latent_dim=32, device="cpu"):
     model.eval()
