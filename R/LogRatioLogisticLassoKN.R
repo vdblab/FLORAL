@@ -45,7 +45,8 @@ LogRatioLogisticLassoKN <- function(x,
                       kn_method$lr,
                       kn_method$weight_decay,
                       kn_method$seed,
-                      progress=progress)$knockoff_x
+                      progress=progress,
+                      pseudo=kn_method$pseudo)$knockoff_x
     }
     
   }else{
@@ -70,7 +71,8 @@ LogRatioLogisticLassoKN <- function(x,
                       kn_method$lr,
                       kn_method$weight_decay,
                       kn_method$seed,
-                      progress=progress)$knockoff_x
+                      progress=progress,
+                      pseudo=kn_method$pseudo)$knockoff_x
     }
     
   }
