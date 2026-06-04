@@ -107,7 +107,8 @@ FLORAL <- function(x,
                                   batch_size      = 50,
                                   lr              = 1e-3,
                                   weight_decay    = 1e-2,
-                                  seed            = 123),
+                                  seed            = 123,
+                                  pseudo          = 1.0),
                    intercept=FALSE,
                    foldid=NULL,
                    step2=TRUE,
@@ -179,7 +180,8 @@ FLORAL <- function(x,
                              batch_size      = 50,
                              lr              = 1e-3,
                              weight_decay    = 1e-2,
-                             seed            = 123)
+                             seed            = 123,
+                             pseudo          = 1.0)
           }
           
           res <- LogRatioGEEKN(x,
@@ -249,7 +251,8 @@ FLORAL <- function(x,
                            batch_size      = 50,
                            lr              = 1e-3,
                            weight_decay    = 1e-2,
-                           seed            = 123)
+                           seed            = 123,
+                           pseudo          = 1.0)
         }
         
         res <- LogRatioLassoKN(x,
@@ -327,7 +330,8 @@ FLORAL <- function(x,
                              batch_size      = 50,
                              lr              = 1e-3,
                              weight_decay    = 1e-2,
-                             seed            = 123)
+                             seed            = 123,
+                             pseudo          = 1.0)
           }
           
           res <- LogRatioGEEKN(x,
@@ -397,7 +401,8 @@ FLORAL <- function(x,
                            batch_size      = 50,
                            lr              = 1e-3,
                            weight_decay    = 1e-2,
-                           seed            = 123)
+                           seed            = 123,
+                           pseudo          = 1.0)
         }
         
         res <- LogRatioLogisticLassoKN(x,
@@ -478,7 +483,8 @@ FLORAL <- function(x,
                              batch_size      = 50,
                              lr              = 1e-3,
                              weight_decay    = 1e-2,
-                             seed            = 123)
+                             seed            = 123,
+                             pseudo          = 1.0)
           }
           
           res <- LogRatioTDCoxLassoKN(newx,
@@ -536,7 +542,8 @@ FLORAL <- function(x,
                            batch_size      = 50,
                            lr              = 1e-3,
                            weight_decay    = 1e-2,
-                           seed            = 123)
+                           seed            = 123,
+                           pseudo          = 1.0)
         }
         
         res <- LogRatioCoxLassoKN(x,
@@ -625,7 +632,8 @@ FLORAL <- function(x,
                              batch_size      = 50,
                              lr              = 1e-3,
                              weight_decay    = 1e-2,
-                             seed            = 123)
+                             seed            = 123,
+                             pseudo          = 1.0)
           }
           
           res <- LogRatioFGLassoKN(newx,
@@ -702,7 +710,8 @@ FLORAL <- function(x,
                            batch_size      = 50,
                            lr              = 1e-3,
                            weight_decay    = 1e-2,
-                           seed            = 123)
+                           seed            = 123,
+                           pseudo          = 1.0)
         }
         
         res <- LogRatioFGLassoKN(newx,

@@ -19,6 +19,7 @@
 #' @param weight_decay Weight decay for optimizer (default: 1e-2)
 #' @param seed Random seed (default: 123)
 #' @param progress Logical. If TRUE (default), prints epoch progress every 10 epochs.
+#' @param pseudo Pseudo count used in the original log-transformation log(count + pseudo). Default 1.0.
 #'
 #' @return A list with components:
 #'   \item{knockoff_x}{Generated knockoff data matrix}
@@ -40,7 +41,8 @@ train_vae <- function(x,
                       lr              = 1e-3,
                       weight_decay    = 1e-2,
                       seed            = 123,
-                      progress        = TRUE) {
+                      progress        = TRUE,
+                      pseudo          = 1.0) {
   
   # Check if Python is available
   if (!reticulate::py_available()) {
@@ -135,7 +137,8 @@ train_vae <- function(x,
       lr = as.numeric(lr),
       weight_decay = as.numeric(weight_decay),
       seed = as.integer(seed),
-      progress = as.logical(progress)
+      progress = as.logical(progress),
+      pseudo = as.numeric(pseudo)
     )
   }, error = function(e) {
     # Provide more informative error messages
