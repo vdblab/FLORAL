@@ -461,7 +461,7 @@ def VAE_func_DK(x,
     np.random.seed(seed)
 
     # log(pseudo) is the value that marks an absent feature in the log-transformed input.
-    log_pseudo = float(np.log(pseudo))
+    log_pseudo = float(np.log(float(pseudo)))
 
     # Convert input to torch tensor if needed
     if isinstance(x, np.ndarray):

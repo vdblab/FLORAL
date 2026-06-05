@@ -138,7 +138,7 @@ train_vae <- function(x,
       weight_decay = as.numeric(weight_decay),
       seed = as.integer(seed),
       progress = as.logical(progress),
-      pseudo = as.numeric(pseudo)
+      pseudo = as.numeric(if (is.null(pseudo) || length(pseudo) == 0) 1.0 else pseudo[1L])
     )
   }, error = function(e) {
     # Provide more informative error messages
