@@ -40,9 +40,9 @@ FLORAL(
 
 \item{ncov}{An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.}
 
-\item{family}{Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.}
+\item{family}{Available options are \code{gaussian}, \code{binomial}, \code{poisson}, \code{cox}, \code{finegray}. \code{poisson} fits a log-ratio lasso regression with a log ("exponential") link for count outcomes.}
 
-\item{longitudinal}{\code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)}
+\item{longitudinal}{\code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"}, \code{"binomial"} or \code{"poisson"} will fit a GEE model.)}
 
 \item{id}{If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.}
 
@@ -103,6 +103,10 @@ fit <- FLORAL(dat$xcount,dat$y,family="gaussian",ncv=2,progress=FALSE,step2=TRUE
 # Binary outcome
 # dat <- simu(n=50,p=30,model="binomial")
 # fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
+
+# Count outcome (log/exponential link)
+# dat <- simu(n=50,p=30,model="poisson")
+# fit <- FLORAL(dat$xcount,dat$y,family="poisson",progress=FALSE,step2=TRUE)
 
 # Survival outcome
 # dat <- simu(n=50,p=30,model="cox")

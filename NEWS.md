@@ -1,3 +1,8 @@
+# FLORAL 0.7.1
+
+* Adding support for count outcomes through a new `family = "poisson"` option with a log ("exponential") link. This is available both for cross-sectional data (a new log-ratio Poisson lasso engine) and for longitudinal data via the GEE model (`longitudinal = TRUE`).
+* `simu()` gains a cross-sectional `model = "poisson"` scenario and a `geetype = "poisson"` scenario for generating correlated count outcomes.
+
 # FLORAL 0.7.0
 
 * Minor changes according to `dplyr` update.

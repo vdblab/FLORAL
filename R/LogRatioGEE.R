@@ -42,10 +42,23 @@ LogRatioGEE <- function(x,
     }else if (a == 0){
       lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))*100
     }
-    
+
+  }else if (family == "poisson"){
+
+    sfun = scale(y)
+
+    if (a > 0){
+      lambda0 <- max(abs(t(sfun) %*% x))/(min(a,1)*nrow(x))*100
+    }else if (a == 0){
+      lambda0 <- max(abs(t(sfun) %*% x))/(1e-3*nrow(x))*100
+    }
+
   }
-  
+
   family0 <- family
+  # For log-link (Poisson) the linear predictor is clamped inside the GEE engine
+  # to keep exp(eta) finite during Newton overshoot; other families are unclamped.
+  clampeta <- if (family0 == "poisson") 30 else 0
   if (is.character(family)) family <- get(family)
   if (is.function(family))  family <- family()
   
@@ -74,7 +87,8 @@ LogRatioGEE <- function(x,
                      maxiter2=1,
                      scalefix=scalefix,
                      scalevalue=scalevalue,
-                     display_progress=progress)
+                     display_progress=progress,
+                     clampeta=clampeta)
   
   if (!is.null(colnames(x))){
     rownames(fullfit$beta) = colnames(x)
@@ -138,7 +152,8 @@ LogRatioGEE <- function(x,
                          maxiter2=1,
                          scalefix=scalefix,
                          scalevalue=scalevalue,
-                         display_progress=progress)
+                         display_progress=progress,
+                     clampeta=clampeta)
         
         cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
         mufit=family$linkinv(test.x %*% cvfit$beta)
@@ -185,7 +200,8 @@ LogRatioGEE <- function(x,
                          maxiter2=1,
                          scalefix=scalefix,
                          scalevalue=scalevalue,
-                         display_progress=progress)
+                         display_progress=progress,
+                     clampeta=clampeta)
         
         cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
         mufit=family$linkinv(test.x %*% cvfit$beta)
@@ -309,24 +325,34 @@ LogRatioGEE <- function(x,
             }
             
           }else if (family0 == "binomial"){
-            
+
             sfun = y-0.5
-            
+
             if (a > 0){
               lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
               lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
-            
+
+          }else if (family0 == "poisson"){
+
+            sfun = scale(y)
+
+            if (a > 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
+            }else if (a == 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
+            }
+
           }
-          
-          # if (is.null(lambda.min.ratio)) 
+
+          # if (is.null(lambda.min.ratio))
           # lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
           lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
-          
+
           fullfit <- gee_fit(y,
                              x.select.min,
-                             nt, 
+                             nt,
                              family$linkinv,
                              family$mu.eta,
                              family$variance,
@@ -342,24 +368,25 @@ LogRatioGEE <- function(x,
                              maxiter2=1,
                              scalefix=scalefix,
                              scalevalue=scalevalue,
-                             display_progress=FALSE)
-          
+                             display_progress=FALSE,
+                             clampeta=clampeta)
+
           cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
-          
+
           if (ncore == 1){
-            
+
             for (cv in 1:ncv){
-              
+
               train.x <- x.select.min[labels[id]!=cv,]
               train.y <- y[labels[id]!=cv]
               test.x <- x.select.min[labels[id]==cv,]
               test.y <- y[labels[id]==cv]
               train.nt <- nt[labels!=cv]
               test.nt <- nt[labels==cv]
-              
+
               cvfit <- gee_fit(train.y,
                                train.x,
-                               train.nt, 
+                               train.nt,
                                family$linkinv,
                                family$mu.eta,
                                family$variance,
@@ -375,35 +402,36 @@ LogRatioGEE <- function(x,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=FALSE)
-              
+                               display_progress=FALSE,
+                             clampeta=clampeta)
+
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)
               cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
-              
+
             }
-            
+
           }else if(ncore > 1){
-            
+
             # if (progress) cat(paste0("Step2: Using ", ncore ," core for cross-validation computation."))
-            
+
             Sys.sleep(1)
-            
+
             cl <- makeCluster(ncore)
             registerDoParallel(cl)
-            
+
             cvmse <- foreach(cv=1:ncv,.combine=cbind) %dopar% {
-              
+
               train.x <- x.select.min[labels[id]!=cv,]
               train.y <- y[labels[id]!=cv]
               test.x <- x.select.min[labels[id]==cv,]
               test.y <- y[labels[id]==cv]
               train.nt <- nt[labels!=cv]
               test.nt <- nt[labels==cv]
-              
+
               cvfit <- gee_fit(train.y,
                                train.x,
-                               train.nt, 
+                               train.nt,
                                family$linkinv,
                                family$mu.eta,
                                family$variance,
@@ -415,33 +443,34 @@ LogRatioGEE <- function(x,
                                tol=1e-3,
                                eps=1e-6,
                                muu=0,
-                               maxiter1=100,                         
+                               maxiter1=100,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=FALSE)
-              
+                               display_progress=FALSE,
+                             clampeta=clampeta)
+
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)
               apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
-              
+
             }
-            
+
             stopCluster(cl)
-            
+
           }
-          
+
           mean.cvmse <- rowMeans(cvmse)
           se.cvmse <- apply(cvmse,1,function(x) sd(x)/sqrt(ncv))
-          
+
           idx.min <- which.min(mean.cvmse)
           se.min <- se.cvmse[idx.min]
           idx.1se <- suppressWarnings(min(which(mean.cvmse < mean.cvmse[idx.min] + se.min & 1:length.lambda < idx.min)))
-          
+
           # betafilt <- fullfit$beta
           # betafilt[abs(betafilt) < 1e-3] = 0
           # betafilt[apply(betafilt, 2,function(x) abs(x) < max(abs(x))*0.01)] <- 0
-          
+
           betafilt <- fullfit$beta
           beta_filtered[abs(beta_filtered) < 1e-3] = 0
           
@@ -532,15 +561,25 @@ LogRatioGEE <- function(x,
             }
             
           }else if (family0 == "binomial"){
-            
+
             sfun = y-0.5
-            
+
             if (a > 0){
               lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
             }else if (a == 0){
               lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
             }
-            
+
+          }else if (family0 == "poisson"){
+
+            sfun = scale(y)
+
+            if (a > 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(min(a,1)*nrow(x.select.min))*100
+            }else if (a == 0){
+              lambda0 <- max(abs(t(sfun) %*% x.select.min))/(1e-3*nrow(x.select.min))*100
+            }
+
           }
           
           # if (is.null(lambda.min.ratio)) 
@@ -565,7 +604,8 @@ LogRatioGEE <- function(x,
                              maxiter2=1,
                              scalefix=scalefix,
                              scalevalue=scalevalue,
-                             display_progress=FALSE)
+                             display_progress=FALSE,
+                             clampeta=clampeta)
           
           cvmse <- matrix(NA,nrow=length.lambda,ncol=ncv)
           
@@ -600,7 +640,8 @@ LogRatioGEE <- function(x,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=FALSE)
+                               display_progress=FALSE,
+                             clampeta=clampeta)
               
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)
@@ -644,7 +685,8 @@ LogRatioGEE <- function(x,
                                maxiter2=1,
                                scalefix=scalefix,
                                scalevalue=scalevalue,
-                               display_progress=FALSE)
+                               display_progress=FALSE,
+                             clampeta=clampeta)
               
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
               mufit=family$linkinv(test.x %*% cvfit$beta)

@@ -3,7 +3,7 @@
 #' @description Simulate a dataset from log-ratio model.
 #' @param n An integer of sample size
 #' @param p An integer of number of features (taxa).
-#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", "gee" (scalar outcome with time-dependent features), or "timedep" (survival endpoint with time-dependent features).
+#' @param model Type of models associated with outcome variable, can be "linear", "binomial", "poisson" (count outcome with a log link), "cox", "finegray", "gee" (scalar outcome with time-dependent features), or "timedep" (survival endpoint with time-dependent features).
 #' @param weak Number of features with \code{weak} effect size.
 #' @param strong Number of features with \code{strong} effect size.
 #' @param weaksize Actual effect size for \code{weak} effect size. Must be positive.
@@ -12,7 +12,7 @@
 #' @param rho Parameter controlling the correlated structure between taxa. Ranges between 0 and 1.
 #' @param timedep_slope If \code{model} is "timedep", this parameter specifies the slope for the feature trajectories. Please refer to the Simulation section of the manuscript for more details.
 #' @param timedep_cor If \code{model} is "timedep", this parameter specifies the sample-wise correlations between longitudinal features. Please refer to the Simulation section of the manuscript for more details.
-#' @param geetype If \code{model} is "gee", \code{geetype} is the type of GEE outcomes. Now support "gaussian" and "binomial".
+#' @param geetype If \code{model} is "gee", \code{geetype} is the type of GEE outcomes. Now support "gaussian", "binomial" and "poisson". For "poisson", within-cluster correlation is induced through a subject-level random intercept with variance \code{rhogee}.
 #' @param m If \code{model} is "gee", \code{m} is the number of repeated measurements per subject.
 #' @param corstr If \code{model} is "gee", \code{corstr} is the working correlation structure. Now support "independence", "exchangeable", and "AR-1".
 #' @param sdvec If \code{model} is "gee" and \code{geetype} is "gaussian", \code{sdvec} is the vector of standard deviations of each outcome variable.
@@ -36,7 +36,7 @@
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
-#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian poisson na.omit rpois
 #' @importFrom msm dpexp ppexp rpexp
 #' @importFrom mvtnorm rmvnorm
 #' @useDynLib FLORAL
@@ -72,7 +72,7 @@ simu <- function(n = 100,
   beta[weak_idx] <- rep(c(weaksize,-weaksize),weak/2)
   beta[strong_idx] <- rep(c(strongsize,-strongsize),strong/2)
   
-  if (model %in% c("linear","binomial")){
+  if (model %in% c("linear","binomial","poisson")){
     y <- rep(NA,length=n)
   }else if (model == "cox"){
     t <- rep(NA,length=n)
@@ -293,11 +293,41 @@ simu <- function(n = 100,
     }
     
     ret <- list(xcount=xcount,x=xobs,y=y,beta=betavec,idx=true_set)
-    
+
     if (intercept) ret$intercept=intcpt
-    
+
     if (ncov > 0) ret$xcov=xcov
-    
+
+  }else if(model == "poisson"){
+
+    # Center the compositional log-ratio signal so the baseline count level is
+    # moderate, and softly cap the linear predictor, to avoid the extreme,
+    # heavy-tailed counts that arise from exponentiating an uncentred predictor
+    # built from log-count features.
+    eta <- x[,true_set] %*% beta
+    eta <- eta - mean(eta)
+
+    if (ncov > 0) eta <- eta + xcov %*% betacov
+
+    if(intercept) {
+
+      intcpt <- rnorm(1,mean=1,sd=1)
+      eta <- eta + intcpt
+
+    }
+
+    mu <- exp(pmin(eta, 6))
+
+    for (i in 1:n){
+      y[i] <- rpois(1,lambda=mu[i])
+    }
+
+    ret <- list(xcount=xcount,x=xobs,y=y,beta=betavec,idx=true_set)
+
+    if (intercept) ret$intercept=intcpt
+
+    if (ncov > 0) ret$xcov=xcov
+
   }else if(model == "cox"){
     
     eta <- x[,true_set] %*% beta
@@ -545,18 +575,39 @@ simu <- function(n = 100,
         }
         
       }else if (corstr == "AR-1"){
-        
+
         for (i in 1:n0){
-          
+
           mu <- prob[id.vect==i]
           y[id.vect==i] <- binsimuar1(mu,rhogee)
-          
+
         }
-        
+
       }
-      
+
+    }else if (geetype == "poisson"){
+
+      eta <- tvec*geeslope + x[,true_set] %*% beta
+      if(intercept) {
+        intcpt <- rnorm(1,mean=1,sd=1)
+        eta <- eta + intcpt
+      }
+
+      y <- rep(NA,n)
+
+      # A subject-level random intercept induces positive within-cluster
+      # correlation among the counts (a Poisson-lognormal mixture). The linear
+      # predictor is softly capped to keep the simulated counts in a realistic
+      # range.
+      b <- rnorm(n0, mean=0, sd=sqrt(rhogee))
+
+      for (i in 1:n0){
+        mu <- exp(pmin(eta[id.vect==i] + b[i], 6))
+        y[id.vect==i] <- rpois(length(mu), lambda=mu)
+      }
+
     }
-    
+
     ret <- list(xcount=xcount,
                 x=xobs,
                 y=y,

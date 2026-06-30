@@ -33,7 +33,7 @@ simu(
 
 \item{p}{An integer of number of features (taxa).}
 
-\item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "cox", "finegray", "gee" (scalar outcome with time-dependent features), or "timedep" (survival endpoint with time-dependent features).}
+\item{model}{Type of models associated with outcome variable, can be "linear", "binomial", "poisson" (count outcome with a log link), "cox", "finegray", "gee" (scalar outcome with time-dependent features), or "timedep" (survival endpoint with time-dependent features).}
 
 \item{weak}{Number of features with \code{weak} effect size.}
 
@@ -51,7 +51,7 @@ simu(
 
 \item{timedep_cor}{If \code{model} is "timedep", this parameter specifies the sample-wise correlations between longitudinal features. Please refer to the Simulation section of the manuscript for more details.}
 
-\item{geetype}{If \code{model} is "gee", \code{geetype} is the type of GEE outcomes. Now support "gaussian" and "binomial".}
+\item{geetype}{If \code{model} is "gee", \code{geetype} is the type of GEE outcomes. Now support "gaussian", "binomial" and "poisson". For "poisson", within-cluster correlation is induced through a subject-level random intercept with variance \code{rhogee}.}
 
 \item{m}{If \code{model} is "gee", \code{m} is the number of repeated measurements per subject.}
 

@@ -4,8 +4,8 @@
 #' @param x Feature matrix, where rows specify subjects and columns specify features. The first \code{ncov} columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
 #' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
-#' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
-#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)
+#' @param family Available options are \code{gaussian}, \code{binomial}, \code{poisson}, \code{cox}, \code{finegray}. \code{poisson} fits a log-ratio lasso regression with a log ("exponential") link for count outcomes.
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"}, \code{"binomial"} or \code{"poisson"} will fit a GEE model.)
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
 #' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
@@ -42,7 +42,11 @@
 #' # Binary outcome
 #' # dat <- simu(n=50,p=30,model="binomial")
 #' # fit <- FLORAL(dat$xcount,dat$y,family="binomial",progress=FALSE,step2=TRUE)
-#' 
+#'
+#' # Count outcome (log/exponential link)
+#' # dat <- simu(n=50,p=30,model="poisson")
+#' # fit <- FLORAL(dat$xcount,dat$y,family="poisson",progress=FALSE,step2=TRUE)
+#'
 #' # Survival outcome
 #' # dat <- simu(n=50,p=30,model="cox")
 #' # fit <- FLORAL(dat$xcount,survival::Surv(dat$t,dat$d),family="cox",progress=FALSE,step2=TRUE)
@@ -63,7 +67,7 @@
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
-#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit median complete.cases
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian poisson na.omit median complete.cases
 #' @useDynLib FLORAL
 #' @export
 
@@ -103,7 +107,7 @@ FLORAL <- function(x,
   }else if (a <= 1){
     if (progress) cat(paste0("Using elastic net with a=",a,"."))
   }else if (a > 1){
-    if (longitudinal & family %in% c("gaussian","binomial")){
+    if (longitudinal & family %in% c("gaussian","binomial","poisson")){
       if (progress) cat(paste0("Using SCAD with a=",a,"."))
     }else{
       stop("`a`>1 is not yet supported for non-GEE models.")
@@ -248,7 +252,75 @@ FLORAL <- function(x,
                                    plot,
                                    ncore=ncore)
     }
-    
+
+  }else if(family == "poisson"){
+
+    if (longitudinal){
+
+      if (is.null(id)){
+
+        stop("`id` must be specified if `longitudinal` is TRUE and `family` is poisson.")
+
+      }else{
+
+        if (!intercept){
+          warning("Setting `intercept=TRUE` is strongly recommended for a Poisson GEE model: the log link requires an intercept to capture the baseline count level, otherwise the coefficient path may be degenerate.")
+        }
+
+        if (intercept){
+
+          x0 <- cbind(1,x)
+          ncov <- ncov + 1
+          if (!is.null(colnames(x))){
+            colnames(x0) <- c("Intercept",colnames(x))
+          }
+          x <- x0
+        }
+
+        id <- as.numeric(as.factor(id))
+
+        res <- LogRatioGEE(x,
+                           y,
+                           id,
+                           ncov,
+                           intercept,
+                           family,
+                           corstr,
+                           scalefix,
+                           scalevalue,
+                           length.lambda,
+                           lambda.min.ratio,
+                           ncov.lambda.weight,
+                           a,
+                           mu,
+                           pfilter,
+                           ncv,
+                           foldid,
+                           step2,
+                           progress,
+                           plot,
+                           ncore)
+
+      }
+
+    }else{
+      res <- LogRatioPoissonLasso(x,
+                                  y,
+                                  ncov,
+                                  length.lambda,
+                                  lambda.min.ratio,
+                                  ncov.lambda.weight,
+                                  a,
+                                  mu,
+                                  maxiter,
+                                  ncv,
+                                  foldid,
+                                  step2,
+                                  progress,
+                                  plot,
+                                  ncore=ncore)
+    }
+
   }else if(family == "cox"){
     
     if (longitudinal){
@@ -417,7 +489,7 @@ FLORAL <- function(x,
   
   if (step2){
     
-    if (longitudinal & family %in% c("gaussian","binomial")){ # For GEE
+    if (longitudinal & family %in% c("gaussian","binomial","poisson")){ # For GEE
       
       res$selected.feature <- list(min=names(res$best.beta$min)[which(res$best.beta$min!=0)],
                                    `1se`=names(res$best.beta$`1se`)[which(res$best.beta$`1se`!=0)],
@@ -524,8 +596,8 @@ FLORAL <- function(x,
 #' @param x Feature matrix, where rows specify subjects and columns specify features. The first \code{ncov} columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
 #' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
-#' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
-#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)
+#' @param family Available options are \code{gaussian}, \code{binomial}, \code{poisson}, \code{cox}, \code{finegray}. \code{poisson} fits a log-ratio lasso regression with a log ("exponential") link for count outcomes.
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"}, \code{"binomial"} or \code{"poisson"} will fit a GEE model.)
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
 #' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
@@ -561,7 +633,7 @@ FLORAL <- function(x,
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
-#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian poisson na.omit
 #' @useDynLib FLORAL
 #' @export
 
@@ -642,7 +714,7 @@ mcv.FLORAL <- function(mcv=10,
         
       }
       
-      if (longitudinal & family %in% c("gaussian","binomial")){
+      if (longitudinal & family %in% c("gaussian","binomial","poisson")){
         
         res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
                     `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
@@ -678,7 +750,7 @@ mcv.FLORAL <- function(mcv=10,
         if (family %in% c("cox","finegray")){
           res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
           res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-        }else if (family %in% c("gaussian","binomial")){
+        }else if (family %in% c("gaussian","binomial","poisson")){
           res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
           res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
         }
@@ -727,7 +799,7 @@ mcv.FLORAL <- function(mcv=10,
       
       stopCluster(cl)
       
-      if (longitudinal & family %in% c("gaussian","binomial")){
+      if (longitudinal & family %in% c("gaussian","binomial","poisson")){
         
         res <- list(min=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$min)))/mcv,
                     `1se`=table(unlist(lapply(FLORAL.res,function(x) x$selected.feature$`1se`)))/mcv,
@@ -763,7 +835,7 @@ mcv.FLORAL <- function(mcv=10,
         if (family %in% c("cox","finegray")){
           res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,5])),na.rm=TRUE)[names(res$min.2stage.ratios)]
           res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,5])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
-        }else if (family %in% c("gaussian","binomial")){
+        }else if (family %in% c("gaussian","binomial","poisson")){
           res$min.2stage.ratios.p = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$min)>0) x$step2.tables$min[,4])),na.rm=TRUE)[names(res$min.2stage.ratios)]
           res$`1se.2stage.ratios.p` = colMeans(bind_rows(lapply(FLORAL.res,function(x) if(length(x$step2.tables$`1se`)>0) x$step2.tables$`1se`[,4])),na.rm=TRUE)[names(res$`1se.2stage.ratios`)]
         }
@@ -811,7 +883,7 @@ mcv.FLORAL <- function(mcv=10,
     df_plot$Avg.coef <- res$min.2stage.ratios.coef[df_plot$taxa]
     df_plot$coefsign <- sign(df_plot$Avg.coef)
     
-    if (longitudinal & family %in% c("gaussian","binomial")){
+    if (longitudinal & family %in% c("gaussian","binomial","poisson")){
       
       res$p_min_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
         geom_bar(aes(weight=.data$prob),color="darkgrey") +
@@ -850,7 +922,7 @@ mcv.FLORAL <- function(mcv=10,
     df_plot$Avg.coef <- res$`1se.2stage.ratios.coef`[df_plot$taxa]
     df_plot$coefsign <- sign(df_plot$Avg.coef)
     
-    if (longitudinal & family %in% c("gaussian","binomial")){
+    if (longitudinal & family %in% c("gaussian","binomial","poisson")){
       
       res$p_1se_ratio <- ggplot(df_plot, aes(y=.data$taxa,fill=.data$Avg.coef)) + 
         geom_bar(aes(weight=.data$prob),color="darkgrey") +
@@ -898,8 +970,8 @@ mcv.FLORAL <- function(mcv=10,
 #' @param x Feature matrix, where rows specify subjects and columns specify features. The first \code{ncov} columns should be patient characteristics and the rest columns are microbiome absolute counts corresponding to various taxa. If \code{x} contains longitudinal data, the rows must be sorted in the same order of the subject IDs used in \code{y}.
 #' @param y Outcome. For a continuous or binary outcome, \code{y} is a vector. For survival outcome, \code{y} is a \code{Surv} object.
 #' @param ncov An integer indicating the number of first \code{ncov} columns in \code{x} that will not be subject to the zero-sum constraint.
-#' @param family Available options are \code{gaussian}, \code{binomial}, \code{cox}, \code{finegray}.
-#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"} or \code{"binomial"} will fit a GEE model.)
+#' @param family Available options are \code{gaussian}, \code{binomial}, \code{poisson}, \code{cox}, \code{finegray}. \code{poisson} fits a log-ratio lasso regression with a log ("exponential") link for count outcomes.
+#' @param longitudinal \code{TRUE} or \code{FALSE}, indicating whether longitudinal data matrix is specified for input \code{x}. (\code{Longitudinal=TRUE} and \code{family="cox"} or \code{"finegray"} will fit a time-dependent covariate model. \code{Longitudinal=TRUE} and \code{family="gaussian"}, \code{"binomial"} or \code{"poisson"} will fit a GEE model.)
 #' @param id If \code{longitudinal} is \code{TRUE}, \code{id} specifies subject IDs corresponding to the rows of input \code{x}.
 #' @param tobs If \code{longitudinal} is \code{TRUE}, \code{tobs} specifies time points corresponding to the rows of input \code{x}.
 #' @param failcode If \code{family = finegray}, \code{failcode} specifies the failure type of interest. This must be a positive integer.
@@ -933,7 +1005,7 @@ mcv.FLORAL <- function(mcv=10,
 #' @importFrom utils combn
 #' @importFrom grDevices rainbow
 #' @importFrom caret createFolds
-#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian na.omit
+#' @importFrom stats dist rbinom rexp rmultinom rnorm runif sd step glm binomial gaussian poisson na.omit
 #' @useDynLib FLORAL
 #' @export
 

@@ -103,6 +103,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// poisson_enet_al
+Rcpp::List poisson_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, double wcov, double a, bool adjust, unsigned int ncov, bool display_progress, bool loop1, bool loop2);
+RcppExport SEXP _FLORAL_poisson_enet_al(SEXP xSEXP, SEXP ySEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP wcovSEXP, SEXP aSEXP, SEXP adjustSEXP, SEXP ncovSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< arma::mat >::type x(xSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type len(lenSEXP);
+    Rcpp::traits::input_parameter< double >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< int >::type ub(ubSEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< double >::type wcov(wcovSEXP);
+    Rcpp::traits::input_parameter< double >::type a(aSEXP);
+    Rcpp::traits::input_parameter< bool >::type adjust(adjustSEXP);
+    Rcpp::traits::input_parameter< unsigned int >::type ncov(ncovSEXP);
+    Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
+    Rcpp::traits::input_parameter< bool >::type loop1(loop1SEXP);
+    Rcpp::traits::input_parameter< bool >::type loop2(loop2SEXP);
+    rcpp_result_gen = Rcpp::wrap(poisson_enet_al(x, y, len, mu, ub, lambda, wcov, a, adjust, ncov, display_progress, loop1, loop2));
+    return rcpp_result_gen;
+END_RCPP
+}
 // cox_enet_al
 Rcpp::List cox_enet_al(arma::mat x, arma::vec t, arma::vec d, arma::vec tj, int len, double mu, int ub, arma::vec lambda, double wcov, double a, bool adjust, unsigned int ncov, double devnull, bool display_progress, bool loop1, bool loop2, bool notcv);
 RcppExport SEXP _FLORAL_cox_enet_al(SEXP xSEXP, SEXP tSEXP, SEXP dSEXP, SEXP tjSEXP, SEXP lenSEXP, SEXP muSEXP, SEXP ubSEXP, SEXP lambdaSEXP, SEXP wcovSEXP, SEXP aSEXP, SEXP adjustSEXP, SEXP ncovSEXP, SEXP devnullSEXP, SEXP display_progressSEXP, SEXP loop1SEXP, SEXP loop2SEXP, SEXP notcvSEXP) {
@@ -182,8 +205,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // gee_NR
-Rcpp::List gee_NR(double N, arma::vec nt, arma::vec y, arma::mat X, double nx, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, arma::vec beta_new, arma::cube Rhat, double fihat, double lambda, double a, double alpha, double ncov, double wcov, double eps, double muu);
-RcppExport SEXP _FLORAL_gee_NR(SEXP NSEXP, SEXP ntSEXP, SEXP ySEXP, SEXP XSEXP, SEXP nxSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP beta_newSEXP, SEXP RhatSEXP, SEXP fihatSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP alphaSEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP epsSEXP, SEXP muuSEXP) {
+Rcpp::List gee_NR(double N, arma::vec nt, arma::vec y, arma::mat X, double nx, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, arma::vec beta_new, arma::cube Rhat, double fihat, double lambda, double a, double alpha, double ncov, double wcov, double eps, double muu, double clampeta);
+RcppExport SEXP _FLORAL_gee_NR(SEXP NSEXP, SEXP ntSEXP, SEXP ySEXP, SEXP XSEXP, SEXP nxSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP beta_newSEXP, SEXP RhatSEXP, SEXP fihatSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP alphaSEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP epsSEXP, SEXP muuSEXP, SEXP clampetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -205,13 +228,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type wcov(wcovSEXP);
     Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
     Rcpp::traits::input_parameter< double >::type muu(muuSEXP);
-    rcpp_result_gen = Rcpp::wrap(gee_NR(N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha, ncov, wcov, eps, muu));
+    Rcpp::traits::input_parameter< double >::type clampeta(clampetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(gee_NR(N, nt, y, X, nx, linkinv, mueta, variance, beta_new, Rhat, fihat, lambda, a, alpha, ncov, wcov, eps, muu, clampeta));
     return rcpp_result_gen;
 END_RCPP
 }
 // gee_cor
-Rcpp::List gee_cor(double N, arma::vec nt, arma::vec y, arma::mat X, Rcpp::Function linkinv, Rcpp::Function variance, arma::vec beta_new, std::string corstr, double maxclsz, bool scalefix, double scalevalue);
-RcppExport SEXP _FLORAL_gee_cor(SEXP NSEXP, SEXP ntSEXP, SEXP ySEXP, SEXP XSEXP, SEXP linkinvSEXP, SEXP varianceSEXP, SEXP beta_newSEXP, SEXP corstrSEXP, SEXP maxclszSEXP, SEXP scalefixSEXP, SEXP scalevalueSEXP) {
+Rcpp::List gee_cor(double N, arma::vec nt, arma::vec y, arma::mat X, Rcpp::Function linkinv, Rcpp::Function variance, arma::vec beta_new, std::string corstr, double maxclsz, bool scalefix, double scalevalue, double clampeta);
+RcppExport SEXP _FLORAL_gee_cor(SEXP NSEXP, SEXP ntSEXP, SEXP ySEXP, SEXP XSEXP, SEXP linkinvSEXP, SEXP varianceSEXP, SEXP beta_newSEXP, SEXP corstrSEXP, SEXP maxclszSEXP, SEXP scalefixSEXP, SEXP scalevalueSEXP, SEXP clampetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -226,13 +250,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type maxclsz(maxclszSEXP);
     Rcpp::traits::input_parameter< bool >::type scalefix(scalefixSEXP);
     Rcpp::traits::input_parameter< double >::type scalevalue(scalevalueSEXP);
-    rcpp_result_gen = Rcpp::wrap(gee_cor(N, nt, y, X, linkinv, variance, beta_new, corstr, maxclsz, scalefix, scalevalue));
+    Rcpp::traits::input_parameter< double >::type clampeta(clampetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(gee_cor(N, nt, y, X, linkinv, variance, beta_new, corstr, maxclsz, scalefix, scalevalue, clampeta));
     return rcpp_result_gen;
 END_RCPP
 }
 // gee_fit
-Rcpp::List gee_fit(arma::vec y, arma::mat X, arma::vec nt, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, std::string corstr, arma::vec lambda, double a, double ncov, double wcov, double tol, double eps, double muu, int maxiter1, int maxiter2, bool scalefix, double scalevalue, bool display_progress);
-RcppExport SEXP _FLORAL_gee_fit(SEXP ySEXP, SEXP XSEXP, SEXP ntSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP corstrSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP tolSEXP, SEXP epsSEXP, SEXP muuSEXP, SEXP maxiter1SEXP, SEXP maxiter2SEXP, SEXP scalefixSEXP, SEXP scalevalueSEXP, SEXP display_progressSEXP) {
+Rcpp::List gee_fit(arma::vec y, arma::mat X, arma::vec nt, Rcpp::Function linkinv, Rcpp::Function mueta, Rcpp::Function variance, std::string corstr, arma::vec lambda, double a, double ncov, double wcov, double tol, double eps, double muu, int maxiter1, int maxiter2, bool scalefix, double scalevalue, bool display_progress, double clampeta);
+RcppExport SEXP _FLORAL_gee_fit(SEXP ySEXP, SEXP XSEXP, SEXP ntSEXP, SEXP linkinvSEXP, SEXP muetaSEXP, SEXP varianceSEXP, SEXP corstrSEXP, SEXP lambdaSEXP, SEXP aSEXP, SEXP ncovSEXP, SEXP wcovSEXP, SEXP tolSEXP, SEXP epsSEXP, SEXP muuSEXP, SEXP maxiter1SEXP, SEXP maxiter2SEXP, SEXP scalefixSEXP, SEXP scalevalueSEXP, SEXP display_progressSEXP, SEXP clampetaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -255,7 +280,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type scalefix(scalefixSEXP);
     Rcpp::traits::input_parameter< double >::type scalevalue(scalevalueSEXP);
     Rcpp::traits::input_parameter< bool >::type display_progress(display_progressSEXP);
-    rcpp_result_gen = Rcpp::wrap(gee_fit(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter1, maxiter2, scalefix, scalevalue, display_progress));
+    Rcpp::traits::input_parameter< double >::type clampeta(clampetaSEXP);
+    rcpp_result_gen = Rcpp::wrap(gee_fit(y, X, nt, linkinv, mueta, variance, corstr, lambda, a, ncov, wcov, tol, eps, muu, maxiter1, maxiter2, scalefix, scalevalue, display_progress, clampeta));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -266,12 +292,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_FLORAL_gd_cov_al", (DL_FUNC) &_FLORAL_gd_cov_al, 11},
     {"_FLORAL_linear_enet_al", (DL_FUNC) &_FLORAL_linear_enet_al, 11},
     {"_FLORAL_logistic_enet_al", (DL_FUNC) &_FLORAL_logistic_enet_al, 13},
+    {"_FLORAL_poisson_enet_al", (DL_FUNC) &_FLORAL_poisson_enet_al, 13},
     {"_FLORAL_cox_enet_al", (DL_FUNC) &_FLORAL_cox_enet_al, 17},
     {"_FLORAL_cox_timedep_enet_al", (DL_FUNC) &_FLORAL_cox_timedep_enet_al, 15},
     {"_FLORAL_fg_enet_al", (DL_FUNC) &_FLORAL_fg_enet_al, 16},
-    {"_FLORAL_gee_NR", (DL_FUNC) &_FLORAL_gee_NR, 18},
-    {"_FLORAL_gee_cor", (DL_FUNC) &_FLORAL_gee_cor, 11},
-    {"_FLORAL_gee_fit", (DL_FUNC) &_FLORAL_gee_fit, 19},
+    {"_FLORAL_gee_NR", (DL_FUNC) &_FLORAL_gee_NR, 19},
+    {"_FLORAL_gee_cor", (DL_FUNC) &_FLORAL_gee_cor, 12},
+    {"_FLORAL_gee_fit", (DL_FUNC) &_FLORAL_gee_fit, 20},
     {NULL, NULL, 0}
 };
 

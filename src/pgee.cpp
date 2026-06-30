@@ -29,16 +29,20 @@ Rcpp::List gee_NR(double N, // Number of subjects
                   double ncov,
                   double wcov,
                   double eps=1e-6,
-                  double muu=1e6){
-  
+                  double muu=1e6,
+                  double clampeta=0){
+
   // Rcpp::Rcout << "Flag1" << endl;
-  
+
   arma::vec aindex=cumsum(nt);
   arma::vec index;
   index.zeros(N);
   index.subvec(1,N-1) = aindex.subvec(0,N-2);
-  
+
   arma::vec eta = X * beta_new;
+  // For log/exponential links (Poisson) clamp the linear predictor to keep
+  // exp(eta) finite during Newton overshoot. clampeta<=0 disables clamping.
+  if (clampeta > 0) eta = clamp(eta, -clampeta, clampeta);
   // sexp linkinveta = linkinv(eta);
   // arma::vec mu = linkinveta;
   arma::vec mu = Rcpp::as<arma::vec>(linkinv(eta));
@@ -237,12 +241,14 @@ Rcpp::List gee_cor(double N, // Number of subjects
                    std::string corstr,
                    double maxclsz, // max number of obs
                    bool scalefix, // indicator of fixed scale parameter
-                   double scalevalue=1 //Value of the scale parameter (if fixed)
+                   double scalevalue=1, //Value of the scale parameter (if fixed)
+                   double clampeta=0
 ){
-  
+
   // Rcpp::Rcout << "Flag1" << endl;
-  
+
   arma::vec eta = X * beta_new;
+  if (clampeta > 0) eta = clamp(eta, -clampeta, clampeta);
   // sexp linkinveta = linkinv(eta);
   // arma::vec mu = linkinveta;
   arma::vec mu = Rcpp::as<arma::vec>(linkinv(eta));
@@ -401,7 +407,8 @@ Rcpp::List gee_fit(arma::vec y,
                    int maxiter2=10,
                    bool scalefix=false, // indicator of fixed scale parameter
                    double scalevalue=1, //Value of the scale parameter (if fixed)
-                   bool display_progress=true
+                   bool display_progress=true,
+                   double clampeta=0 // clamp linear predictor for log-link (Poisson); 0 disables
 ){
   
   double N = nt.n_elem;
@@ -467,9 +474,10 @@ Rcpp::List gee_fit(arma::vec y,
                                        variance,
                                        betai,
                                        corstr,
-                                       maxclsz, 
+                                       maxclsz,
                                        scalefix,
-                                       scalevalue
+                                       scalevalue,
+                                       clampeta
           );
           
           arma::cube Rhat = cor_obj["Rhat"];
@@ -492,7 +500,8 @@ Rcpp::List gee_fit(arma::vec y,
                                    ncov,
                                    wcov,
                                    eps,
-                                   muu);
+                                   muu,
+                                   clampeta);
           
           arma::vec S = NR_obj["S"];
           arma::mat H = NR_obj["H"];
@@ -548,9 +557,10 @@ Rcpp::List gee_fit(arma::vec y,
                                      variance,
                                      betai,
                                      corstr,
-                                     maxclsz, 
+                                     maxclsz,
                                      scalefix,
-                                     scalevalue
+                                     scalevalue,
+                                     clampeta
         );
         
         arma::cube Rhat = cor_obj["Rhat"];

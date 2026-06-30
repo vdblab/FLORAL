@@ -409,11 +409,190 @@ Rcpp::List logistic_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub
   ret["lambda"] = lambda;
   ret["loss"] = loss;
   ret["mse"] = mse;
-  ret["tol"] = tol; 
+  ret["tol"] = tol;
   ret["iters"] = iters;
-  
+
   return ret;
-  
+
+}
+
+
+// [[Rcpp::export]]
+Rcpp::List poisson_enet_al(arma::mat x, arma::vec y, int len, double mu, int ub, arma::vec lambda, double wcov, double a, bool adjust, unsigned int ncov, bool display_progress=true, bool loop1=false, bool loop2=false){
+
+  // Penalized log-ratio elastic-net for count (Poisson) outcomes with a log
+  // ("exponential") link. Structurally identical to logistic_enet_al, but the
+  // IRLS quantities are those of a Poisson GLM: mu = exp(eta), score = y - mu,
+  // and working weight (Hessian diagonal) = mu. The linear predictor is clamped
+  // to avoid overflow of exp() for large eta.
+
+  int n = y.n_elem;
+  unsigned int p = x.n_cols;
+
+  double etacap = 30.0; // clamp eta to [-etacap, etacap] to keep exp(eta) finite
+  double b0init = log(mean(y) + 1e-8); // intercept-only Poisson MLE (good warm start)
+
+  arma::vec beta0;
+  beta0.zeros(len);
+  arma::mat beta;
+  beta.zeros(p,len);
+  arma::vec loss = vec(len);
+  arma::vec mse = vec(len);
+  arma::vec tol = vec(len);
+  arma::vec iters = vec(len);
+
+  Progress prog(len, display_progress);
+
+  for (int i=0; i<len; ++i){
+
+    prog.increment();
+
+    double l = lambda(i);
+
+    double beta0i = b0init;
+    arma::vec betai = beta.col(i);
+    if (i >= 1) {
+      beta0i = beta0(i-1);
+      betai = beta.col(i-1);
+    }
+
+    double alpha = 0;
+    int k = 0;
+    int k1 = 0;
+
+    arma::vec eta = clamp(beta0i + x*betai, -etacap, etacap);
+    arma::vec mufit = exp(eta);
+    arma::vec sfun = y - mufit;
+    arma::vec hfun = mufit + 1e-8;
+    arma::vec z0 = eta + sfun/hfun;
+    arma::vec z = z0 - mean(z0);
+    arma::mat xx = x.t()*diagmat(hfun)*x;
+    arma::vec xz = x.t()*(z % hfun);
+
+    arma::vec diff = z - x*betai;
+
+    double loss0 = 0;
+    if (adjust){
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betai.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betai.subvec(0,ncov-1),2))/2;
+    }else{
+      loss0 = accu(hfun % diff % diff)/(2*n)+ a*l*accu(abs(betai.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betai.subvec(ncov,p-1),2))/2 + mu*pow(accu(betai.subvec(ncov,p-1)) + alpha,2)/2;
+    }
+
+    arma::vec betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
+    arma::vec difftemp = z - x*betatemp;
+
+    double lossnew = 0;
+    if (adjust){
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+    }else{
+      lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+    }
+
+    k1 = 0;
+
+    while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+
+      if (loop2){
+        beta0i = mean(z0 - x*betatemp);
+        eta = clamp(beta0i + x*betatemp, -etacap, etacap);
+        mufit = exp(eta);
+        sfun = y - mufit;
+        hfun = mufit + 1e-8;
+        z0 = eta + sfun/hfun;
+        z = z0 - mean(z0);
+        xx = x.t()*diagmat(hfun)*x;
+        xz = x.t()*(z % hfun);
+      }
+
+      k1 = k1 + 1;
+      loss0 = lossnew;
+      betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
+      difftemp = z - x*betatemp;
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+      }
+    }
+
+    while (mean(abs(betatemp - betai)) > 1e-7 and k < ub){
+
+      if (loop1){
+        beta0i = mean(z0 - x*betatemp);
+        eta = clamp(beta0i + x*betatemp, -etacap, etacap);
+        mufit = exp(eta);
+        sfun = y - mufit;
+        hfun = mufit + 1e-8;
+        z0 = eta + sfun/hfun;
+        z = z0 - mean(z0);
+        xx = x.t()*diagmat(hfun)*x;
+        xz = x.t()*(z % hfun);
+      }
+
+      k = k+1;
+
+      betai = betatemp;
+      alpha = alpha + accu(betai.subvec(ncov,p-1));
+
+      diff = z - x*betai;
+      loss0 = accu(hfun % diff % diff)/(2*n) + l*accu(abs(betai)) + mu*pow(accu(betai) + alpha,2)/2;
+      betatemp = gd_cov_al(xx,xz,n,l,a,betai,mu,alpha,adjust,ncov,wcov);
+      difftemp = z - x*betatemp;
+      if (adjust){
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+      }else{
+        lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+      }
+
+      k1 = 0;
+
+      while (abs(lossnew - loss0) > 1e-7 and k1 < ub){
+
+        if (loop2){
+          beta0i = mean(z0 - x*betatemp);
+          eta = clamp(beta0i + x*betatemp, -etacap, etacap);
+          mufit = exp(eta);
+          sfun = y - mufit;
+          hfun = mufit + 1e-8;
+          z0 = eta + sfun/hfun;
+          z = z0 - mean(z0);
+          xx = x.t()*diagmat(hfun)*x;
+          xz = x.t()*(z % hfun);
+        }
+
+        k1 = k1 + 1;
+        loss0 = lossnew;
+        betatemp = gd_cov_al(xx,xz,n,l,a,betatemp,mu,alpha,adjust,ncov,wcov);
+        difftemp = z - x*betatemp;
+        if (adjust){
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2 + wcov*a*l*accu(abs(betatemp.subvec(0,ncov-1))) + wcov*(1-a)*l*accu(pow(betatemp.subvec(0,ncov-1),2))/2;
+        }else{
+          lossnew = accu(hfun % difftemp % difftemp)/(2*n)+ a*l*accu(abs(betatemp.subvec(ncov,p-1))) + (1-a)*l*accu(pow(betatemp.subvec(ncov,p-1),2))/2 + mu*pow(accu(betatemp.subvec(ncov,p-1)) + alpha,2)/2;
+        }
+      }
+
+    }
+
+    beta0(i) = mean(z0 - x*betatemp);
+    loss(i) = lossnew;
+    mse(i) = accu(difftemp % difftemp)/n;
+    beta.col(i) = betatemp;
+    tol(i) = mean(abs(betatemp - betai));
+    iters(i) = k;
+
+  }
+
+  Rcpp::List ret;
+  ret["beta"] = beta;
+  ret["beta0"] = beta0;
+  ret["lambda"] = lambda;
+  ret["loss"] = loss;
+  ret["mse"] = mse;
+  ret["tol"] = tol;
+  ret["iters"] = iters;
+
+  return ret;
+
 }
 
 
