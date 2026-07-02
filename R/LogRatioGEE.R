@@ -61,6 +61,15 @@ LogRatioGEE <- function(x,
   clampeta <- if (family0 == "poisson") 30 else 0
   if (is.character(family)) family <- get(family)
   if (is.function(family))  family <- family()
+
+  # Predicted mean on the response scale. For log links the linear predictor is
+  # clamped so that exp(eta) cannot overflow to Inf: at small lambda the fitted
+  # count-model coefficients can diverge, and an Inf fitted mean would make the
+  # Poisson deviance residual NaN, propagating NA into cvmse.mean/cvmse.se.
+  predmu <- function(xb){
+    if (clampeta > 0) xb <- pmin(pmax(xb, -clampeta), clampeta)
+    family$linkinv(xb)
+  }
   
   if (is.null(lambda.min.ratio)) lambda.min.ratio = ifelse(n < p, 1e-01, 1e-02)
   lambda <- 10^(seq(log10(lambda0),log10(lambda0*lambda.min.ratio),length.out=length.lambda))
@@ -156,7 +165,7 @@ LogRatioGEE <- function(x,
                      clampeta=clampeta)
         
         cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
-        mufit=family$linkinv(test.x %*% cvfit$beta)
+        mufit=predmu(test.x %*% cvfit$beta)
         
         #### !check
         
@@ -204,7 +213,7 @@ LogRatioGEE <- function(x,
                      clampeta=clampeta)
         
         cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
-        mufit=family$linkinv(test.x %*% cvfit$beta)
+        mufit=predmu(test.x %*% cvfit$beta)
         apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
         
       }
@@ -406,7 +415,7 @@ LogRatioGEE <- function(x,
                              clampeta=clampeta)
 
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
-              mufit=family$linkinv(test.x %*% cvfit$beta)
+              mufit=predmu(test.x %*% cvfit$beta)
               cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
 
             }
@@ -451,7 +460,7 @@ LogRatioGEE <- function(x,
                              clampeta=clampeta)
 
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
-              mufit=family$linkinv(test.x %*% cvfit$beta)
+              mufit=predmu(test.x %*% cvfit$beta)
               apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
 
             }
@@ -644,7 +653,7 @@ LogRatioGEE <- function(x,
                              clampeta=clampeta)
               
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
-              mufit=family$linkinv(test.x %*% cvfit$beta)
+              mufit=predmu(test.x %*% cvfit$beta)
               cvmse[,cv] <- apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
               
             }
@@ -689,7 +698,7 @@ LogRatioGEE <- function(x,
                              clampeta=clampeta)
               
               cvfit$beta[abs(cvfit$beta) < 1e-3] = 0
-              mufit=family$linkinv(test.x %*% cvfit$beta)
+              mufit=predmu(test.x %*% cvfit$beta)
               apply(mufit,2,function(x) sum(family$dev.resids(test.y,x,wt=1)))
               
             }
