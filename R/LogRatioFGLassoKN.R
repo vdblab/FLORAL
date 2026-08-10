@@ -169,18 +169,37 @@ LogRatioFGLassoKN <- function(x,
       threshold_list[[combo_idx]] <- threshold
       names(threshold_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
       
-      # Find the lambda index closest to the threshold (in case of floating point precision issues)
-      thres.idx <- which.min(abs(lambda - threshold))
-      thres.idx_list[[combo_idx]] <- thres.idx
-      names(thres.idx_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
-      
-      thres.beta <- fullfit$beta[,thres.idx][(ncov+1):(ncov+p0)]
-      thres.beta_list[[combo_idx]] <- thres.beta
-      names(thres.beta_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
-      
-      selected.features <- names(thres.beta[thres.beta != 0])
+      # ---- Selection: the knockoff rule itself, {j : W_j >= T} ----------------
+      # Derived directly from W rather than from the lambda path, so an infinite
+      # threshold (knockoff.threshold()'s encoding of "reject nothing") yields
+      # the EMPTY set. Reading nonzero coefficients at the lambda nearest T
+      # instead returned whatever sat at lambda[1] whenever T was Inf, because
+      # abs(lambda - Inf) is Inf for every lambda and which.min() then falls back
+      # to index 1; for finite T it could also admit features whose knockoff
+      # entered first (W_j < 0).
+      selected.features <- as.character(
+        df_betaseq_long$feature_original[df_betaseq_long$W >= threshold]
+      )
       selected.features_list[[combo_idx]] <- selected.features
       names(selected.features_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
+
+      # ---- Reporting index: smallest lambda that is still >= threshold --------
+      # W_j is feature j's entry lambda, so the nonzero set at this lambda
+      # coincides with {W_j >= T}. `>=` (not `>`) retains the boundary feature
+      # whose |W| defines the threshold. NA when T is infinite.
+      keep_idx  <- which(lambda >= threshold)
+      thres.idx <- if (length(keep_idx) > 0L) max(keep_idx) else NA_integer_
+      thres.idx_list[[combo_idx]] <- thres.idx
+      names(thres.idx_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
+
+      feat_names <- rownames(fullfit$beta)[(ncov+1):(ncov+p0)]
+      thres.beta <- if (is.na(thres.idx)) {
+        stats::setNames(rep(0, p0), feat_names)
+      } else {
+        fullfit$beta[,thres.idx][(ncov+1):(ncov+p0)]
+      }
+      thres.beta_list[[combo_idx]] <- thres.beta
+      names(thres.beta_list)[combo_idx] <- paste0("fdr_", fdr_val, "_offset_", offset_val)
       
       combo_idx <- combo_idx + 1
     }
@@ -205,7 +224,8 @@ LogRatioFGLassoKN <- function(x,
               threshold_list = threshold_list,  # All thresholds (all FDR×offset combinations)
               thres.idx_list = thres.idx_list,  # All threshold indices
               thres.beta_list = thres.beta_list,  # All threshold betas
-              selected.features_list = selected.features_list  # All selected features
+              selected.features_list = selected.features_list,  # All selected features
+              W = df_betaseq_long  # feature_original / Original / KN / W - audit trail
   )
   
   if (plot){
