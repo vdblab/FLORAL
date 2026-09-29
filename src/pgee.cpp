@@ -91,7 +91,7 @@ Rcpp::List gee_NR(double N, // Number of subjects
       
       // Rcpp::Rcout << "b2: " << 1-b2 << endl;
       
-      E1 = diagmat((lambda*(1-b1)+b1%((lambda*a)-beta_new)%b2/(a-1))/(abs(beta_new)+eps));
+      E1 = diagmat((lambda*(1-b1)+b1%((lambda*a)-abs(beta_new))%b2/(a-1))/(abs(beta_new)+eps));
       E2.ones(nx);
       E2 = E2 * (muu * (accu(beta_new) + alpha));
       
@@ -114,7 +114,7 @@ Rcpp::List gee_NR(double N, // Number of subjects
       lw.ones(size(beta_new));
       lw.subvec(0,ncov-1) = lw.subvec(0,ncov-1)*wcov;
       
-      E1 = diagmat((lw % (lambda*(1-b1)+b1%((lambda*a)-beta_new)%b2/(a-1)))/(abs(beta_new)+eps));
+      E1 = diagmat((lw % (lambda*(1-b1)+b1%((lambda*a)-abs(beta_new))%b2/(a-1)))/(abs(beta_new)+eps));
       E2.ones(nx);
       arma::vec muuvec(size(beta_new));
       muuvec.fill(muu);
