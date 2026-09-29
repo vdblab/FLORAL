@@ -19,6 +19,7 @@ You can install `FLORAL` with the following code. The installation is
 typically complete within minutes.
 
 ``` r
+
 install.packages("FLORAL")
 ```
 
@@ -32,6 +33,7 @@ You can install the development version of `FLORAL` from
 [GitHub](https://github.com/) with:
 
 ``` r
+
 # install.packages("devtools")
 devtools::install_github("vdblab/FLORAL")
 ```
@@ -47,6 +49,7 @@ The data simulation procedure is described in the preprint. The expected
 run time for the following demo is about a minute.
 
 ``` r
+
 set.seed(23420)
 library(FLORAL)
 
@@ -61,8 +64,8 @@ coefficients, use `fit$pmse` or `fit$pcoef`:
 
 To view selected compositional features, use `fit$selected.feature`,
 where features are sorted by their names. Features under `min` and `1se`
-correspond to penalty parameter $\lambda_{\min}$ and
-$\lambda_{\text{1se}}$, respectively. Features under `min.2stage` and
+correspond to penalty parameter $`\lambda_{\min}`$ and
+$`\lambda_{\text{1se}}`$, respectively. Features under `min.2stage` and
 `1se.2stage` are obtained after applying 2-stage filtering based on
 features under `min` and `1se`, respectively.
 
@@ -72,6 +75,7 @@ the sense that the cross-validated prediction error is improved by
 considering these selected features.
 
 ``` r
+
 fit$selected.feature
 #> $min
 #>  [1] "taxa1"  "taxa10" "taxa15" "taxa2"  "taxa29" "taxa3"  "taxa39" "taxa43"
@@ -97,6 +101,7 @@ return the column indices in the original input matrix for the two
 corresponding features forming the ratio.
 
 ``` r
+
 fit$step2.ratios
 #> $min
 #> [1] "taxa1/taxa10"  "taxa2/taxa5"   "taxa3/taxa8"   "taxa5/taxa8"  
@@ -129,10 +134,12 @@ summary tables for the multivariable stepwise regression models obtained
 by the 2-stage procedure.
 
 ``` r
+
 fit$step2.tables$min
 ```
 
 ``` r
+
 fit$step2.tables$`1se`
 ```
 
@@ -140,6 +147,7 @@ For binary and survival outcomes, please specify `family="binomial"`,
 `family="cox"`, or `family="finegray"` accordingly.
 
 ``` r
+
 dat.bin <- simu(n=50,p=100,model="binomial")
 fit.bin <- FLORAL(dat.bin$xcount,dat.bin$y,family="binomial",ncv=10,progress=FALSE)
 

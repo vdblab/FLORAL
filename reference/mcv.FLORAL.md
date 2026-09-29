@@ -198,6 +198,7 @@ Teng Fei. Email: feit1@mskcc.org
 ## Examples
 
 ``` r
+
 set.seed(23420)
 
 dat <- simu(n=50,p=30,model="linear")

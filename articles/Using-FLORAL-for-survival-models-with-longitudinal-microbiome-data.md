@@ -1,6 +1,7 @@
 # Using FLORAL for survival models with longitudinal microbiome data
 
 ``` r
+
 library(FLORAL)
 library(dplyr)
 library(patchwork)
@@ -26,6 +27,7 @@ By default, the first 10 features out of the 500 features simulated
 below are associated with the time-to-event.
 
 ``` r
+
 
 simdat <- simu(n=200, # sample size
                p=500, # number of features
@@ -53,6 +55,7 @@ Here we provide a detailed description on each arguments:
   with respect to the IDs specified in `id`.
 
 ``` r
+
 
 fit <- FLORAL(x=simdat$xcount,
               y=Surv(simdat$data_unique$t,simdat$data_unique$d),

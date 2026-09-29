@@ -13,6 +13,7 @@ be replaced with
 performace.
 
 ``` r
+
 samples <- get0("samples", envir = asNamespace("FLORAL"))
 counts <- get0("counts", envir = asNamespace("FLORAL"))
 taxonomy <- get0("taxonomy", envir = asNamespace("FLORAL"))
@@ -32,11 +33,13 @@ Note that the analysis described here is just an example for using the
 function; this
 
 ``` r
+
 dat <- FLORAL::phy_to_floral_data(phy, covariates=c("Consistency"), y = "DayRelativeToNearestHCT")
 ```
 
 The resulting list has named entities for the main arguments to FLORAL:
 
 ``` r
+
 res <- FLORAL::FLORAL(y = dat$y, x = dat$xcount, ncov = dat$ncov, family = "gaussian", ncv=NULL, progress=FALSE)
 ```

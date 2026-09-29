@@ -12,8 +12,8 @@
 <link rel="icon" sizes="any" href="../favicon.ico">
 <link rel="manifest" href="../site.webmanifest">
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using FLORAL for Microbiome Analysis">
 </head>
@@ -141,7 +141,7 @@ runs, please use <code>progress = TRUE</code>.</p>
 “best” solutions for
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
 available: one minimizing the mean squared error
-(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mo>min</mo></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>),
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi mathvariant="normal">min</mi></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>),
 and one maximizing the value of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
 withing 1 standard error of the minimum mean squared error
@@ -155,13 +155,13 @@ as follows:</p>
 <code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">pmse</span> <span class="op">+</span> <span class="va">fit</span><span class="op">$</span><span class="va">pcoef</span></span></code></pre></div>
 <p><img src="Using-FLORAL-for-Microbiome-Analysis_files/figure-html/plots-1.png" class="r-plt" alt="" width="100%"></p>
 <p>In both plots, the vertical dashed line and dotted line represent
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mo>min</mo></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi mathvariant="normal">min</mi></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mtext mathvariant="normal">1se</mtext></msub><annotation encoding="application/x-tex">\lambda_{\text{1se}}</annotation></semantics></math>,
 respectively. In the MSE plot, the bands represent plus minus one
 standard error of the MSE. In the coefficient plot, the colored lines
 represent individual taxa, where taxa with non-zero values at
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mo>min</mo></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi mathvariant="normal">min</mi></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mtext mathvariant="normal">1se</mtext></msub><annotation encoding="application/x-tex">\lambda_{\text{1se}}</annotation></semantics></math>
 are selected as predictive of the outcome.</p>
@@ -285,7 +285,7 @@ account for the random fold splits. <code>FLORAL</code> provides
 <code>mcv.FLORAL</code> functions to repeat cross-validations for
 <code>mcv</code> times and on <code>ncore</code> cores. The output
 summarizes taxa selection probabilities, average coefficients based on
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mo>min</mo></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi mathvariant="normal">min</mi></msub><annotation encoding="application/x-tex">\lambda_\min</annotation></semantics></math>
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mtext mathvariant="normal">1se</mtext></msub><annotation encoding="application/x-tex">\lambda_{\text{1se}}</annotation></semantics></math>.
 Interpretable plots can be created if <code>plot = TRUE</code> is
@@ -354,7 +354,7 @@ against the choice of
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

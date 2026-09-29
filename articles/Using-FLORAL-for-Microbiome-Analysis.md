@@ -1,6 +1,7 @@
 # Using FLORAL for Microbiome Analysis
 
 ``` r
+
 library(FLORAL)
 library(dplyr)
 library(patchwork)
@@ -13,6 +14,7 @@ easier installation, we saved a flat copy of the data, but the steps
 below show how that was created.
 
 ``` r
+
 if (! "BiocManager" %in% installed.packages()) install.packages("BiocManager")
 if (! "curatedMetagenomicData" %in% installed.packages()) BiocManager::install("curatedMetagenomicData")
 if (! "patchwork" %in% installed.packages()) install.packages("patchwork")
@@ -32,6 +34,7 @@ save(list = c("x", "y"),  file = file.path("inst", "extdata", "YachidaS_2019.Rda
 ```
 
 ``` r
+
 load(system.file("extdata", "YachidaS_2019.Rdata", package="FLORAL"))
 ```
 
@@ -47,6 +50,7 @@ To print the progress bar as the algorithm runs, please use
 `progress = TRUE`.
 
 ``` r
+
 
 x <- x[y %in% c("CRC","healthy"),]
 x <- x[,colSums(x >= 100) >= nrow(x)*0.2] # filter low abundance taxa
@@ -71,27 +75,28 @@ fit <- FLORAL(x = x, y = y, family="binomial", ncv=10, progress=TRUE)
 ## Interpreting the Model
 
 FLORAL, like other methods that have an optimization step, has two
-“best” solutions for $\lambda$ available: one minimizing the mean
-squared error ($\lambda_{\min}$), and one maximizing the value of
-$\lambda$ withing 1 standard error of the minimum mean squared error
-($\lambda_{\text{1se}}$). These are referred to as the `min` and `1se`
+“best” solutions for $`\lambda`$ available: one minimizing the mean
+squared error ($`\lambda_\min`$), and one maximizing the value of
+$`\lambda`$ withing 1 standard error of the minimum mean squared error
+($`\lambda_{\text{1se}}`$). These are referred to as the `min` and `1se`
 solutions, respectively.
 
 We can see the mean squared error (MSE) and the coefficients vs
-log($\lambda$) as follows:
+log($`\lambda`$) as follows:
 
 ``` r
+
 fit$pmse + fit$pcoef
 ```
 
 ![](Using-FLORAL-for-Microbiome-Analysis_files/figure-html/plots-1.png)
 
 In both plots, the vertical dashed line and dotted line represent
-$\lambda_{\min}$ and $\lambda_{\text{1se}}$, respectively. In the MSE
+$`\lambda_\min`$ and $`\lambda_{\text{1se}}`$, respectively. In the MSE
 plot, the bands represent plus minus one standard error of the MSE. In
 the coefficient plot, the colored lines represent individual taxa, where
-taxa with non-zero values at $\lambda_{\min}$ and $\lambda_{\text{1se}}$
-are selected as predictive of the outcome.
+taxa with non-zero values at $`\lambda_\min`$ and
+$`\lambda_{\text{1se}}`$ are selected as predictive of the outcome.
 
 To view specific names of the selected taxa, please see
 `fit$selected.feature$min` or `fit$selected.feature$1se` vectors. To
@@ -104,6 +109,7 @@ below for a more rigorous interpretation based on ratios, which is
 derived from the log-ratio model assumption.
 
 ``` r
+
 
 head(fit$selected.feature$min)
 #> [1] "s__Actinomyces_sp_HMSC035G02"      "s__Actinomyces_sp_ICM47"          
@@ -133,6 +139,7 @@ can occur in multiple ratios.
 
 ``` r
 
+
 head(fit$step2.ratios$`1se`)
 #> [1] "s__Bacteroides_plebeius/s__Roseburia_faecis"                    
 #> [2] "s__Eubacterium_eligens/s__Bacteroides_cellulosilyticus"         
@@ -161,6 +168,7 @@ outcome, as demonstrated by the improved 10-fold cross-validated
 prediction errors.
 
 ``` r
+
 
 fit$step2.tables$`1se`
 #>                                                                    Estimate
@@ -215,10 +223,11 @@ It is encouraged to run k-fold cross-validation for several times to
 account for the random fold splits. `FLORAL` provides `mcv.FLORAL`
 functions to repeat cross-validations for `mcv` times and on `ncore`
 cores. The output summarizes taxa selection probabilities, average
-coefficients based on $\lambda_{\min}$ and $\lambda_{\text{1se}}$.
+coefficients based on $`\lambda_\min`$ and $`\lambda_{\text{1se}}`$.
 Interpretable plots can be created if `plot = TRUE` is specified.
 
 ``` r
+
 
 mcv.fit <- mcv.FLORAL(mcv=2,
                       ncore=1,
@@ -235,12 +244,14 @@ mcv.fit <- mcv.FLORAL(mcv=2,
 
 ``` r
 
+
 mcv.fit$p_min
 ```
 
 ![](Using-FLORAL-for-Microbiome-Analysis_files/figure-html/mcvplots-1.png)
 
 ``` r
+
 
 #Other options are also available
 #mcv.fit$p_min_ratio
@@ -256,9 +267,10 @@ be used when `a=1` while ridge penalty will be used when `a=0`.
 
 The `a.FLORAL` function can help investigate the prediction performance
 for different choices of `a` and return a plot of the corresponding
-prediction metric trajectories against the choice of $\lambda$.
+prediction metric trajectories against the choice of $`\lambda`$.
 
 ``` r
+
 
 a.fit <- a.FLORAL(a = c(0.1,1),
                   ncore = 1,

@@ -192,6 +192,7 @@ Teng Fei. Email: feit1@mskcc.org
 ## Examples
 
 ``` r
+
 set.seed(23420)
 
 # Continuous outcome
