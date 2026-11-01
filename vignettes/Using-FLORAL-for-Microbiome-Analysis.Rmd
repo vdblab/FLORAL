@@ -2,9 +2,7 @@
 title: "Using FLORAL for Microbiome Analysis"
 output: 
   rmarkdown::html_vignette:
-    md_extensions: [ 
-      "-autolink_bare_uris" 
-    ]
+    md_extensions: ["-autolink_bare_uris"]
 vignette: >
   %\VignetteIndexEntry{Using FLORAL for Microbiome Analysis}
   %\VignetteEncoding{UTF-8}
