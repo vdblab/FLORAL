@@ -68,14 +68,15 @@ fit <- FLORAL(x=simdat$xcount,
 
 fit$selected
 #> $min
-#> [1] "taxa1"   "taxa2"   "taxa27"  "taxa366" "taxa38"  "taxa5"   "taxa6"  
-#> [8] "taxa8"   "taxa9"  
+#>  [1] "taxa1"   "taxa145" "taxa2"   "taxa229" "taxa3"   "taxa38"  "taxa5"  
+#>  [8] "taxa6"   "taxa8"   "taxa9"  
 #> 
 #> $`1se`
 #> [1] "taxa1" "taxa5" "taxa6" "taxa8" "taxa9"
 #> 
 #> $min.2stage
-#> [1] "taxa2"   "taxa366" "taxa38"  "taxa5"   "taxa6"   "taxa8"   "taxa9"  
+#> [1] "taxa145" "taxa2"   "taxa229" "taxa3"   "taxa38"  "taxa5"   "taxa6"  
+#> [8] "taxa8"   "taxa9"  
 #> 
 #> $`1se.2stage`
 #> [1] "taxa1" "taxa5" "taxa6" "taxa8" "taxa9"

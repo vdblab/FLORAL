@@ -1,5 +1,11 @@
 # Changelog
 
+## FLORAL 0.7.1
+
+- Fixed vignette YAML headers so that they parse under Pandoc 3.13,
+  which is stricter about multi-line flow sequences. This resolves the
+  vignette re-building ERRORs on CRAN.
+
 ## FLORAL 0.7.0
 
 CRAN release: 2026-02-07
